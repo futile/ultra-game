@@ -21,21 +21,42 @@
           inherit system overlays;
         };
       in
-      with pkgs;
       {
-        devShells.default = mkShell {
-          buildInputs = [
-            # openssl
-            # pkg-config
+        devShells.default = pkgs.mkShell rec {
+          nativeBuildInputs = with pkgs; [
+            # from https://github.com/bevyengine/bevy/blob/main/docs/linux_dependencies.md#Nix
+            pkg-config
+
+            # from https://bevyengine.org/learn/book/getting-started/setup/#enable-fast-compiles-optional
+            mold-wrapped
+            clang_16
 
             # use rust-version + components from the rust-toolchain.toml file
             (rust-bin.fromRustupToolchainFile ./rust-toolchain.toml)
           ];
 
-          # shellHook = ''
-          #   alias ls=eza
-          #   alias find=fd
-          # '';
+          buildInputs = with pkgs; [
+            # common bevy dependencies
+            udev
+            alsa-lib
+            vulkan-loader
+
+            # bevy x11 feature
+            xorg.libX11
+            xorg.libXcursor
+            xorg.libXi
+            xorg.libXrandr
+
+            # bevy wayland feature
+            libxkbcommon
+            wayland
+
+            # often this becomes necessary sooner or later
+            # openssl
+          ];
+
+          # from bevy setup as well
+          LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath buildInputs;
         };
       }
     );
