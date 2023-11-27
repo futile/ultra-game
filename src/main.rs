@@ -23,6 +23,11 @@ struct PlayerCharacterCard {
     _player_character: Entity,
 }
 
+#[derive(Debug, Component)]
+struct EnemyCard {
+    _enemy: Entity,
+}
+
 const FIGHT_BOARD_SIZE: Vec2 = Vec2::new(850., 700.);
 
 // detect when `Fight` is added to the world
@@ -35,8 +40,6 @@ fn fight_added(
     mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
     for (e, fight) in new_fights.iter() {
-        println!("Detected new `Fight`, spawning `FightBoard`");
-
         commands
             .spawn((
                 FightBoard { _fight: e },
@@ -59,6 +62,22 @@ fn fight_added(
                                 .into(),
                             material: materials.add(ColorMaterial::from(Color::BLUE)),
                             transform: Transform::from_translation(Vec3::new(-225., 225., 100.)),
+                            ..default()
+                        },
+                    ));
+                }
+
+                if let Ok(_enemy) = enemies.get(fight.enemy) {
+                    parent.spawn((
+                        EnemyCard {
+                            _enemy: fight.enemy,
+                        },
+                        MaterialMesh2dBundle {
+                            mesh: meshes
+                                .add(shape::Quad::new(Vec2::new(350., 150.)).into())
+                                .into(),
+                            material: materials.add(ColorMaterial::from(Color::ORANGE_RED)),
+                            transform: Transform::from_translation(Vec3::new(225., 225., 100.)),
                             ..default()
                         },
                     ));
