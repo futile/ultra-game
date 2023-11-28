@@ -1,6 +1,8 @@
 use bevy::prelude::*;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
-use core_logic::{Enemy, Fight, PlayerCharacter};
+use core_logic::{
+    AbilitySlot, AbilitySlotType, Character, CoreLogicPlugin, Enemy, Fight, PlayerCharacter,
+};
 use fight_board_plugin::FightBoardPlugin;
 
 mod core_logic;
@@ -9,8 +11,19 @@ mod fight_board_plugin;
 fn setup(mut commands: Commands) {
     commands.spawn(Camera2dBundle::default());
 
+    let the_player: Character = Character {
+        slots: smallvec::smallvec![AbilitySlot {
+            tpe: AbilitySlotType::WeaponAttack
+        }],
+    };
+
     let player_character = commands
-        .spawn((PlayerCharacter, Name::new("Player Character")))
+        .spawn((
+            PlayerCharacter {
+                character: the_player,
+            },
+            Name::new("Player Character"),
+        ))
         .id();
 
     let enemy = commands.spawn((Enemy, Name::new("The Enemy"))).id();
@@ -28,6 +41,7 @@ fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .add_plugins(WorldInspectorPlugin::new())
+        .add_plugins(CoreLogicPlugin)
         .add_plugins(FightBoardPlugin)
         .add_systems(Startup, setup)
         .add_systems(Update, bevy::window::close_on_esc)
