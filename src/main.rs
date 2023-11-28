@@ -38,6 +38,7 @@ fn fight_added(
     enemies: Query<&Enemy>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
+    _asset_server: Res<AssetServer>,
 ) {
     for (e, fight) in new_fights.iter() {
         commands
@@ -45,42 +46,82 @@ fn fight_added(
                 FightBoard { _fight: e },
                 MaterialMesh2dBundle {
                     mesh: meshes.add(shape::Quad::new(FIGHT_BOARD_SIZE).into()).into(),
-                    material: materials.add(ColorMaterial::from(Color::GRAY)),
-                    transform: Transform::from_translation(Vec3::new(200., 0., -100.)),
+                    material: materials.add(ColorMaterial::from(Color::WHITE)),
+                    transform: Transform::from_translation(Vec3::new(200., 0., 0.)),
                     ..default()
                 },
             ))
             .with_children(|parent| {
                 if let Ok(_pc) = player_characters.get(fight.player_character) {
-                    parent.spawn((
-                        PlayerCharacterCard {
-                            _player_character: fight.player_character,
-                        },
-                        MaterialMesh2dBundle {
-                            mesh: meshes
-                                .add(shape::Quad::new(Vec2::new(350., 150.)).into())
-                                .into(),
-                            material: materials.add(ColorMaterial::from(Color::BLUE)),
-                            transform: Transform::from_translation(Vec3::new(-225., 225., 100.)),
-                            ..default()
-                        },
-                    ));
+                    parent
+                        .spawn((
+                            PlayerCharacterCard {
+                                _player_character: fight.player_character,
+                            },
+                            SpatialBundle::from_transform(Transform::from_translation(Vec3::new(
+                                -225., 225., 1.,
+                            ))),
+                        ))
+                        .with_children(|card| {
+                            card.spawn(MaterialMesh2dBundle {
+                                mesh: meshes
+                                    .add(shape::Quad::new(Vec2::new(350., 150.)).into())
+                                    .into(),
+                                material: materials
+                                    .add(ColorMaterial::from(Color::BLUE.with_a(0.5))),
+                                ..default()
+                            });
+
+                            card.spawn(Text2dBundle {
+                                text: Text::from_section(
+                                    "Player",
+                                    TextStyle {
+                                        font_size: 30.0,
+                                        color: Color::BLACK,
+                                        ..default()
+                                    },
+                                )
+                                .with_alignment(TextAlignment::Left),
+                                transform: Transform::from_translation(Vec3::new(-100., 40., 2.)),
+                                ..default()
+                            });
+                        });
                 }
 
                 if let Ok(_enemy) = enemies.get(fight.enemy) {
-                    parent.spawn((
-                        EnemyCard {
-                            _enemy: fight.enemy,
-                        },
-                        MaterialMesh2dBundle {
-                            mesh: meshes
-                                .add(shape::Quad::new(Vec2::new(350., 150.)).into())
-                                .into(),
-                            material: materials.add(ColorMaterial::from(Color::ORANGE_RED)),
-                            transform: Transform::from_translation(Vec3::new(225., 225., 100.)),
-                            ..default()
-                        },
-                    ));
+                    parent
+                        .spawn((
+                            EnemyCard {
+                                _enemy: fight.enemy,
+                            },
+                            SpatialBundle::from_transform(Transform::from_translation(Vec3::new(
+                                225., 225., 1.,
+                            ))),
+                        ))
+                        .with_children(|card| {
+                            card.spawn(MaterialMesh2dBundle {
+                                mesh: meshes
+                                    .add(shape::Quad::new(Vec2::new(350., 150.)).into())
+                                    .into(),
+                                material: materials
+                                    .add(ColorMaterial::from(Color::ORANGE_RED.with_a(0.5))),
+                                ..default()
+                            });
+
+                            card.spawn(Text2dBundle {
+                                text: Text::from_section(
+                                    "Enemy",
+                                    TextStyle {
+                                        font_size: 30.0,
+                                        color: Color::BLACK,
+                                        ..default()
+                                    },
+                                )
+                                .with_alignment(TextAlignment::Left),
+                                transform: Transform::from_translation(Vec3::new(-100., 40., 2.)),
+                                ..default()
+                            });
+                        });
                 }
             });
     }
