@@ -7,21 +7,11 @@ use bevy::{
 
 use crate::core_logic::{Ability, AbilityId, AbilitySlotType};
 
-#[derive(Debug, Resource, Reflect, Default)]
-#[reflect(Resource)]
-pub struct AbilityCatalog;
-
-impl std::ops::Deref for AbilityCatalog {
-    type Target = HashMap<AbilityId, Ability>;
-    fn deref(&self) -> &Self::Target {
-        ability_catalog()
-    }
-}
-
 pub fn ability_catalog() -> &'static HashMap<AbilityId, Ability> {
     static ABILITY_CATALOG: OnceLock<HashMap<AbilityId, Ability>> = OnceLock::new();
     ABILITY_CATALOG.get_or_init(|| {
         let mut catalog = HashMap::new();
+
         catalog.insert(
             AbilityId::Attack,
             Ability {
@@ -31,8 +21,20 @@ pub fn ability_catalog() -> &'static HashMap<AbilityId, Ability> {
                 cooldown: Duration::from_secs_f32(1.0),
             },
         );
+
         catalog
     })
+}
+
+#[derive(Debug, Resource, Reflect, Default)]
+#[reflect(Resource)]
+pub struct AbilityCatalog;
+
+impl std::ops::Deref for AbilityCatalog {
+    type Target = HashMap<AbilityId, Ability>;
+    fn deref(&self) -> &Self::Target {
+        ability_catalog()
+    }
 }
 
 #[derive(Debug)]
