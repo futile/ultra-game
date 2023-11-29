@@ -1,24 +1,11 @@
-use std::{borrow::Cow, sync::OnceLock};
+use std::sync::OnceLock;
 
 use bevy::{
     prelude::*,
     utils::{Duration, HashMap},
 };
 
-use crate::core_logic::AbilitySlotType;
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub enum AbilityId {
-    Attack,
-}
-
-#[derive(Debug)]
-pub struct Ability {
-    name: Cow<'static, str>,
-    id: AbilityId,
-    slot_type: AbilitySlotType,
-    cooldown: Duration,
-}
+use crate::core_logic::{Ability, AbilityId, AbilitySlotType};
 
 #[derive(Debug, Resource, Reflect, Default)]
 #[reflect(Resource)]

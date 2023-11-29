@@ -1,4 +1,6 @@
-use bevy::prelude::*;
+use std::borrow::Cow;
+
+use bevy::{prelude::*, utils::Duration};
 use smallvec::SmallVec;
 
 #[derive(Debug, Clone, Component, Reflect)]
@@ -29,6 +31,19 @@ pub struct AbilitySlot {
 pub enum AbilitySlotType {
     WeaponAttack,
     _ShieldDefend,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum AbilityId {
+    Attack,
+}
+
+#[derive(Debug)]
+pub struct Ability {
+    pub name: Cow<'static, str>,
+    pub id: AbilityId,
+    pub slot_type: AbilitySlotType,
+    pub cooldown: Duration,
 }
 
 pub struct CoreLogicPlugin;
