@@ -1,3 +1,4 @@
+use ability_catalog::AbilityCatalogPlugin;
 use bevy::prelude::*;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use core_logic::{
@@ -5,6 +6,7 @@ use core_logic::{
 };
 use fight_board_plugin::FightBoardPlugin;
 
+mod ability_catalog;
 mod core_logic;
 mod fight_board_plugin;
 
@@ -41,6 +43,7 @@ fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .add_plugins(WorldInspectorPlugin::new())
+        .add_plugins(AbilityCatalogPlugin)
         .add_plugins(CoreLogicPlugin)
         .add_plugins(FightBoardPlugin)
         .add_systems(Startup, setup)
