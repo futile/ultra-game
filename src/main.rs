@@ -2,8 +2,8 @@ use ability_catalog::AbilityCatalogPlugin;
 use bevy::prelude::*;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use core_logic::{
-    AbilityId, AbilitySlot, AbilitySlotType, Character, CoreLogicPlugin, Enemy, Fight,
-    PlayerCharacter,
+    AbilityId, AbilitySlot, AbilitySlotType, AbilitySlots, CoreLogicPlugin, Enemy, Fight,
+    HasAbilities, PlayerCharacter,
 };
 use fight_board_plugin::FightBoardPlugin;
 use smallvec::smallvec;
@@ -15,18 +15,13 @@ mod fight_board_plugin;
 fn setup(mut commands: Commands) {
     commands.spawn(Camera2dBundle::default());
 
-    let the_player: Character = Character {
-        slots: smallvec![AbilitySlot {
-            tpe: AbilitySlotType::WeaponAttack
-        }],
-        abilities: smallvec![AbilityId::Attack],
-    };
-
     let player_character = commands
         .spawn((
-            PlayerCharacter {
-                character: the_player,
-            },
+            PlayerCharacter,
+            AbilitySlots(smallvec![AbilitySlot {
+                tpe: AbilitySlotType::WeaponAttack
+            }]),
+            HasAbilities(smallvec![AbilityId::Attack]),
             Name::new("Player Character"),
         ))
         .id();

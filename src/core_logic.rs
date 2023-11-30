@@ -10,18 +10,16 @@ pub struct Fight {
 }
 
 #[derive(Debug, Component, Reflect)]
-pub struct PlayerCharacter {
-    pub character: Character,
-}
+pub struct PlayerCharacter;
 
 #[derive(Debug, Component, Reflect)]
 pub struct Enemy;
 
-#[derive(Debug, Reflect)]
-pub struct Character {
-    pub slots: SmallVec<[AbilitySlot; 4]>,
-    pub abilities: SmallVec<[AbilityId; 4]>,
-}
+#[derive(Debug, Component, Reflect)]
+pub struct AbilitySlots(pub SmallVec<[AbilitySlot; 4]>);
+
+#[derive(Debug, Component, Reflect)]
+pub struct HasAbilities(pub SmallVec<[AbilityId; 4]>);
 
 #[derive(Debug, Reflect)]
 pub struct AbilitySlot {
@@ -54,6 +52,8 @@ impl Plugin for CoreLogicPlugin {
         // from https://github.com/jakobhellermann/bevy-inspector-egui/discussions/130
         app.register_type::<Fight>()
             .register_type::<Enemy>()
+            .register_type::<HasAbilities>()
+            .register_type::<AbilitySlots>()
             .register_type::<PlayerCharacter>();
     }
 }
