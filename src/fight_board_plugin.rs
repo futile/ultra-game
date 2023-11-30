@@ -26,6 +26,8 @@ struct EnemyCard {
 }
 
 const FIGHT_BOARD_SIZE: Vec2 = Vec2::new(850., 700.);
+const CARD_SIZE: Vec2 = Vec2::new(350., 600.);
+const CARD_TEXT_TRANSFORM: Transform = Transform::from_translation(Vec3::new(-100., 260., 2.));
 
 // detect when `Fight` is added to the world
 fn fight_added(
@@ -56,14 +58,12 @@ fn fight_added(
                                 _player_character: fight.player_character,
                             },
                             SpatialBundle::from_transform(Transform::from_translation(Vec3::new(
-                                -225., 225., 1.,
+                                -225., 0., 1.,
                             ))),
                         ))
                         .with_children(|card| {
                             card.spawn(MaterialMesh2dBundle {
-                                mesh: meshes
-                                    .add(shape::Quad::new(Vec2::new(350., 150.)).into())
-                                    .into(),
+                                mesh: meshes.add(shape::Quad::new(CARD_SIZE).into()).into(),
                                 material: materials
                                     .add(ColorMaterial::from(Color::BLUE.with_a(0.5))),
                                 ..default()
@@ -79,7 +79,7 @@ fn fight_added(
                                     },
                                 )
                                 .with_alignment(TextAlignment::Left),
-                                transform: Transform::from_translation(Vec3::new(-100., 40., 2.)),
+                                transform: CARD_TEXT_TRANSFORM,
                                 ..default()
                             });
                         });
@@ -92,14 +92,12 @@ fn fight_added(
                                 _enemy: fight.enemy,
                             },
                             SpatialBundle::from_transform(Transform::from_translation(Vec3::new(
-                                225., 225., 1.,
+                                225., 0., 1.,
                             ))),
                         ))
                         .with_children(|card| {
                             card.spawn(MaterialMesh2dBundle {
-                                mesh: meshes
-                                    .add(shape::Quad::new(Vec2::new(350., 150.)).into())
-                                    .into(),
+                                mesh: meshes.add(shape::Quad::new(CARD_SIZE).into()).into(),
                                 material: materials
                                     .add(ColorMaterial::from(Color::ORANGE_RED.with_a(0.5))),
                                 ..default()
@@ -115,7 +113,7 @@ fn fight_added(
                                     },
                                 )
                                 .with_alignment(TextAlignment::Left),
-                                transform: Transform::from_translation(Vec3::new(-100., 40., 2.)),
+                                transform: CARD_TEXT_TRANSFORM,
                                 ..default()
                             });
                         });
