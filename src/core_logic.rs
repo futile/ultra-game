@@ -20,6 +20,7 @@ pub struct Enemy;
 #[derive(Debug, Reflect)]
 pub struct Character {
     pub slots: SmallVec<[AbilitySlot; 4]>,
+    pub abilities: SmallVec<[AbilityId; 4]>,
 }
 
 #[derive(Debug, Reflect)]
@@ -33,7 +34,7 @@ pub enum AbilitySlotType {
     _ShieldDefend,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Reflect)]
 pub enum AbilityId {
     Attack,
 }
