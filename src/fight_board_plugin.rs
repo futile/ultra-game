@@ -1,14 +1,6 @@
 use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
 
-use crate::core_logic::{Enemy, Fight, PlayerCharacter};
-
-pub struct FightBoardPlugin;
-
-impl Plugin for FightBoardPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_systems(Update, fight_added);
-    }
-}
+use crate::core_logic::{AbilitySlotType, AbilitySlots, Enemy, Fight, PlayerCharacter};
 
 #[derive(Debug, Component)]
 struct FightBoard {
@@ -25,6 +17,17 @@ struct EnemyCard {
     _enemy: Entity,
 }
 
+#[derive(Debug, Component)]
+struct AbilitySlotsSection {
+    model: Entity,
+}
+
+impl AbilitySlotsSection {
+    fn new(model: Entity) -> Self {
+        Self { model }
+    }
+}
+
 const FIGHT_BOARD_SIZE: Vec2 = Vec2::new(850., 700.);
 const CARD_SIZE: Vec2 = Vec2::new(350., 600.);
 const CARD_TEXT_TRANSFORM: Transform = Transform::from_translation(Vec3::new(-100., 260., 2.));
@@ -37,7 +40,6 @@ fn fight_added(
     enemies: Query<&Enemy>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
-    _asset_server: Res<AssetServer>,
 ) {
     for (e, fight) in new_fights.iter() {
         commands
@@ -82,6 +84,13 @@ fn fight_added(
                                 transform: CARD_TEXT_TRANSFORM,
                                 ..default()
                             });
+
+                            card.spawn((
+                                AbilitySlotsSection::new(fight.player_character),
+                                SpatialBundle::from_transform(Transform::from_translation(
+                                    Vec3::new(-50., 150., 1.),
+                                )),
+                            ));
                         });
                 }
 
@@ -116,8 +125,104 @@ fn fight_added(
                                 transform: CARD_TEXT_TRANSFORM,
                                 ..default()
                             });
+
+                            card.spawn((
+                                AbilitySlotsSection::new(fight.enemy),
+                                SpatialBundle::from_transform(Transform::from_translation(
+                                    Vec3::new(-50., 150., 1.),
+                                )),
+                            ));
                         });
                 }
             });
+    }
+}
+
+fn ability_slots_section_sync(
+    mut commands: Commands,
+    sections: Query<(Entity, Ref<AbilitySlotsSection>)>,
+    slots: Query<Ref<AbilitySlots>>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
+) {
+    for (en, section) in sections.iter() {
+        let should_spawn_text = section.is_added();
+
+        if should_spawn_text {
+            commands.entity(en).with_children(|parent| {
+                parent.spawn(Text2dBundle {
+                    text: Text::from_section(
+                        "Ability Slots",
+                        TextStyle {
+                            font_size: 27.0,
+                            color: Color::BLACK,
+                            ..default()
+                        },
+                    )
+                    .with_alignment(TextAlignment::Left),
+                    transform: Transform::from_translation(Vec3::new(-10., 0., 1.)),
+                    ..default()
+                });
+            });
+        }
+
+        let Ok(model_slots) = slots.get(section.model) else {
+            continue;
+        };
+
+        let model_changed = model_slots.is_changed();
+        let section_changed = section.is_changed() && (!section.is_added());
+        let should_despawn = section_changed || model_changed;
+
+        if should_despawn {
+            commands.entity(en).clear_children();
+        }
+
+        let should_spawn = should_despawn || section.is_added();
+
+        if should_spawn {
+            commands.entity(en).with_children(|parent| {
+                parent.spawn(Text2dBundle {
+                    text: Text::from_section(
+                        "Ability Slots",
+                        TextStyle {
+                            font_size: 27.0,
+                            color: Color::BLACK,
+                            ..default()
+                        },
+                    )
+                    .with_alignment(TextAlignment::Left),
+                    transform: Transform::from_translation(Vec3::new(-10., 0., 1.)),
+                    ..default()
+                });
+
+                for (idx, slot) in model_slots.0.iter().enumerate() {
+                    let color = match slot.tpe {
+                        AbilitySlotType::WeaponAttack => Color::LIME_GREEN,
+                        AbilitySlotType::ShieldDefend => Color::PINK,
+                    };
+                    parent.spawn(MaterialMesh2dBundle {
+                        mesh: meshes
+                            .add(shape::Quad::new(Vec2::new(35., 35.)).into())
+                            .into(),
+                        material: materials.add(ColorMaterial::from(color)),
+                        transform: Transform::from_translation(Vec3::new(
+                            -85. + 50. * (idx as f32),
+                            -50.,
+                            1.,
+                        )),
+                        ..default()
+                    });
+                }
+            });
+        }
+    }
+}
+
+pub struct FightBoardPlugin;
+
+impl Plugin for FightBoardPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(Update, (fight_added, ability_slots_section_sync).chain());
     }
 }

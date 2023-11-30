@@ -29,7 +29,7 @@ pub struct AbilitySlot {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Reflect)]
 pub enum AbilitySlotType {
     WeaponAttack,
-    _ShieldDefend,
+    ShieldDefend,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Reflect)]

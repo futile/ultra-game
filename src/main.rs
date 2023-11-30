@@ -18,9 +18,14 @@ fn setup(mut commands: Commands) {
     let player_character = commands
         .spawn((
             PlayerCharacter,
-            AbilitySlots(smallvec![AbilitySlot {
-                tpe: AbilitySlotType::WeaponAttack
-            }]),
+            AbilitySlots(smallvec![
+                AbilitySlot {
+                    tpe: AbilitySlotType::WeaponAttack
+                },
+                AbilitySlot {
+                    tpe: AbilitySlotType::ShieldDefend
+                }
+            ]),
             HasAbilities(smallvec![AbilityId::Attack]),
             Name::new("Player Character"),
         ))
