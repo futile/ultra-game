@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 
+mod abilities_section;
 mod ability_slots_section;
 mod fight_added;
 
@@ -12,6 +13,7 @@ impl Plugin for FightBoardPlugin {
             (
                 fight_added::fight_added,
                 ability_slots_section::sync_to_models,
+                abilities_section::sync_to_models,
             )
                 .chain(),
         );

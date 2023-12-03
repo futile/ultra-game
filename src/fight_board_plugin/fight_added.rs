@@ -1,6 +1,6 @@
 use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
 
-use super::ability_slots_section::AbilitySlotsSection;
+use super::{abilities_section::AbilitiesSection, ability_slots_section::AbilitySlotsSection};
 use crate::core_logic::{Enemy, Fight, PlayerCharacter};
 
 // detect when `Fight` is added to the world
@@ -62,6 +62,15 @@ pub fn fight_added(
                                     Vec3::new(-50., 150., 1.),
                                 )),
                             ));
+
+                            card.spawn((
+                                AbilitiesSection {
+                                    model: fight.player_character,
+                                },
+                                SpatialBundle::from_transform(Transform::from_translation(
+                                    Vec3::new(-50., 0., 1.),
+                                )),
+                            ));
                         });
                 }
 
@@ -101,6 +110,13 @@ pub fn fight_added(
                                 AbilitySlotsSection::new(fight.enemy),
                                 SpatialBundle::from_transform(Transform::from_translation(
                                     Vec3::new(-50., 150., 1.),
+                                )),
+                            ));
+
+                            card.spawn((
+                                AbilitiesSection { model: fight.enemy },
+                                SpatialBundle::from_transform(Transform::from_translation(
+                                    Vec3::new(-50., 0., 1.),
                                 )),
                             ));
                         });
