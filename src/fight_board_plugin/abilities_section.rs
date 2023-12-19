@@ -10,9 +10,9 @@ pub struct AbilitiesSection {
 pub fn sync_to_models(
     mut commands: Commands,
     sections: Query<(Entity, Ref<AbilitiesSection>)>,
-    abilities: Query<Ref<HasAbilities>>,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
+    has_abilities: Query<Ref<HasAbilities>>,
+    // mut meshes: ResMut<Assets<Mesh>>,
+    // mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
     for (en, section) in sections.iter() {
         let should_spawn_text = section.is_added();

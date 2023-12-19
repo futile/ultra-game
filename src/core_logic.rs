@@ -19,7 +19,9 @@ pub struct Enemy;
 pub struct AbilitySlots(pub SmallVec<[AbilitySlot; 4]>);
 
 #[derive(Debug, Component, Reflect)]
-pub struct HasAbilities(pub SmallVec<[AbilityId; 4]>);
+pub struct HasAbilities {
+    pub holder: Entity,
+}
 
 #[derive(Debug, Reflect)]
 pub struct AbilitySlot {
@@ -32,7 +34,7 @@ pub enum AbilitySlotType {
     ShieldDefend,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Reflect)]
+#[derive(Component, Clone, Copy, Debug, PartialEq, Eq, Hash, Reflect)]
 pub enum AbilityId {
     Attack,
 }
@@ -53,6 +55,7 @@ impl Plugin for CoreLogicPlugin {
         app.register_type::<Fight>()
             .register_type::<Enemy>()
             .register_type::<HasAbilities>()
+            .register_type::<AbilityId>()
             .register_type::<AbilitySlots>()
             .register_type::<PlayerCharacter>();
     }
