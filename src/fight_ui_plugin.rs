@@ -4,7 +4,7 @@ use bevy_inspector_egui::{
     egui::{self, Id, RichText, Ui, Visuals},
 };
 
-use crate::{AbilitySlotType, AbilitySlots, Fight, HasAbilities};
+use crate::{core_logic::AbilityId, AbilitySlotType, AbilitySlots, Fight, HasAbilities};
 
 pub struct FightUiPlugin;
 
@@ -20,6 +20,8 @@ fn ui_fight_windows(
     names: Query<&Name>,
     ability_slots: Query<&AbilitySlots>,
     has_abilities: Query<&HasAbilities>,
+    children: Query<&Children>,
+    ability_ids: Query<&AbilityId>,
     mut contexts: EguiContexts,
 ) {
     // context for the primary (so far, only) window
@@ -40,6 +42,8 @@ fn ui_fight_windows(
                         &names,
                         &ability_slots,
                         &has_abilities,
+                        &children,
+                        &ability_ids,
                     );
 
                     columns[1].label(RichText::new("Enemy").heading().strong());
@@ -49,6 +53,8 @@ fn ui_fight_windows(
                         &names,
                         &ability_slots,
                         &has_abilities,
+                        &children,
+                        &ability_ids,
                     );
                 });
             });
@@ -61,6 +67,8 @@ fn ui_fight_column(
     names: &Query<&Name>,
     ability_slots: &Query<&AbilitySlots>,
     has_abilities: &Query<&HasAbilities>,
+    children: &Query<&Children>,
+    ability_ids: &Query<&AbilityId>,
 ) {
     ui.indent(ui.id().with("entity_name"), |ui: &mut Ui| {
         if let Some(name) = names.get(e).ok() {
@@ -77,7 +85,7 @@ fn ui_fight_column(
 
     if let Some(abilities) = has_abilities.get(e).ok() {
         ui.add_space(10.);
-        ui_abilities(ui, abilities);
+        ui_abilities(ui, abilities, children, ability_ids);
     }
 }
 
@@ -99,10 +107,21 @@ fn ui_ability_slots(ui: &mut Ui, slots: &AbilitySlots) {
     });
 }
 
-fn ui_abilities(ui: &mut Ui, _abilities: &HasAbilities) {
+fn ui_abilities(
+    ui: &mut Ui,
+    abilities: &HasAbilities,
+    children: &Query<&Children>,
+    ability_ids: &Query<&AbilityId>,
+) {
     ui.heading("Abilities");
 
     ui.indent(ui.id().with("abilities"), |ui: &mut Ui| {
-        ui.label("TODO: render abilities here");
+        for child in children
+            .get(abilities.holder)
+            .expect("abilities.holder without children")
+        {
+            let ability_id = ability_ids.get(*child).expect("ability without AbilityId");
+            ui.label(format!("{:?}", ability_id));
+        }
     });
 }
