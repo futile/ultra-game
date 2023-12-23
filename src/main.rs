@@ -9,7 +9,6 @@ use smallvec::smallvec;
 
 mod ability_catalog;
 mod core_logic;
-mod fight_board_plugin;
 mod fight_ui_plugin;
 
 fn setup(mut commands: Commands) {
