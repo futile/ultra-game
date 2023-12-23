@@ -1,4 +1,4 @@
-use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
+use bevy::prelude::*;
 
 use crate::core_logic::HasAbilities;
 
@@ -10,7 +10,7 @@ pub struct AbilitiesSection {
 pub fn sync_to_models(
     mut commands: Commands,
     sections: Query<(Entity, Ref<AbilitiesSection>)>,
-    has_abilities: Query<Ref<HasAbilities>>,
+    _has_abilities: Query<Ref<HasAbilities>>,
     // mut meshes: ResMut<Assets<Mesh>>,
     // mut materials: ResMut<Assets<ColorMaterial>>,
 ) {

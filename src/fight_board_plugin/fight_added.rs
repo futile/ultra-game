@@ -1,14 +1,12 @@
 use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
 
 use super::{abilities_section::AbilitiesSection, ability_slots_section::AbilitySlotsSection};
-use crate::core_logic::{Enemy, Fight, PlayerCharacter};
+use crate::core_logic::Fight;
 
 // detect when `Fight` is added to the world
 pub fn fight_added(
     mut commands: Commands,
     new_fights: Query<(Entity, &Fight), Added<Fight>>,
-    player_characters: Query<&PlayerCharacter>,
-    enemies: Query<&Enemy>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
@@ -24,103 +22,98 @@ pub fn fight_added(
                 },
             ))
             .with_children(|parent| {
-                if let Ok(_pc) = player_characters.get(fight.player_character) {
-                    parent
-                        .spawn((
-                            PlayerCharacterCard {
-                                _player_character: fight.player_character,
-                            },
-                            SpatialBundle::from_transform(Transform::from_translation(Vec3::new(
-                                -225., 0., 1.,
-                            ))),
-                        ))
-                        .with_children(|card| {
-                            card.spawn(MaterialMesh2dBundle {
-                                mesh: meshes.add(shape::Quad::new(CARD_SIZE).into()).into(),
-                                material: materials
-                                    .add(ColorMaterial::from(Color::BLUE.with_a(0.5))),
-                                ..default()
-                            });
+                parent
+                    .spawn((
+                        PlayerCharacterCard {
+                            _player_character: fight.player_character,
+                        },
+                        SpatialBundle::from_transform(Transform::from_translation(Vec3::new(
+                            -225., 0., 1.,
+                        ))),
+                    ))
+                    .with_children(|card| {
+                        card.spawn(MaterialMesh2dBundle {
+                            mesh: meshes.add(shape::Quad::new(CARD_SIZE).into()).into(),
+                            material: materials.add(ColorMaterial::from(Color::BLUE.with_a(0.5))),
+                            ..default()
+                        });
 
-                            card.spawn(Text2dBundle {
-                                text: Text::from_section(
-                                    "Player",
-                                    TextStyle {
-                                        font_size: 30.0,
-                                        color: Color::BLACK,
-                                        ..default()
-                                    },
-                                )
-                                .with_alignment(TextAlignment::Left),
-                                transform: CARD_TEXT_TRANSFORM,
-                                ..default()
-                            });
-
-                            card.spawn((
-                                AbilitySlotsSection::new(fight.player_character),
-                                SpatialBundle::from_transform(Transform::from_translation(
-                                    Vec3::new(-50., 150., 1.),
-                                )),
-                            ));
-
-                            card.spawn((
-                                AbilitiesSection {
-                                    model: fight.player_character,
+                        card.spawn(Text2dBundle {
+                            text: Text::from_section(
+                                "Player",
+                                TextStyle {
+                                    font_size: 30.0,
+                                    color: Color::BLACK,
+                                    ..default()
                                 },
-                                SpatialBundle::from_transform(Transform::from_translation(
-                                    Vec3::new(-50., 0., 1.),
-                                )),
-                            ));
+                            )
+                            .with_alignment(TextAlignment::Left),
+                            transform: CARD_TEXT_TRANSFORM,
+                            ..default()
                         });
-                }
 
-                if let Ok(_enemy) = enemies.get(fight.enemy) {
-                    parent
-                        .spawn((
-                            EnemyCard {
-                                _enemy: fight.enemy,
+                        card.spawn((
+                            AbilitySlotsSection::new(fight.player_character),
+                            SpatialBundle::from_transform(Transform::from_translation(Vec3::new(
+                                -50., 150., 1.,
+                            ))),
+                        ));
+
+                        card.spawn((
+                            AbilitiesSection {
+                                model: fight.player_character,
                             },
                             SpatialBundle::from_transform(Transform::from_translation(Vec3::new(
-                                225., 0., 1.,
+                                -50., 0., 1.,
                             ))),
-                        ))
-                        .with_children(|card| {
-                            card.spawn(MaterialMesh2dBundle {
-                                mesh: meshes.add(shape::Quad::new(CARD_SIZE).into()).into(),
-                                material: materials
-                                    .add(ColorMaterial::from(Color::ORANGE_RED.with_a(0.5))),
-                                ..default()
-                            });
+                        ));
+                    });
 
-                            card.spawn(Text2dBundle {
-                                text: Text::from_section(
-                                    "Enemy",
-                                    TextStyle {
-                                        font_size: 30.0,
-                                        color: Color::BLACK,
-                                        ..default()
-                                    },
-                                )
-                                .with_alignment(TextAlignment::Left),
-                                transform: CARD_TEXT_TRANSFORM,
-                                ..default()
-                            });
-
-                            card.spawn((
-                                AbilitySlotsSection::new(fight.enemy),
-                                SpatialBundle::from_transform(Transform::from_translation(
-                                    Vec3::new(-50., 150., 1.),
-                                )),
-                            ));
-
-                            card.spawn((
-                                AbilitiesSection { model: fight.enemy },
-                                SpatialBundle::from_transform(Transform::from_translation(
-                                    Vec3::new(-50., 0., 1.),
-                                )),
-                            ));
+                parent
+                    .spawn((
+                        EnemyCard {
+                            _enemy: fight.enemy,
+                        },
+                        SpatialBundle::from_transform(Transform::from_translation(Vec3::new(
+                            225., 0., 1.,
+                        ))),
+                    ))
+                    .with_children(|card| {
+                        card.spawn(MaterialMesh2dBundle {
+                            mesh: meshes.add(shape::Quad::new(CARD_SIZE).into()).into(),
+                            material: materials
+                                .add(ColorMaterial::from(Color::ORANGE_RED.with_a(0.5))),
+                            ..default()
                         });
-                }
+
+                        card.spawn(Text2dBundle {
+                            text: Text::from_section(
+                                "Enemy",
+                                TextStyle {
+                                    font_size: 30.0,
+                                    color: Color::BLACK,
+                                    ..default()
+                                },
+                            )
+                            .with_alignment(TextAlignment::Left),
+                            transform: CARD_TEXT_TRANSFORM,
+                            ..default()
+                        });
+
+                        card.spawn((
+                            AbilitySlotsSection::new(fight.enemy),
+                            SpatialBundle::from_transform(Transform::from_translation(Vec3::new(
+                                -50., 150., 1.,
+                            ))),
+                        ));
+
+                        card.spawn((
+                            AbilitiesSection { model: fight.enemy },
+                            SpatialBundle::from_transform(Transform::from_translation(Vec3::new(
+                                -50., 0., 1.,
+                            ))),
+                        ));
+                    });
             });
     }
 }
