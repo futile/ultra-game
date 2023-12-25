@@ -15,7 +15,7 @@ pub struct FightWindowUiState {
     enemy_abilities_section_state: AbilitiesSectionUiState,
 }
 
-pub fn ui_render_fight_windows(
+pub fn render_fight_windows(
     mut _commands: Commands,
     fights: Query<(Entity, &Fight)>,
     names: Query<&Name>,

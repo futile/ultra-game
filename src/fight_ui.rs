@@ -1,6 +1,6 @@
 use bevy::{prelude::*, utils::EntityHashSet};
 
-use self::render_fight_window::{ui_render_fight_windows, FightWindowUiState};
+use self::render_fight_window::{render_fight_windows, FightWindowUiState};
 use crate::core_logic::Fight;
 
 mod render_fight_window;
@@ -9,7 +9,10 @@ pub struct FightUiPlugin;
 
 impl Plugin for FightUiPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, (sync_to_fights, ui_render_fight_windows).chain());
+        app.add_systems(
+            Update,
+            (sync_fight_windows_to_fights, render_fight_windows).chain(),
+        );
     }
 }
 
@@ -29,7 +32,7 @@ impl FightWindow {
 }
 
 // Create `FightWindow`s for new fights, and delete `FightWindow`s for removed fights.
-fn sync_to_fights(
+fn sync_fight_windows_to_fights(
     mut commands: Commands,
     new_fights: Query<Entity, Added<Fight>>,
     fight_windows: Query<(Entity, &FightWindow)>,
