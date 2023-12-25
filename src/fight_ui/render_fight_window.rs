@@ -4,6 +4,7 @@ use bevy_inspector_egui::{
     egui::{self, Id, RichText, Ui, Visuals},
 };
 
+use super::{ui_utils, FightWindow};
 use crate::{
     core_logic::{AbilityId, AbilitySlot},
     AbilitySlotType, Fight, HasAbilities, HasAbilitySlots,
@@ -11,20 +12,20 @@ use crate::{
 
 #[derive(Debug, Default, Component, Reflect)]
 pub struct FightWindowUiState {
-    player_abilities_section_state: AbilitiesSectionUiState,
-    enemy_abilities_section_state: AbilitiesSectionUiState,
+    player_column_state: FightColumnUiState,
+    enemy_column_state: FightColumnUiState,
 }
 
 pub fn render_fight_windows(
     mut _commands: Commands,
-    fights: Query<(Entity, &Fight)>,
+    mut fight_windows: Query<(Entity, &mut FightWindow)>,
+    fights: Query<&Fight>,
     names: Query<&Name>,
     has_ability_slots: Query<&HasAbilitySlots>,
     has_abilities: Query<&HasAbilities>,
     children: Query<&Children>,
     ability_ids: Query<&AbilityId>,
     ability_slots: Query<&AbilitySlot>,
-    // mut fight_window_ui_states: Query<&mut FightWindowUiState>,
     mut contexts: EguiContexts,
 ) {
     // context for the primary (so far, only) window
@@ -33,14 +34,22 @@ pub fn render_fight_windows(
     // enable light style: https://github.com/emilk/egui/discussions/1627
     ui_ctx.style_mut(|style| style.visuals = Visuals::light());
 
-    for (e, fight) in fights.iter() {
+    for (window_e, fight_window) in &mut fight_windows {
+        let fight = fights
+            .get(fight_window.model)
+            .expect("FightWindow.model doesn't have a Fight");
+
+        let mut ui_state = fight_window.map_unchanged(|fw| &mut fw.ui_state);
+
         egui::Window::new("Fight")
-            .id(Id::new(e))
+            .id(Id::new(window_e))
             .show(ui_ctx, |ui: &mut Ui| {
                 ui.columns(2, |columns: &mut [Ui]| {
                     columns[0].label(RichText::new("Player").heading().strong());
+
                     ui_fight_column(
                         &mut columns[0],
+                        &mut ui_state.player_column_state,
                         fight.player_character,
                         &names,
                         &has_ability_slots,
@@ -51,8 +60,10 @@ pub fn render_fight_windows(
                     );
 
                     columns[1].label(RichText::new("Enemy").heading().strong());
+
                     ui_fight_column(
                         &mut columns[1],
+                        &mut ui_state.enemy_column_state,
                         fight.enemy,
                         &names,
                         &has_ability_slots,
@@ -66,13 +77,19 @@ pub fn render_fight_windows(
     }
 }
 
-#[derive(Debug, Default, Component, Reflect)]
-struct AbilitiesSectionUiState {
+#[derive(Debug, Default, Reflect)]
+struct FightColumnUiState {
+    abilities_section_state: AbilitySlotsSectionUiState,
+}
+
+#[derive(Debug, Default, Reflect)]
+struct AbilitySlotsSectionUiState {
     selected_slot: Option<Entity>,
 }
 
 fn ui_fight_column(
     ui: &mut Ui,
+    ui_column_state: &mut FightColumnUiState,
     e: Entity,
     names: &Query<&Name>,
     has_ability_slots: &Query<&HasAbilitySlots>,
@@ -91,7 +108,13 @@ fn ui_fight_column(
 
     if let Some(slots) = has_ability_slots.get(e).ok() {
         ui.add_space(10.);
-        ui_ability_slots(ui, slots, children, ability_slots);
+        ui_ability_slots(
+            ui,
+            &mut ui_column_state.abilities_section_state,
+            slots,
+            children,
+            ability_slots,
+        );
     }
 
     if let Some(abilities) = has_abilities.get(e).ok() {
@@ -102,6 +125,7 @@ fn ui_fight_column(
 
 fn ui_ability_slots(
     ui: &mut Ui,
+    abilities_section_state: &mut AbilitySlotsSectionUiState,
     slots: &HasAbilitySlots,
     children: &Query<&Children>,
     ability_slots: &Query<&AbilitySlot>,
@@ -122,10 +146,15 @@ fn ui_ability_slots(
                 .get(*child)
                 .expect("ability slot without AbilitySlotType");
 
-            ui.label(match slot.tpe {
-                AbilitySlotType::WeaponAttack => "Weapon Attack",
-                AbilitySlotType::ShieldDefend => "Shield Defend",
-            });
+            ui_utils::un_selectable_value(
+                ui,
+                &mut abilities_section_state.selected_slot,
+                *child,
+                match slot.tpe {
+                    AbilitySlotType::WeaponAttack => "Weapon Attack",
+                    AbilitySlotType::ShieldDefend => "Shield Defend",
+                },
+            );
         }
     });
 }

@@ -3,6 +3,8 @@ use bevy::{prelude::*, utils::EntityHashSet};
 use self::render_fight_window::{render_fight_windows, FightWindowUiState};
 use crate::core_logic::Fight;
 
+pub(self) mod ui_utils;
+
 mod render_fight_window;
 
 pub struct FightUiPlugin;
