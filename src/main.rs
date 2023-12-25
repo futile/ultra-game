@@ -4,11 +4,11 @@ use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use core_logic::{
     AbilityId, AbilitySlot, AbilitySlotType, CoreLogicPlugin, Fight, HasAbilities, HasAbilitySlots,
 };
-use fight_ui_plugin::FightUiPlugin;
+use fight_ui::FightUiPlugin;
 
 mod ability_catalog;
 mod core_logic;
-mod fight_ui_plugin;
+mod fight_ui;
 
 fn setup(mut commands: Commands) {
     commands.spawn(Camera2dBundle::default());

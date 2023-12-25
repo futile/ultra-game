@@ -9,16 +9,14 @@ use crate::{
     AbilitySlotType, Fight, HasAbilities, HasAbilitySlots,
 };
 
-pub struct FightUiPlugin;
-
-impl Plugin for FightUiPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_systems(Update, ui_fight_windows);
-    }
+#[derive(Debug, Default, Component, Reflect)]
+pub struct FightWindowUiState {
+    player_abilities_section_state: AbilitiesSectionUiState,
+    enemy_abilities_section_state: AbilitiesSectionUiState,
 }
 
-fn ui_fight_windows(
-    _commands: Commands,
+pub fn ui_render_fight_windows(
+    mut _commands: Commands,
     fights: Query<(Entity, &Fight)>,
     names: Query<&Name>,
     has_ability_slots: Query<&HasAbilitySlots>,
@@ -26,6 +24,7 @@ fn ui_fight_windows(
     children: Query<&Children>,
     ability_ids: Query<&AbilityId>,
     ability_slots: Query<&AbilitySlot>,
+    mut fight_window_ui_states: Query<&mut FightWindowUiState>,
     mut contexts: EguiContexts,
 ) {
     // context for the primary (so far, only) window
@@ -65,6 +64,11 @@ fn ui_fight_windows(
                 });
             });
     }
+}
+
+#[derive(Debug, Default, Component, Reflect)]
+struct AbilitiesSectionUiState {
+    selected_slot: Option<Entity>,
 }
 
 fn ui_fight_column(
