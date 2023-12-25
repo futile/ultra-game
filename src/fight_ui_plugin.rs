@@ -4,7 +4,10 @@ use bevy_inspector_egui::{
     egui::{self, Id, RichText, Ui, Visuals},
 };
 
-use crate::{core_logic::AbilityId, AbilitySlotType, AbilitySlots, Fight, HasAbilities};
+use crate::{
+    core_logic::{AbilityId, AbilitySlot},
+    AbilitySlotType, Fight, HasAbilities, HasAbilitySlots,
+};
 
 pub struct FightUiPlugin;
 
@@ -18,10 +21,11 @@ fn ui_fight_windows(
     _commands: Commands,
     fights: Query<(Entity, &Fight)>,
     names: Query<&Name>,
-    ability_slots: Query<&AbilitySlots>,
+    has_ability_slots: Query<&HasAbilitySlots>,
     has_abilities: Query<&HasAbilities>,
     children: Query<&Children>,
     ability_ids: Query<&AbilityId>,
+    ability_slots: Query<&AbilitySlot>,
     mut contexts: EguiContexts,
 ) {
     // context for the primary (so far, only) window
@@ -40,10 +44,11 @@ fn ui_fight_windows(
                         &mut columns[0],
                         fight.player_character,
                         &names,
-                        &ability_slots,
+                        &has_ability_slots,
                         &has_abilities,
                         &children,
                         &ability_ids,
+                        &ability_slots,
                     );
 
                     columns[1].label(RichText::new("Enemy").heading().strong());
@@ -51,10 +56,11 @@ fn ui_fight_windows(
                         &mut columns[1],
                         fight.enemy,
                         &names,
-                        &ability_slots,
+                        &has_ability_slots,
                         &has_abilities,
                         &children,
                         &ability_ids,
+                        &ability_slots,
                     );
                 });
             });
@@ -65,10 +71,11 @@ fn ui_fight_column(
     ui: &mut Ui,
     e: Entity,
     names: &Query<&Name>,
-    ability_slots: &Query<&AbilitySlots>,
+    has_ability_slots: &Query<&HasAbilitySlots>,
     has_abilities: &Query<&HasAbilities>,
     children: &Query<&Children>,
     ability_ids: &Query<&AbilityId>,
+    ability_slots: &Query<&AbilitySlot>,
 ) {
     ui.indent(ui.id().with("entity_name"), |ui: &mut Ui| {
         if let Some(name) = names.get(e).ok() {
@@ -78,9 +85,9 @@ fn ui_fight_column(
         }
     });
 
-    if let Some(slots) = ability_slots.get(e).ok() {
+    if let Some(slots) = has_ability_slots.get(e).ok() {
         ui.add_space(10.);
-        ui_ability_slots(ui, slots);
+        ui_ability_slots(ui, slots, children, ability_slots);
     }
 
     if let Some(abilities) = has_abilities.get(e).ok() {
@@ -89,7 +96,12 @@ fn ui_fight_column(
     }
 }
 
-fn ui_ability_slots(ui: &mut Ui, slots: &AbilitySlots) {
+fn ui_ability_slots(
+    ui: &mut Ui,
+    slots: &HasAbilitySlots,
+    children: &Query<&Children>,
+    ability_slots: &Query<&AbilitySlot>,
+) {
     // TODO: add colors (again) at some point (if it fits..)
     // old colors for reference:
     // AbilitySlotType::WeaponAttack => Color::LIME_GREEN,
@@ -98,7 +110,14 @@ fn ui_ability_slots(ui: &mut Ui, slots: &AbilitySlots) {
     ui.heading("Ability Slots");
 
     ui.indent(ui.id().with("ability_slots"), |ui: &mut Ui| {
-        for slot in slots.0.iter() {
+        for child in children
+            .get(slots.holder)
+            .expect("HasAbilitySlots.holder without children")
+        {
+            let slot = ability_slots
+                .get(*child)
+                .expect("ability slot without AbilitySlotType");
+
             ui.label(match slot.tpe {
                 AbilitySlotType::WeaponAttack => "Weapon Attack",
                 AbilitySlotType::ShieldDefend => "Shield Defend",
@@ -118,7 +137,7 @@ fn ui_abilities(
     ui.indent(ui.id().with("abilities"), |ui: &mut Ui| {
         for child in children
             .get(abilities.holder)
-            .expect("abilities.holder without children")
+            .expect("HasAbilities.holder without children")
         {
             let ability_id = ability_ids.get(*child).expect("ability without AbilityId");
             ui.label(format!("{:?}", ability_id));

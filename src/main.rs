@@ -2,10 +2,9 @@ use ability_catalog::AbilityCatalogPlugin;
 use bevy::prelude::*;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use core_logic::{
-    AbilityId, AbilitySlot, AbilitySlotType, AbilitySlots, CoreLogicPlugin, Fight, HasAbilities,
+    AbilityId, AbilitySlot, AbilitySlotType, CoreLogicPlugin, Fight, HasAbilities, HasAbilitySlots,
 };
 use fight_ui_plugin::FightUiPlugin;
-use smallvec::smallvec;
 
 mod ability_catalog;
 mod core_logic;
@@ -21,16 +20,23 @@ fn setup(mut commands: Commands) {
         })
         .id();
 
+    let player_ability_slots = commands
+        .spawn((Name::new("Player Ability Slots"),))
+        .with_children(|p| {
+            p.spawn(AbilitySlot {
+                tpe: AbilitySlotType::WeaponAttack,
+            });
+            p.spawn(AbilitySlot {
+                tpe: AbilitySlotType::ShieldDefend,
+            });
+        })
+        .id();
+
     let player_character = commands
         .spawn((
-            AbilitySlots(smallvec![
-                AbilitySlot {
-                    tpe: AbilitySlotType::WeaponAttack
-                },
-                AbilitySlot {
-                    tpe: AbilitySlotType::ShieldDefend
-                }
-            ]),
+            HasAbilitySlots {
+                holder: player_ability_slots,
+            },
             HasAbilities {
                 holder: player_abilities,
             },

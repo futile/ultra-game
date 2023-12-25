@@ -1,7 +1,6 @@
 use std::borrow::Cow;
 
 use bevy::{prelude::*, utils::Duration};
-use smallvec::SmallVec;
 
 #[derive(Debug, Clone, Component, Reflect)]
 pub struct Fight {
@@ -10,14 +9,16 @@ pub struct Fight {
 }
 
 #[derive(Debug, Component, Reflect)]
-pub struct AbilitySlots(pub SmallVec<[AbilitySlot; 4]>);
+pub struct HasAbilitySlots {
+    pub holder: Entity,
+}
 
 #[derive(Debug, Component, Reflect)]
 pub struct HasAbilities {
     pub holder: Entity,
 }
 
-#[derive(Debug, Reflect)]
+#[derive(Debug, Component, Reflect)]
 pub struct AbilitySlot {
     pub tpe: AbilitySlotType,
 }
@@ -49,6 +50,6 @@ impl Plugin for CoreLogicPlugin {
         app.register_type::<Fight>()
             .register_type::<HasAbilities>()
             .register_type::<AbilityId>()
-            .register_type::<AbilitySlots>();
+            .register_type::<HasAbilitySlots>();
     }
 }
