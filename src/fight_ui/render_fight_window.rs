@@ -24,7 +24,7 @@ pub fn ui_render_fight_windows(
     children: Query<&Children>,
     ability_ids: Query<&AbilityId>,
     ability_slots: Query<&AbilitySlot>,
-    mut fight_window_ui_states: Query<&mut FightWindowUiState>,
+    // mut fight_window_ui_states: Query<&mut FightWindowUiState>,
     mut contexts: EguiContexts,
 ) {
     // context for the primary (so far, only) window
