@@ -20,6 +20,9 @@
         pkgs = import nixpkgs {
           inherit system overlays;
         };
+
+        # use rust-version + components from the rust-toolchain.toml file
+        rust-toolchain = pkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml;
       in
       {
         devShells.default = pkgs.mkShell rec {
@@ -31,8 +34,7 @@
             mold-wrapped
             clang_16
 
-            # use rust-version + components from the rust-toolchain.toml file
-            (rust-bin.fromRustupToolchainFile ./rust-toolchain.toml)
+            rust-toolchain
           ];
 
           buildInputs = with pkgs; [
@@ -57,6 +59,10 @@
 
           # from bevy setup as well
           LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath buildInputs;
+
+          # Some environment to make rust-analyzer work correctly (Still the path prefix issue)
+          # See https://github.com/oxalica/rust-overlay/issues/129
+          RUST_SRC_PATH = "${rust-toolchain}/lib/rustlib/src/rust/library";
         };
       }
     );
