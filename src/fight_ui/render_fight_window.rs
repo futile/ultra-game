@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_inspector_egui::{
     bevy_egui::EguiContexts,
-    egui::{self, Id, RichText, Ui, Visuals},
+    egui::{self, Id, Key, KeyboardShortcut, Modifiers, RichText, Ui, Visuals},
 };
 
 use super::{ui_utils, FightWindow};
@@ -138,23 +138,60 @@ fn ui_ability_slots(
     ui.heading("Ability Slots");
 
     ui.indent(ui.id().with("ability_slots"), |ui: &mut Ui| {
-        for child in children
+        for (idx, child) in children
             .get(slots.holder)
-            .expect("HasAbilitySlots.holder without children")
+            .expect("HasAbilitySlots.holder without Children")
+            .iter()
+            .enumerate()
         {
             let slot = ability_slots
                 .get(*child)
-                .expect("ability slot without AbilitySlotType");
+                .expect("ability slot without AbilitySlot");
 
-            ui_utils::un_selectable_value(
-                ui,
-                &mut abilities_section_state.selected_slot,
-                *child,
-                match slot.tpe {
-                    AbilitySlotType::WeaponAttack => "Weapon Attack",
-                    AbilitySlotType::ShieldDefend => "Shield Defend",
-                },
-            );
+            let keyboard_shortcut: Option<KeyboardShortcut> = {
+                let key: Option<Key> = match idx {
+                    0 => Some(Key::Num1),
+                    1 => Some(Key::Num2),
+                    2 => Some(Key::Num3),
+                    3 => Some(Key::Num4),
+                    _ => None,
+                };
+
+                key.map(|key| KeyboardShortcut::new(Modifiers::NONE, key))
+            };
+
+            if let Some(shortcut) = keyboard_shortcut {
+                ui.input_mut(|i| {
+                    if i.consume_shortcut(&shortcut) {
+                        abilities_section_state.selected_slot =
+                            match abilities_section_state.selected_slot {
+                                // if selected before, toggle selection off
+                                Some(selected) if selected == *child => None,
+                                // otherwise select this slot
+                                _ => Some(*child),
+                            };
+                    }
+                });
+            }
+
+            ui.horizontal(|ui: &mut Ui| {
+                let leading_text: String = match keyboard_shortcut {
+                    Some(shortcut) => ui.ctx().format_shortcut(&shortcut),
+                    None => String::from(" "),
+                };
+
+                ui.monospace(leading_text);
+
+                ui_utils::un_selectable_value(
+                    ui,
+                    &mut abilities_section_state.selected_slot,
+                    *child,
+                    match slot.tpe {
+                        AbilitySlotType::WeaponAttack => "Weapon Attack",
+                        AbilitySlotType::ShieldDefend => "Shield Defend",
+                    },
+                );
+            });
         }
     });
 }
@@ -170,7 +207,7 @@ fn ui_abilities(
     ui.indent(ui.id().with("abilities"), |ui: &mut Ui| {
         for child in children
             .get(abilities.holder)
-            .expect("HasAbilities.holder without children")
+            .expect("HasAbilities.holder without Children")
         {
             let ability_id = ability_ids.get(*child).expect("ability without AbilityId");
             ui.label(format!("{:?}", ability_id));
