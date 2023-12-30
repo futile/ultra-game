@@ -221,24 +221,53 @@ fn ui_abilities(
     ui.heading("Abilities");
 
     ui.indent(ui.id().with("abilities"), |ui: &mut Ui| {
-        for child in children
+        for (idx, ability_id_e) in children
             .get(abilities.holder)
             .expect("HasAbilities.holder without Children")
+            .iter()
+            .enumerate()
         {
-            let ability_id = ability_ids.get(*child).expect("ability without AbilityId");
+            let ability_id = ability_ids
+                .get(*ability_id_e)
+                .expect("ability without AbilityId");
             let ability = ability_catalog()
                 .get(ability_id)
                 .expect(&format!("AbilityId `{:?}` not in catalog", ability_id));
             let ability_usable = ability.can_use(selected_slot);
 
-            let ability_button = ui.add_enabled(
-                ability_usable,
-                egui::Button::new(format!("{}", ability.name)),
-            );
+            let keyboard_shortcut: Option<KeyboardShortcut> = {
+                let key: Option<Key> = match idx {
+                    0 => Some(Key::X),
+                    // 1 => Some(Key::Num2),
+                    _ => None,
+                };
 
-            if ability_button.clicked() {
-                println!("Ability {:?} clicked", ability_id);
-            }
+                key.map(|key| KeyboardShortcut::new(Modifiers::NONE, key))
+            };
+
+            let shortcut_pressed: bool = match keyboard_shortcut {
+                // TODO: somehow check if the current egui window has keyboard focus.
+                // Window.show().response.has_focus() is always false, so dunno how to do this.
+                Some(shortcut) => ui.input_mut(|i| i.consume_shortcut(&shortcut)),
+                None => false,
+            };
+
+            let shortcut_text: String = match keyboard_shortcut {
+                Some(shortcut) => ui.ctx().format_shortcut(&shortcut),
+                None => String::from(" "),
+            };
+
+            ui.add_enabled_ui(ability_usable, |ui: &mut Ui| {
+                ui.horizontal(|ui: &mut Ui| {
+                    ui.monospace(shortcut_text);
+
+                    let ability_button = ui.add(egui::Button::new(format!("{}", ability.name)));
+
+                    if shortcut_pressed || ability_button.clicked() {
+                        println!("Ability {:?} used", ability_id);
+                    }
+                });
+            });
         }
     });
 }
