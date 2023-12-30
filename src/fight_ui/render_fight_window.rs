@@ -267,6 +267,10 @@ fn ui_abilities(
                     let ability_button = ui.add(egui::Button::new(format!("{}", ability.name)));
 
                     if shortcut_pressed || ability_button.clicked() {
+                        // TODO: actual logic for abilitiess somehow.
+                        // Fire an event, which might be a `Command` for the entity,
+                        // or the cast itself, so it can be resolved?
+                        // Think about structure.
                         println!("Ability {:?} used", ability_id);
 
                         // clear the selected slot, because it was used.
