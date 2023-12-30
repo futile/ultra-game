@@ -179,7 +179,7 @@ fn ui_ability_slots(
             ui.horizontal(|ui: &mut Ui| {
                 ui.monospace(shortcut_text);
 
-                let mut response = ui.selectable_label(
+                let mut label_response = ui.selectable_label(
                     slot_is_selected,
                     match slot.tpe {
                         AbilitySlotType::WeaponAttack => "Weapon Attack",
@@ -187,13 +187,13 @@ fn ui_ability_slots(
                     },
                 );
 
-                if shortcut_pressed || response.clicked() {
+                if shortcut_pressed || label_response.clicked() {
                     abilities_section_state.selected_slot =
                         if slot_is_selected { None } else { Some(slot_e) };
 
                     // not 100% sure why this is needed, but `Ui::selectable_value()` does it as
                     // well, so it might be necessary.
-                    response.mark_changed();
+                    label_response.mark_changed();
                 }
             });
         }
