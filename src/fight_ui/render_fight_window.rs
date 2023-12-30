@@ -168,24 +168,12 @@ fn ui_ability_slots(
                 key.map(|key| KeyboardShortcut::new(Modifiers::NONE, key))
             };
 
-            let shortcut_pressed: bool = match keyboard_shortcut {
-                // TODO: somehow check if the current egui window has keyboard focus.
-                // Window.show().response.has_focus() is always false, so dunno how to do this.
-                Some(shortcut) => ui.input_mut(|i| i.consume_shortcut(&shortcut)),
-                None => false,
-            };
-
-            let shortcut_text: String = match keyboard_shortcut {
-                Some(shortcut) => ui.ctx().format_shortcut(&shortcut),
-                None => String::from(" "),
-            };
-
             let slot_is_selected: bool = abilities_section_state
                 .selected_slot
                 .is_some_and(|s| s == slot_e);
 
             ui.horizontal(|ui: &mut Ui| {
-                ui.monospace(shortcut_text);
+                let shortcut_pressed = monospace_checked_shortcut(ui, keyboard_shortcut.as_ref());
 
                 let mut label_response = ui.selectable_label(
                     slot_is_selected,
@@ -248,21 +236,10 @@ fn ui_abilities(
                 key.map(|key| KeyboardShortcut::new(Modifiers::NONE, key))
             };
 
-            let shortcut_pressed: bool = match keyboard_shortcut {
-                // TODO: somehow check if the current egui window has keyboard focus.
-                // Window.show().response.has_focus() is always false, so dunno how to do this.
-                Some(shortcut) => ui.input_mut(|i| i.consume_shortcut(&shortcut)),
-                None => false,
-            };
-
-            let shortcut_text: String = match keyboard_shortcut {
-                Some(shortcut) => ui.ctx().format_shortcut(&shortcut),
-                None => String::from(" "),
-            };
-
             ui.add_enabled_ui(ability_usable, |ui: &mut Ui| {
                 ui.horizontal(|ui: &mut Ui| {
-                    ui.monospace(shortcut_text);
+                    let shortcut_pressed =
+                        monospace_checked_shortcut(ui, keyboard_shortcut.as_ref());
 
                     let ability_button = ui.add(egui::Button::new(format!("{}", ability.name)));
 
@@ -280,4 +257,22 @@ fn ui_abilities(
             });
         }
     });
+}
+
+fn monospace_checked_shortcut(ui: &mut Ui, shortcut: Option<&KeyboardShortcut>) -> bool {
+    let shortcut_pressed: bool = match shortcut {
+        // TODO: somehow check if the current egui window has keyboard focus.
+        // Window.show().response.has_focus() is always false, so dunno how to do this.
+        Some(shortcut) => ui.input_mut(|i| i.consume_shortcut(&shortcut)),
+        None => false,
+    };
+
+    let shortcut_text: String = match shortcut {
+        Some(shortcut) => ui.ctx().format_shortcut(&shortcut),
+        None => String::from(" "),
+    };
+
+    ui.monospace(shortcut_text);
+
+    shortcut_pressed
 }
