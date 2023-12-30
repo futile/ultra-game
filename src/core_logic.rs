@@ -42,6 +42,12 @@ pub struct Ability {
     pub cooldown: Duration,
 }
 
+impl Ability {
+    pub fn can_use(&self, selected_ability_slot: Option<&AbilitySlot>) -> bool {
+        selected_ability_slot.is_some_and(|s| s.tpe == self.slot_type)
+    }
+}
+
 pub struct CoreLogicPlugin;
 
 impl Plugin for CoreLogicPlugin {

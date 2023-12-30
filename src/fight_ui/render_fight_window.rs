@@ -6,6 +6,7 @@ use bevy_inspector_egui::{
 
 use super::FightWindow;
 use crate::{
+    ability_catalog::ability_catalog,
     core_logic::{AbilityId, AbilitySlot},
     AbilitySlotType, Fight, HasAbilities, HasAbilitySlots,
 };
@@ -119,7 +120,14 @@ fn ui_fight_column(
 
     if let Some(abilities) = has_abilities.get(e).ok() {
         ui.add_space(10.);
-        ui_abilities(ui, abilities, children, ability_ids);
+        ui_abilities(
+            ui,
+            abilities,
+            children,
+            ability_ids,
+            ability_slots,
+            ui_column_state.abilities_section_state.selected_slot,
+        )
     }
 }
 
@@ -205,7 +213,11 @@ fn ui_abilities(
     abilities: &HasAbilities,
     children: &Query<&Children>,
     ability_ids: &Query<&AbilityId>,
+    ability_slots: &Query<&AbilitySlot>,
+    selected_slot_e: Option<Entity>,
 ) {
+    let selected_slot = selected_slot_e.and_then(|s| ability_slots.get(s).ok());
+
     ui.heading("Abilities");
 
     ui.indent(ui.id().with("abilities"), |ui: &mut Ui| {
@@ -214,7 +226,19 @@ fn ui_abilities(
             .expect("HasAbilities.holder without Children")
         {
             let ability_id = ability_ids.get(*child).expect("ability without AbilityId");
-            ui.label(format!("{:?}", ability_id));
+            let ability = ability_catalog()
+                .get(ability_id)
+                .expect(&format!("AbilityId `{:?}` not in catalog", ability_id));
+            let ability_usable = ability.can_use(selected_slot);
+
+            let ability_button = ui.add_enabled(
+                ability_usable,
+                egui::Button::new(format!("{}", ability.name)),
+            );
+
+            if ability_button.clicked() {
+                println!("Ability {:?} clicked", ability_id);
+            }
         }
     });
 }
