@@ -126,7 +126,7 @@ fn ui_fight_column(
             children,
             ability_ids,
             ability_slots,
-            ui_column_state.abilities_section_state.selected_slot,
+            ui_column_state,
         )
     }
 }
@@ -214,9 +214,12 @@ fn ui_abilities(
     children: &Query<&Children>,
     ability_ids: &Query<&AbilityId>,
     ability_slots: &Query<&AbilitySlot>,
-    selected_slot_e: Option<Entity>,
+    ui_state: &mut FightColumnUiState,
 ) {
-    let selected_slot = selected_slot_e.and_then(|s| ability_slots.get(s).ok());
+    let selected_slot = ui_state
+        .abilities_section_state
+        .selected_slot
+        .and_then(|s| ability_slots.get(s).ok());
 
     ui.heading("Abilities");
 
@@ -265,6 +268,9 @@ fn ui_abilities(
 
                     if shortcut_pressed || ability_button.clicked() {
                         println!("Ability {:?} used", ability_id);
+
+                        // clear the selected slot, because it was used.
+                        ui_state.abilities_section_state.selected_slot = None;
                     }
                 });
             });
