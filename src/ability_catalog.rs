@@ -7,7 +7,7 @@ use bevy::{
 
 use crate::core_logic::{Ability, AbilityId, AbilitySlotType};
 
-pub fn ability_catalog() -> &'static HashMap<AbilityId, Ability> {
+fn ability_catalog() -> &'static HashMap<AbilityId, Ability> {
     static ABILITY_CATALOG: OnceLock<HashMap<AbilityId, Ability>> = OnceLock::new();
     ABILITY_CATALOG.get_or_init(|| {
         let mut catalog = HashMap::new();

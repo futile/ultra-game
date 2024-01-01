@@ -6,7 +6,7 @@ use bevy_inspector_egui::{
 
 use super::FightWindow;
 use crate::{
-    ability_catalog::ability_catalog,
+    ability_catalog::AbilityCatalog,
     core_logic::{AbilityId, AbilitySlot},
     AbilitySlotType, Fight, HasAbilities, HasAbilitySlots,
 };
@@ -27,6 +27,7 @@ pub fn render_fight_windows(
     children: Query<&Children>,
     ability_ids: Query<&AbilityId>,
     ability_slots: Query<&AbilitySlot>,
+    ability_catalog: Res<AbilityCatalog>,
     mut contexts: EguiContexts,
 ) {
     // context for the primary (so far, only) window
@@ -58,6 +59,7 @@ pub fn render_fight_windows(
                         &children,
                         &ability_ids,
                         &ability_slots,
+                        &ability_catalog,
                     );
 
                     columns[1].label(RichText::new("Enemy").heading().strong());
@@ -72,6 +74,7 @@ pub fn render_fight_windows(
                         &children,
                         &ability_ids,
                         &ability_slots,
+                        &ability_catalog,
                     );
                 });
             });
@@ -98,6 +101,7 @@ fn ui_fight_column(
     children: &Query<&Children>,
     ability_ids: &Query<&AbilityId>,
     ability_slots: &Query<&AbilitySlot>,
+    ability_catalog: &Res<AbilityCatalog>,
 ) {
     ui.indent(ui.id().with("entity_name"), |ui: &mut Ui| {
         if let Some(name) = names.get(e).ok() {
@@ -126,6 +130,7 @@ fn ui_fight_column(
             children,
             ability_ids,
             ability_slots,
+            ability_catalog,
             ui_column_state,
         )
     }
@@ -202,6 +207,7 @@ fn ui_abilities(
     children: &Query<&Children>,
     ability_ids: &Query<&AbilityId>,
     ability_slots: &Query<&AbilitySlot>,
+    ability_catalog: &Res<AbilityCatalog>,
     ui_state: &mut FightColumnUiState,
 ) {
     let selected_slot = ui_state
@@ -221,7 +227,7 @@ fn ui_abilities(
             let ability_id = ability_ids
                 .get(*ability_id_e)
                 .expect("ability without AbilityId");
-            let ability = ability_catalog()
+            let ability = ability_catalog
                 .get(ability_id)
                 .expect(&format!("AbilityId `{:?}` not in catalog", ability_id));
             let ability_usable = ability.can_use(selected_slot);
