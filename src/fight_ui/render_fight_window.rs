@@ -6,7 +6,7 @@ use bevy_inspector_egui::{
 
 use super::FightWindow;
 use crate::{
-    ability_catalog::AbilityCatalog,
+    abilities::AbilityCatalog,
     core_logic::{AbilityId, AbilitySlot},
     AbilitySlotType, Fight, HasAbilities, HasAbilitySlots,
 };
@@ -228,6 +228,7 @@ fn ui_abilities(
                 .get(*ability_id_e)
                 .expect("ability without AbilityId");
             let ability = ability_catalog
+                .0
                 .get(ability_id)
                 .expect(&format!("AbilityId `{:?}` not in catalog", ability_id));
             let ability_usable = ability.can_use(selected_slot);
