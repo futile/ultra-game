@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-use bevy::{prelude::*, utils::Duration};
+use bevy::prelude::*;
 
 #[derive(Debug, Clone, Component, Reflect)]
 pub struct Fight {
@@ -39,7 +39,6 @@ pub struct Ability {
     pub name: Cow<'static, str>,
     pub id: AbilityId,
     pub slot_type: AbilitySlotType,
-    pub cooldown: Duration,
 }
 
 impl Ability {

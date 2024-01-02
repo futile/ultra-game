@@ -1,5 +1,3 @@
-use std::time::Duration;
-
 use bevy::prelude::*;
 
 use super::AbilityCatalog;
@@ -12,7 +10,6 @@ fn add_to_ability_catalog(mut abilties_catalog: ResMut<AbilityCatalog>) {
             name: "Attack".into(),
             id: AbilityId::Attack,
             slot_type: AbilitySlotType::WeaponAttack,
-            cooldown: Duration::from_secs_f32(1.0),
         },
     );
 }
