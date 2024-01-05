@@ -1,7 +1,7 @@
 use bevy::{prelude::*, utils::EntityHashSet};
 
 use self::render_fight_window::{render_fight_windows, FightWindowUiState};
-use crate::core_logic::Fight;
+use crate::{core_logic::Fight, PerUpdateSet};
 
 mod render_fight_window;
 
@@ -11,7 +11,9 @@ impl Plugin for FightUiPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             Update,
-            (sync_fight_windows_to_fights, render_fight_windows).chain(),
+            (sync_fight_windows_to_fights, render_fight_windows)
+                .chain()
+                .in_set(PerUpdateSet::CommandSubmission),
         );
     }
 }

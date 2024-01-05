@@ -68,10 +68,26 @@ fn setup(mut commands: Commands) {
     ));
 }
 
+#[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone, Copy)]
+enum PerUpdateSet {
+    LogicUpdate,
+    CommandSubmission,
+    CommandResolution,
+}
+
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .add_plugins(WorldInspectorPlugin::new())
+        .configure_sets(
+            Update,
+            (
+                PerUpdateSet::LogicUpdate,
+                PerUpdateSet::CommandSubmission,
+                PerUpdateSet::CommandResolution,
+            )
+                .chain(),
+        )
         .add_plugins(AbilitiesPlugin)
         .add_plugins(CoreLogicPlugin)
         .add_plugins(FightUiPlugin)
