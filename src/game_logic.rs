@@ -2,6 +2,8 @@ use std::borrow::Cow;
 
 use bevy::prelude::*;
 
+pub mod commands;
+
 #[derive(Debug, Clone, Component, Reflect)]
 pub struct Fight {
     pub player_character: Entity,
@@ -47,14 +49,15 @@ impl Ability {
     }
 }
 
-pub struct CoreLogicPlugin;
+pub struct GameLogicPlugin;
 
-impl Plugin for CoreLogicPlugin {
+impl Plugin for GameLogicPlugin {
     fn build(&self, app: &mut App) {
         // from https://github.com/jakobhellermann/bevy-inspector-egui/discussions/130
         app.register_type::<Fight>()
             .register_type::<HasAbilities>()
             .register_type::<AbilityId>()
-            .register_type::<HasAbilitySlots>();
+            .register_type::<HasAbilitySlots>()
+            .add_plugins(commands::CommandsPlugin);
     }
 }

@@ -1,14 +1,14 @@
 use abilities::AbilitiesPlugin;
 use bevy::prelude::*;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
-use game_logic::{
-    AbilityId, AbilitySlot, AbilitySlotType, CoreLogicPlugin, Fight, HasAbilities, HasAbilitySlots,
-};
 use fight_ui::FightUiPlugin;
+use game_logic::{
+    AbilityId, AbilitySlot, AbilitySlotType, Fight, GameLogicPlugin, HasAbilities, HasAbilitySlots,
+};
 
 pub mod abilities;
-mod game_logic;
 mod fight_ui;
+mod game_logic;
 
 fn setup(mut commands: Commands) {
     commands.spawn(Camera2dBundle::default());
@@ -89,7 +89,7 @@ fn main() {
                 .chain(),
         )
         .add_plugins(AbilitiesPlugin)
-        .add_plugins(CoreLogicPlugin)
+        .add_plugins(GameLogicPlugin)
         .add_plugins(FightUiPlugin)
         .add_systems(Startup, setup)
         .add_systems(Update, bevy::window::close_on_esc)

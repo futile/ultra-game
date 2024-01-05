@@ -7,7 +7,7 @@ use bevy_inspector_egui::{
 use super::FightWindow;
 use crate::{
     abilities::AbilityCatalog,
-    game_logic::{AbilityId, AbilitySlot},
+    game_logic::{commands, AbilityId, AbilitySlot},
     AbilitySlotType, Fight, HasAbilities, HasAbilitySlots,
 };
 
@@ -28,6 +28,7 @@ pub fn render_fight_windows(
     ability_ids: Query<&AbilityId>,
     ability_slots: Query<&AbilitySlot>,
     ability_catalog: Res<AbilityCatalog>,
+    mut cast_ability: EventWriter<commands::CastAbility>,
     mut contexts: EguiContexts,
 ) {
     // context for the primary (so far, only) window
@@ -60,6 +61,7 @@ pub fn render_fight_windows(
                         &ability_ids,
                         &ability_slots,
                         &ability_catalog,
+                        &mut cast_ability,
                     );
 
                     columns[1].label(RichText::new("Enemy").heading().strong());
@@ -75,6 +77,7 @@ pub fn render_fight_windows(
                         &ability_ids,
                         &ability_slots,
                         &ability_catalog,
+                        &mut cast_ability,
                     );
                 });
             });
@@ -102,6 +105,7 @@ fn ui_fight_column(
     ability_ids: &Query<&AbilityId>,
     ability_slots: &Query<&AbilitySlot>,
     ability_catalog: &Res<AbilityCatalog>,
+    cast_ability: &mut EventWriter<commands::CastAbility>,
 ) {
     ui.indent(ui.id().with("entity_name"), |ui: &mut Ui| {
         if let Some(name) = names.get(e).ok() {
@@ -126,11 +130,13 @@ fn ui_fight_column(
         ui.add_space(10.);
         ui_abilities(
             ui,
+            e,
             abilities,
             children,
             ability_ids,
             ability_slots,
             ability_catalog,
+            cast_ability,
             ui_column_state,
         )
     }
@@ -203,11 +209,13 @@ fn ui_ability_slots(
 
 fn ui_abilities(
     ui: &mut Ui,
+    model: Entity,
     abilities: &HasAbilities,
     children: &Query<&Children>,
     ability_ids: &Query<&AbilityId>,
     ability_slots: &Query<&AbilitySlot>,
     ability_catalog: &Res<AbilityCatalog>,
+    cast_ability: &mut EventWriter<commands::CastAbility>,
     ui_state: &mut FightColumnUiState,
 ) {
     let selected_slot = ui_state
@@ -251,11 +259,10 @@ fn ui_abilities(
                     let ability_button = ui.add(egui::Button::new(format!("{}", ability.name)));
 
                     if ability_usable && (shortcut_pressed || ability_button.clicked()) {
-                        // TODO: actual logic for abilitiess somehow.
-                        // Fire an event, which might be a `Command` for the entity,
-                        // or the cast itself, so it can be resolved?
-                        // Think about structure.
-                        println!("Ability {:?} used", ability_id);
+                        cast_ability.send(commands::CastAbility {
+                            caster: model,
+                            ability: *ability_id_e,
+                        });
 
                         // clear the selected slot, because it was used.
                         ui_state.abilities_section_state.selected_slot = None;
