@@ -1,6 +1,6 @@
 use bevy::{prelude::*, utils::HashMap};
 
-use crate::core_logic::{Ability, AbilityId};
+use crate::game_logic::{Ability, AbilityId};
 
 mod weapon_attack;
 

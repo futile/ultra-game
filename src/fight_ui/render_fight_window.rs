@@ -7,7 +7,7 @@ use bevy_inspector_egui::{
 use super::FightWindow;
 use crate::{
     abilities::AbilityCatalog,
-    core_logic::{AbilityId, AbilitySlot},
+    game_logic::{AbilityId, AbilitySlot},
     AbilitySlotType, Fight, HasAbilities, HasAbilitySlots,
 };
 

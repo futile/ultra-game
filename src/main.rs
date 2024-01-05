@@ -1,13 +1,13 @@
 use abilities::AbilitiesPlugin;
 use bevy::prelude::*;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
-use core_logic::{
+use game_logic::{
     AbilityId, AbilitySlot, AbilitySlotType, CoreLogicPlugin, Fight, HasAbilities, HasAbilitySlots,
 };
 use fight_ui::FightUiPlugin;
 
 pub mod abilities;
-mod core_logic;
+mod game_logic;
 mod fight_ui;
 
 fn setup(mut commands: Commands) {
