@@ -71,6 +71,8 @@ fn setup(mut commands: Commands) {
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone, Copy)]
 enum PerUpdateSet {
     LogicUpdate,
+    RequestSubmission,
+    RequestResolution,
     CommandSubmission,
     CommandResolution,
 }
@@ -83,6 +85,8 @@ fn main() {
             Update,
             (
                 PerUpdateSet::LogicUpdate,
+                PerUpdateSet::RequestSubmission,
+                PerUpdateSet::RequestResolution,
                 PerUpdateSet::CommandSubmission,
                 PerUpdateSet::CommandResolution,
             )
