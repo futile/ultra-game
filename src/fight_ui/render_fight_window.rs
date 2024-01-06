@@ -218,10 +218,8 @@ fn ui_abilities(
     cast_ability: &mut EventWriter<commands::CastAbility>,
     ui_state: &mut FightColumnUiState,
 ) {
-    let selected_slot = ui_state
-        .abilities_section_state
-        .selected_slot
-        .and_then(|s| ability_slots.get(s).ok());
+    let selected_slot_e = ui_state.abilities_section_state.selected_slot;
+    let selected_slot = selected_slot_e.and_then(|s| ability_slots.get(s).ok());
 
     ui.heading("Abilities");
 
@@ -261,6 +259,7 @@ fn ui_abilities(
                     if ability_usable && (shortcut_pressed || ability_button.clicked()) {
                         cast_ability.send(commands::CastAbility {
                             caster: model,
+                            slot: selected_slot_e,
                             ability: *ability_id_e,
                         });
 

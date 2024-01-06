@@ -3,6 +3,7 @@ use bevy::prelude::*;
 #[derive(Debug, Event)]
 pub struct CastAbility {
     pub caster: Entity,
+    pub slot: Option<Entity>,
     pub ability: Entity,
 }
 

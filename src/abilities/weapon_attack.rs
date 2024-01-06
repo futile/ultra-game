@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use super::AbilityCatalog;
 use crate::{
-    game_logic::{commands, Ability, AbilityId, AbilitySlotType},
+    game_logic::{commands, Ability, AbilityId, AbilitySlot, AbilitySlotType},
     PerUpdateSet,
 };
 
@@ -22,17 +22,32 @@ fn add_to_ability_catalog(mut abilties_catalog: ResMut<AbilityCatalog>) {
 fn cast_ability(
     mut cast_ability_events: EventReader<commands::CastAbility>,
     ability_ids: Query<&AbilityId>,
+    ability_slots: Query<&AbilitySlot>,
 ) {
-    for cast_ability in cast_ability_events.read() {
+    for commands::CastAbility {
+        caster,
+        slot: slot_e,
+        ability: ability_e,
+    } in cast_ability_events.read()
+    {
         let ability_id = ability_ids
-            .get(cast_ability.ability)
+            .get(*ability_e)
             .expect("CastAbility.ability without AbilityId");
 
         if *ability_id != THIS_ABILITY_ID {
             continue;
         }
 
-        println!("Casting ability: {:?}", ability_id);
+        let slot = slot_e.map(|slot_e| {
+            ability_slots
+                .get(slot_e)
+                .ok()
+                .expect("CastAbility.slot without AbilitySlot")
+        });
+
+        println!(
+            "Casting ability: {ability_id:?} | Caster: {caster:?} | Slot: {slot_e:?} [{slot:?}]"
+        );
     }
 }
 
