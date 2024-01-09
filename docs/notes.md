@@ -1,4 +1,17 @@
-# Notes + Todos
+# Todos
+
+## Next:
+
+- Alternative: Implement damage, hp, etc. first, and simply make `Attack` target all/the first/etc. enemy.
+    - Also ok, maybe much easier, but probably better, because it forces me to work on actual gameplay, instead of building systems :see_no_evil:
+- Targeting-system for abilities (UI)
+    - Targeting-state for UI when selecting an ability
+    - Cancel using ESC?
+    - Re-use number-hotkeys?
+    - Targetable enemies/entities/units have to be tracked through castability-system (see below).
+    - Add `target` entity/unit to `commands::CastAbility`, maybe add optional targeting or new command type.
+
+# Notes
 
 ## Castability etc. systems/handling
 
