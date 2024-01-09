@@ -23,6 +23,7 @@ fn cast_ability(
     mut cast_ability_events: EventReader<commands::CastAbility>,
     ability_ids: Query<&AbilityId>,
     ability_slots: Query<&AbilitySlot>,
+    ability_catalog: Res<AbilityCatalog>,
 ) {
     for commands::CastAbility {
         caster,
@@ -44,6 +45,18 @@ fn cast_ability(
                 .ok()
                 .expect("CastAbility.slot without AbilitySlot")
         });
+
+        let ability = ability_catalog
+            .0
+            .get(ability_id)
+            .expect("CastAbility.ability without AbilityCatalog entry");
+
+        if !ability.can_use(slot) {
+            eprintln!(
+                "Cannot execute commands::CastAbility due to mismatching slot: {ability:?} | Caster: {caster:?} | Slot: {slot_e:?} [{slot:?}]"
+            );
+            continue;
+        }
 
         println!(
             "Casting ability: {ability_id:?} | Caster: {caster:?} | Slot: {slot_e:?} [{slot:?}]"
