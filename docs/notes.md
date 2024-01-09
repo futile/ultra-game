@@ -1,3 +1,32 @@
+# Notes + Todos
+
+## Castability etc. systems/handling
+
+Casting an ability has different kinds of information that determine castability.
+
+1. Is the ability itself ready *locally*, i.e., cooldown and manacost ready?
+    - Determine this through a system/systems and keep it updated on the ability in some way.
+    - E.g., a component, etc.
+    - Static information is pulled from the ability definition, and can be overriden dynamically through components.
+      E.g.: A "Disabled for 10 sec"-component would cause the ability to not be ready, even though static stuff such as cooldown and manacost are ready.
+2. Which slots can it be used with?
+    - Keep these as (aery?) edges, i.e., ability is connected to all slots it can be used with.
+    - If an ability requires multiple slots, create a "hyper slot", which represents a combination of two (or more) slots. Connect with this then.
+3. Which targets can the ability be used on?
+    - Keep these as (aery?) edges, and keep it up to date.
+    - Similar to slots, static + dynamic information/components can (probably) be involved.
+4. Is the caster itself able to cast an ability (this ability?) at all?
+    - E.g., if silenced/muted or something, can't cast.
+
+All of these can be resolved/kept up to date individually.
+Finally, executability of a command, such as `CastAbility`, checks all of them to determine castability.
+
+
+
+---
+# OLD STUFF
+---
+
 # Idea for Ability Casting / General Entity-Command System
 
 Dual-phase for actions:
