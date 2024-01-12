@@ -84,20 +84,22 @@ pub fn render_fight_windows(
     }
 }
 
-#[derive(Debug, Default, Reflect)]
+#[derive(Debug, Reflect)]
 struct FightColumnUiState {
     abilities_section_state: AbilitySlotsSectionUiState,
+    user_interactable: bool,
 }
 
-#[derive(Debug, Default, Reflect)]
+#[derive(Debug, Reflect)]
 struct AbilitySlotsSectionUiState {
     selected_slot: Option<Entity>,
+    user_interactable: bool,
 }
 
 fn ui_fight_column(
     ui: &mut Ui,
     ui_column_state: &mut FightColumnUiState,
-    e: Entity,
+    model_e: Entity,
     names: &Query<&Name>,
     has_ability_slots: &Query<&HasAbilitySlots>,
     has_abilities: &Query<&HasAbilities>,
@@ -108,14 +110,14 @@ fn ui_fight_column(
     cast_ability: &mut EventWriter<commands::CastAbility>,
 ) {
     ui.indent(ui.id().with("entity_name"), |ui: &mut Ui| {
-        if let Some(name) = names.get(e).ok() {
+        if let Some(name) = names.get(model_e).ok() {
             ui.label(name.as_str());
         } else {
             ui.label("<No Name>");
         }
     });
 
-    if let Some(slots) = has_ability_slots.get(e).ok() {
+    if let Some(slots) = has_ability_slots.get(model_e).ok() {
         ui.add_space(10.);
         ui_ability_slots(
             ui,
@@ -126,11 +128,11 @@ fn ui_fight_column(
         );
     }
 
-    if let Some(abilities) = has_abilities.get(e).ok() {
+    if let Some(abilities) = has_abilities.get(model_e).ok() {
         ui.add_space(10.);
         ui_abilities(
             ui,
-            e,
+            model_e,
             abilities,
             children,
             ability_ids,
