@@ -11,10 +11,19 @@ use crate::{
     AbilitySlotType, Fight, HasAbilities, HasAbilitySlots,
 };
 
-#[derive(Debug, Default, Component, Reflect)]
+#[derive(Debug, Component, Reflect)]
 pub struct FightWindowUiState {
     player_column_state: FightColumnUiState,
     enemy_column_state: FightColumnUiState,
+}
+
+impl Default for FightWindowUiState {
+    fn default() -> Self {
+        Self {
+            player_column_state: FightColumnUiState::new(true),
+            enemy_column_state: FightColumnUiState::new(false),
+        }
+    }
 }
 
 pub fn render_fight_windows(
@@ -90,10 +99,28 @@ struct FightColumnUiState {
     user_interactable: bool,
 }
 
+impl FightColumnUiState {
+    fn new(user_interactable: bool) -> FightColumnUiState {
+        FightColumnUiState {
+            abilities_section_state: AbilitySlotsSectionUiState::new(user_interactable),
+            user_interactable,
+        }
+    }
+}
+
 #[derive(Debug, Reflect)]
 struct AbilitySlotsSectionUiState {
     selected_slot: Option<Entity>,
     user_interactable: bool,
+}
+
+impl AbilitySlotsSectionUiState {
+    fn new(user_interactable: bool) -> AbilitySlotsSectionUiState {
+        AbilitySlotsSectionUiState {
+            selected_slot: None,
+            user_interactable,
+        }
+    }
 }
 
 fn ui_fight_column(
@@ -156,6 +183,8 @@ fn ui_ability_slots(
     // AbilitySlotType::WeaponAttack => Color::LIME_GREEN,
     // AbilitySlotType::ShieldDefend => Color::PINK,
 
+    let user_interactable = abilities_section_state.user_interactable;
+
     ui.heading("Ability Slots");
 
     ui.indent(ui.id().with("ability_slots"), |ui: &mut Ui| {
@@ -169,7 +198,7 @@ fn ui_ability_slots(
                 .get(slot_e)
                 .expect("ability slot without AbilitySlot");
 
-            let keyboard_shortcut: Option<KeyboardShortcut> = {
+            let keyboard_shortcut: Option<KeyboardShortcut> = if user_interactable {
                 let key: Option<Key> = match idx {
                     0 => Some(Key::Num1),
                     1 => Some(Key::Num2),
@@ -179,6 +208,8 @@ fn ui_ability_slots(
                 };
 
                 key.map(|key| KeyboardShortcut::new(Modifiers::NONE, key))
+            } else {
+                None
             };
 
             let slot_is_selected: bool = abilities_section_state
@@ -188,13 +219,17 @@ fn ui_ability_slots(
             ui.horizontal(|ui: &mut Ui| {
                 let shortcut_pressed = monospace_checked_shortcut(ui, keyboard_shortcut.as_ref());
 
-                let mut label_response = ui.selectable_label(
-                    slot_is_selected,
-                    match slot.tpe {
-                        AbilitySlotType::WeaponAttack => "Weapon Attack",
-                        AbilitySlotType::ShieldDefend => "Shield Defend",
-                    },
-                );
+                let mut label_response = ui
+                    .add_enabled_ui(user_interactable, |ui: &mut Ui| {
+                        ui.selectable_label(
+                            slot_is_selected,
+                            match slot.tpe {
+                                AbilitySlotType::WeaponAttack => "Weapon Attack",
+                                AbilitySlotType::ShieldDefend => "Shield Defend",
+                            },
+                        )
+                    })
+                    .inner;
 
                 if shortcut_pressed || label_response.clicked() {
                     abilities_section_state.selected_slot =
@@ -220,6 +255,7 @@ fn ui_abilities(
     cast_ability: &mut EventWriter<commands::CastAbility>,
     ui_state: &mut FightColumnUiState,
 ) {
+    let user_interactable = ui_state.user_interactable;
     let selected_slot_e = ui_state.abilities_section_state.selected_slot;
     let selected_slot = selected_slot_e.and_then(|s| ability_slots.get(s).ok());
 
@@ -241,7 +277,7 @@ fn ui_abilities(
                 .expect(&format!("AbilityId `{:?}` not in catalog", ability_id));
             let ability_usable = ability.can_use(selected_slot);
 
-            let keyboard_shortcut: Option<KeyboardShortcut> = {
+            let keyboard_shortcut: Option<KeyboardShortcut> = if user_interactable {
                 let key: Option<Key> = match idx {
                     0 => Some(Key::X),
                     // 1 => Some(Key::Num2),
@@ -249,6 +285,8 @@ fn ui_abilities(
                 };
 
                 key.map(|key| KeyboardShortcut::new(Modifiers::NONE, key))
+            } else {
+                None
             };
 
             ui.add_enabled_ui(ability_usable, |ui: &mut Ui| {
@@ -256,7 +294,10 @@ fn ui_abilities(
                     let shortcut_pressed =
                         monospace_checked_shortcut(ui, keyboard_shortcut.as_ref());
 
-                    let ability_button = ui.add(egui::Button::new(format!("{}", ability.name)));
+                    let ability_button = ui.add_enabled(
+                        user_interactable,
+                        egui::Button::new(format!("{}", ability.name)),
+                    );
 
                     if ability_usable && (shortcut_pressed || ability_button.clicked()) {
                         cast_ability.send(commands::CastAbility {
