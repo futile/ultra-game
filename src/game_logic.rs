@@ -10,6 +10,11 @@ pub struct Fight {
     pub enemy: Entity,
 }
 
+#[derive(Debug, Clone, Component, Reflect)]
+pub struct Health {
+    pub health: f64,
+}
+
 #[derive(Debug, Component, Reflect)]
 pub struct HasAbilitySlots {
     pub holder: Entity,
@@ -55,6 +60,7 @@ impl Plugin for GameLogicPlugin {
     fn build(&self, app: &mut App) {
         // from https://github.com/jakobhellermann/bevy-inspector-egui/discussions/130
         app.register_type::<Fight>()
+            .register_type::<Health>()
             .register_type::<HasAbilities>()
             .register_type::<AbilityId>()
             .register_type::<HasAbilitySlots>()
