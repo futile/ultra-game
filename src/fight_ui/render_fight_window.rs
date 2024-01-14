@@ -7,7 +7,7 @@ use bevy_inspector_egui::{
 use super::FightWindow;
 use crate::{
     abilities::AbilityCatalog,
-    game_logic::{commands, AbilityId, AbilitySlot},
+    game_logic::{commands, AbilityId, AbilitySlot, Health},
     AbilitySlotType, Fight, HasAbilities, HasAbilitySlots,
 };
 
@@ -31,6 +31,7 @@ pub fn render_fight_windows(
     mut fight_windows: Query<(Entity, &mut FightWindow)>,
     fights: Query<&Fight>,
     names: Query<&Name>,
+    healths: Query<&Health>,
     has_ability_slots: Query<&HasAbilitySlots>,
     has_abilities: Query<&HasAbilities>,
     children: Query<&Children>,
@@ -64,6 +65,7 @@ pub fn render_fight_windows(
                         &mut ui_state.player_column_state,
                         fight.player_character,
                         &names,
+                        &healths,
                         &has_ability_slots,
                         &has_abilities,
                         &children,
@@ -80,6 +82,7 @@ pub fn render_fight_windows(
                         &mut ui_state.enemy_column_state,
                         fight.enemy,
                         &names,
+                        &healths,
                         &has_ability_slots,
                         &has_abilities,
                         &children,
@@ -128,6 +131,7 @@ fn ui_fight_column(
     ui_column_state: &mut FightColumnUiState,
     model_e: Entity,
     names: &Query<&Name>,
+    healths: &Query<&Health>,
     has_ability_slots: &Query<&HasAbilitySlots>,
     has_abilities: &Query<&HasAbilities>,
     children: &Query<&Children>,
@@ -136,11 +140,17 @@ fn ui_fight_column(
     ability_catalog: &Res<AbilityCatalog>,
     cast_ability: &mut EventWriter<commands::CastAbility>,
 ) {
-    ui.indent(ui.id().with("entity_name"), |ui: &mut Ui| {
+    ui.indent(ui.id().with("entity_overview_section"), |ui: &mut Ui| {
         if let Some(name) = names.get(model_e).ok() {
             ui.label(name.as_str());
         } else {
             ui.label("<No Name>");
+        }
+
+        if let Some(health) = healths.get(model_e).ok() {
+            ui.label(format!("Health: {}", health.health));
+        } else {
+            ui.label("<No Health>");
         }
     });
 
