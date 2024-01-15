@@ -54,18 +54,14 @@ fn setup(mut commands: Commands) {
             HasAbilities {
                 holder: player_abilities,
             },
-            Health { health: 100.0 },
+            Health::new(100.0),
             Faction::Player,
             Name::new("Player Character"),
         ))
         .id();
 
     let enemy = commands
-        .spawn((
-            Name::new("The Enemy"),
-            Health { health: 100.0 },
-            Faction::Enemy,
-        ))
+        .spawn((Name::new("The Enemy"), Health::new(100.0), Faction::Enemy))
         .id();
 
     commands.spawn((

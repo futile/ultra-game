@@ -12,7 +12,17 @@ pub struct Fight {
 
 #[derive(Debug, Clone, Component, Reflect)]
 pub struct Health {
-    pub health: f64,
+    pub current: f64,
+    pub max: f64,
+}
+
+impl Health {
+    pub fn new(current_and_max: f64) -> Self {
+        Self {
+            current: current_and_max,
+            max: current_and_max,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Component, Reflect)]

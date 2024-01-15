@@ -152,7 +152,7 @@ fn ui_fight_column(
         }
 
         if let Some(health) = healths.get(model_e).ok() {
-            ui.label(format!("Health: {}", health.health));
+            ui.label(format!("Health: {}/{}", health.current, health.max));
         } else {
             ui.label("<No Health>");
         }
