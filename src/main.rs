@@ -3,8 +3,8 @@ use bevy::prelude::*;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use fight_ui::FightUiPlugin;
 use game_logic::{
-    AbilityId, AbilitySlot, AbilitySlotType, Fight, GameLogicPlugin, HasAbilities, HasAbilitySlots,
-    Health,
+    AbilityId, AbilitySlot, AbilitySlotType, Faction, Fight, GameLogicPlugin, HasAbilities,
+    HasAbilitySlots, Health,
 };
 
 pub mod abilities;
@@ -55,12 +55,17 @@ fn setup(mut commands: Commands) {
                 holder: player_abilities,
             },
             Health { health: 100.0 },
+            Faction::Player,
             Name::new("Player Character"),
         ))
         .id();
 
     let enemy = commands
-        .spawn((Name::new("The Enemy"), Health { health: 100.0 }))
+        .spawn((
+            Name::new("The Enemy"),
+            Health { health: 100.0 },
+            Faction::Enemy,
+        ))
         .id();
 
     commands.spawn((
