@@ -5,10 +5,7 @@ use bevy::prelude::*;
 pub mod commands;
 
 #[derive(Debug, Clone, Component, Reflect)]
-pub struct Fight {
-    pub player_character: Entity,
-    pub enemy: Entity,
-}
+pub struct Fight;
 
 #[derive(Debug, Clone, Component, Reflect)]
 pub struct Health {
@@ -25,7 +22,7 @@ impl Health {
     }
 }
 
-#[derive(Debug, Clone, Component, Reflect)]
+#[derive(Debug, Clone, Component, Reflect, PartialEq, Eq, Hash)]
 pub enum Faction {
     Player,
     Enemy,

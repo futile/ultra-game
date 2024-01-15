@@ -3,11 +3,12 @@ use bevy_inspector_egui::{
     bevy_egui::EguiContexts,
     egui::{self, Id, Key, KeyboardShortcut, Modifiers, RichText, Ui, Visuals},
 };
+use itertools::Itertools;
 
 use super::FightWindow;
 use crate::{
     abilities::AbilityCatalog,
-    game_logic::{commands, AbilityId, AbilitySlot, Health},
+    game_logic::{commands, AbilityId, AbilitySlot, Faction, Health},
     AbilitySlotType, Fight, HasAbilities, HasAbilitySlots,
 };
 
@@ -30,6 +31,7 @@ pub fn render_fight_windows(
     mut _commands: Commands,
     mut fight_windows: Query<(Entity, &mut FightWindow)>,
     fights: Query<&Fight>,
+    factions: Query<(Entity, &Faction)>,
     names: Query<&Name>,
     healths: Query<&Health>,
     has_ability_slots: Query<&HasAbilitySlots>,
@@ -49,9 +51,29 @@ pub fn render_fight_windows(
 
     for (window_e, fight_window) in &mut fight_windows {
         let fight_e = fight_window.model;
-        let fight = fights
+
+        fights
             .get(fight_e)
             .expect("FightWindow.model doesn't have a Fight");
+
+        let fight_children = children.get(fight_e).expect("Fight without Children");
+        let player_entity = factions
+            .iter_many(fight_children)
+            .filter(|(_e, faction)| **faction == Faction::Player)
+            .at_most_one()
+            .ok()
+            .flatten()
+            .unwrap()
+            .0;
+
+        let enemy_entity = factions
+            .iter_many(fight_children)
+            .filter(|(_e, faction)| **faction == Faction::Enemy)
+            .at_most_one()
+            .ok()
+            .flatten()
+            .unwrap()
+            .0;
 
         let mut ui_state = fight_window.map_unchanged(|fw| &mut fw.ui_state);
 
@@ -64,7 +86,7 @@ pub fn render_fight_windows(
                     ui_fight_column(
                         &mut columns[0],
                         &mut ui_state.player_column_state,
-                        fight.player_character,
+                        player_entity,
                         fight_e,
                         &names,
                         &healths,
@@ -82,7 +104,7 @@ pub fn render_fight_windows(
                     ui_fight_column(
                         &mut columns[1],
                         &mut ui_state.enemy_column_state,
-                        fight.enemy,
+                        enemy_entity,
                         fight_e,
                         &names,
                         &healths,

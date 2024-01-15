@@ -64,13 +64,9 @@ fn setup(mut commands: Commands) {
         .spawn((Name::new("The Enemy"), Health::new(100.0), Faction::Enemy))
         .id();
 
-    commands.spawn((
-        Fight {
-            player_character,
-            enemy,
-        },
-        Name::new("The Fight"),
-    ));
+    commands
+        .spawn((Fight, Name::new("The Fight")))
+        .push_children(&[player_character, enemy]);
 }
 
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone, Copy)]
