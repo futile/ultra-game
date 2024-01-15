@@ -29,6 +29,7 @@ fn cast_ability(
         caster_e,
         slot_e,
         ability_e,
+        fight_e,
     } in cast_ability_events.read()
     {
         let ability_id = ability_ids
@@ -59,7 +60,7 @@ fn cast_ability(
         }
 
         println!(
-            "Casting ability: {ability_id:?} | Caster: {caster_e:?} | Slot: {slot_e:?} [{slot:?}]"
+            "Casting ability: {ability_id:?} | Fight: {fight_e:?} | Caster: {caster_e:?} | Slot: {slot_e:?} [{slot:?}]"
         );
     }
 }

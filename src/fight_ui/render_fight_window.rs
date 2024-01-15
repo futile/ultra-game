@@ -48,8 +48,9 @@ pub fn render_fight_windows(
     ui_ctx.style_mut(|style| style.visuals = Visuals::light());
 
     for (window_e, fight_window) in &mut fight_windows {
+        let fight_e = fight_window.model;
         let fight = fights
-            .get(fight_window.model)
+            .get(fight_e)
             .expect("FightWindow.model doesn't have a Fight");
 
         let mut ui_state = fight_window.map_unchanged(|fw| &mut fw.ui_state);
@@ -64,6 +65,7 @@ pub fn render_fight_windows(
                         &mut columns[0],
                         &mut ui_state.player_column_state,
                         fight.player_character,
+                        fight_e,
                         &names,
                         &healths,
                         &has_ability_slots,
@@ -81,6 +83,7 @@ pub fn render_fight_windows(
                         &mut columns[1],
                         &mut ui_state.enemy_column_state,
                         fight.enemy,
+                        fight_e,
                         &names,
                         &healths,
                         &has_ability_slots,
@@ -130,6 +133,7 @@ fn ui_fight_column(
     ui: &mut Ui,
     ui_column_state: &mut FightColumnUiState,
     model_e: Entity,
+    fight_e: Entity,
     names: &Query<&Name>,
     healths: &Query<&Health>,
     has_ability_slots: &Query<&HasAbilitySlots>,
@@ -170,6 +174,7 @@ fn ui_fight_column(
         ui_abilities(
             ui,
             model_e,
+            fight_e,
             abilities,
             children,
             ability_ids,
@@ -257,6 +262,7 @@ fn ui_ability_slots(
 fn ui_abilities(
     ui: &mut Ui,
     model: Entity,
+    fight_e: Entity,
     abilities: &HasAbilities,
     children: &Query<&Children>,
     ability_ids: &Query<&AbilityId>,
@@ -314,6 +320,7 @@ fn ui_abilities(
                             caster_e: model,
                             slot_e: selected_slot_e,
                             ability_e: *ability_id_e,
+                            fight_e,
                         });
 
                         // clear the selected slot, because it was used.

@@ -5,6 +5,7 @@ pub struct CastAbility {
     pub caster_e: Entity,
     pub slot_e: Option<Entity>,
     pub ability_e: Entity,
+    pub fight_e: Entity,
 }
 
 pub struct CommandsPlugin;
