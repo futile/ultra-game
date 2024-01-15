@@ -26,9 +26,9 @@ fn cast_ability(
     ability_catalog: Res<AbilityCatalog>,
 ) {
     for commands::CastAbility {
-        caster,
-        slot: slot_e,
-        ability: ability_e,
+        caster_e,
+        slot_e,
+        ability_e,
     } in cast_ability_events.read()
     {
         let ability_id = ability_ids
@@ -53,13 +53,13 @@ fn cast_ability(
 
         if !ability.can_use(slot) {
             eprintln!(
-                "Cannot execute commands::CastAbility due to mismatching slot: {ability:?} | Caster: {caster:?} | Slot: {slot_e:?} [{slot:?}]"
+                "Cannot execute commands::CastAbility due to mismatching slot: {ability:?} | Caster: {caster_e:?} | Slot: {slot_e:?} [{slot:?}]"
             );
             continue;
         }
 
         println!(
-            "Casting ability: {ability_id:?} | Caster: {caster:?} | Slot: {slot_e:?} [{slot:?}]"
+            "Casting ability: {ability_id:?} | Caster: {caster_e:?} | Slot: {slot_e:?} [{slot:?}]"
         );
     }
 }

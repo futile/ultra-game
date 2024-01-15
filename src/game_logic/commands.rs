@@ -2,9 +2,9 @@ use bevy::prelude::*;
 
 #[derive(Debug, Event)]
 pub struct CastAbility {
-    pub caster: Entity,
-    pub slot: Option<Entity>,
-    pub ability: Entity,
+    pub caster_e: Entity,
+    pub slot_e: Option<Entity>,
+    pub ability_e: Entity,
 }
 
 pub struct CommandsPlugin;

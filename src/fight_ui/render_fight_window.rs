@@ -311,9 +311,9 @@ fn ui_abilities(
 
                     if ability_usable && (shortcut_pressed || ability_button.clicked()) {
                         cast_ability.send(commands::CastAbility {
-                            caster: model,
-                            slot: selected_slot_e,
-                            ability: *ability_id_e,
+                            caster_e: model,
+                            slot_e: selected_slot_e,
+                            ability_e: *ability_id_e,
                         });
 
                         // clear the selected slot, because it was used.
