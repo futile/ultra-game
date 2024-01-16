@@ -32,25 +32,18 @@ fn cast_ability(
         fight_e,
     } in cast_ability_events.read()
     {
-        let ability_id = ability_ids
-            .get(*ability_e)
-            .expect("CastAbility.ability without AbilityId");
+        let ability_id: &AbilityId = ability_ids.component(*ability_e);
 
         if *ability_id != THIS_ABILITY_ID {
             continue;
         }
 
-        let slot = slot_e.map(|slot_e| {
-            ability_slots
-                .get(slot_e)
-                .ok()
-                .expect("CastAbility.slot without AbilitySlot")
-        });
-
         let ability = ability_catalog
             .0
             .get(ability_id)
             .expect("CastAbility.ability without AbilityCatalog entry");
+
+        let slot: Option<&AbilitySlot> = slot_e.map(|slot_e| ability_slots.component(slot_e));
 
         if !ability.can_use(slot) {
             eprintln!(
