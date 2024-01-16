@@ -13,3 +13,7 @@ _default:
 # Run using x11 display protocol on wayland
 run-x11-on-wayland:
     WINIT_UNIX_BACKEND=x11 cargo run
+
+# Build with detailed timing information (doesn't require a full rebuild)
+build-with-timings:
+    cargo rustc -- -Ztime-passes
