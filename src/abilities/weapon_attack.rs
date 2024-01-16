@@ -25,35 +25,24 @@ fn cast_ability(
     ability_slots: Query<&AbilitySlot>,
     ability_catalog: Res<AbilityCatalog>,
 ) {
+    let this_ability = ability_catalog
+        .0
+        .get(&THIS_ABILITY_ID)
+        .expect("AbilityCatalog does not contain this ability");
+
     for commands::CastAbility {
         caster_e,
         slot_e,
-        ability_e,
+        ability_e: _,
         fight_e,
-    } in cast_ability_events.read()
+    } in cast_ability_events
+        .read()
+        .filter(|c| c.is_valid_matching_ability_cast(this_ability, &ability_ids, &ability_slots))
     {
-        let ability_id: &AbilityId = ability_ids.component(*ability_e);
-
-        if *ability_id != THIS_ABILITY_ID {
-            continue;
-        }
-
-        let ability = ability_catalog
-            .0
-            .get(ability_id)
-            .expect("CastAbility.ability without AbilityCatalog entry");
-
         let slot: Option<&AbilitySlot> = slot_e.map(|slot_e| ability_slots.component(slot_e));
 
-        if !ability.can_use(slot) {
-            eprintln!(
-                "Cannot execute commands::CastAbility due to mismatching slot: {ability:?} | Caster: {caster_e:?} | Slot: {slot_e:?} [{slot:?}]"
-            );
-            continue;
-        }
-
         println!(
-            "Casting ability: {ability_id:?} | Fight: {fight_e:?} | Caster: {caster_e:?} | Slot: {slot_e:?} [{slot:?}]"
+            "Casting ability: {THIS_ABILITY_ID:?} | Fight: {fight_e:?} | Caster: {caster_e:?} | Slot: {slot_e:?} [{slot:?}]"
         );
     }
 }
