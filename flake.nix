@@ -35,6 +35,11 @@
             clang_16
 
             rust-toolchain
+
+            # From https://github.com/dpc/htmx-sorta/blob/9e101583ec9391127b5bfcbe421e3ede2d627856/flake.nix#L83-L85
+            # This is required to prevent a mangled bash shell in nix develop
+            # see: https://discourse.nixos.org/t/interactive-bash-with-nix-develop-flake/15486
+            (pkgs.hiPrio pkgs.bashInteractive)
           ];
 
           buildInputs = with pkgs; [
