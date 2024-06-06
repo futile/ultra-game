@@ -1,4 +1,4 @@
-use bevy::{prelude::*, utils::EntityHashSet};
+use bevy::{ecs::entity::EntityHashSet, prelude::*};
 
 use self::render_fight_window::{render_fight_windows, FightWindowUiState};
 use crate::{game_logic::Fight, PerUpdateSet};
@@ -44,7 +44,7 @@ fn sync_fight_windows_to_fights(
         commands.spawn((FightWindow::new(fight_e),));
     }
 
-    let mut removed_fight_entities: EntityHashSet<Entity> = removed_fights.read().collect();
+    let mut removed_fight_entities: EntityHashSet = removed_fights.read().collect();
 
     if !removed_fight_entities.is_empty() {
         for (window_e, fight_window) in fight_windows.iter() {

@@ -18,11 +18,12 @@ impl CastAbility {
         ability_slots: &Query<&AbilitySlot>,
     ) -> bool {
         let matching_id = {
-            let ability_id = ability_ids.component::<AbilityId>(self.ability_e);
+            let ability_id = ability_ids.get(self.ability_e).unwrap();
             ability_id == &ability.id
         };
 
-        let slot: Option<&AbilitySlot> = self.slot_e.map(|slot_e| ability_slots.component(slot_e));
+        let slot: Option<&AbilitySlot> =
+            self.slot_e.map(|slot_e| ability_slots.get(slot_e).unwrap());
 
         let can_use = ability.can_use(slot);
 

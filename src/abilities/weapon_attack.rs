@@ -39,7 +39,7 @@ fn cast_ability(
         .read()
         .filter(|c| c.is_valid_matching_ability_cast(this_ability, &ability_ids, &ability_slots))
     {
-        let slot: Option<&AbilitySlot> = slot_e.map(|slot_e| ability_slots.component(slot_e));
+        let slot: Option<&AbilitySlot> = slot_e.map(|slot_e| ability_slots.get(slot_e).unwrap());
 
         println!(
             "Casting ability: {THIS_ABILITY_ID:?} | Fight: {fight_e:?} | Caster: {caster_e:?} | Slot: {slot_e:?} [{slot:?}]"
