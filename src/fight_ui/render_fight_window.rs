@@ -44,7 +44,11 @@ pub fn render_fight_windows(
     mut contexts: EguiContexts,
 ) {
     // context for the primary (so far, only) window
-    let ui_ctx = contexts.ctx_mut();
+    let Some(ui_ctx) = contexts.try_ctx_mut() else {
+        // another workaround can be found in https://github.com/mvlabat/bevy_egui/issues/212
+        eprintln!("[render_fight_windows] No egui context, skipping rendering.");
+        return;
+    };
 
     // enable light style: https://github.com/emilk/egui/discussions/1627
     ui_ctx.style_mut(|style| style.visuals = Visuals::light());
