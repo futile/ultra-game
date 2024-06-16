@@ -22,6 +22,10 @@ impl CastAbility {
             ability_id == &ability.id
         };
 
+        if !matching_id {
+            return false;
+        }
+
         let slot: Option<&AbilitySlot> =
             self.slot_e.map(|slot_e| ability_slots.get(slot_e).unwrap());
 
@@ -29,9 +33,10 @@ impl CastAbility {
 
         if !can_use {
             eprintln!("Cannot execute commands::CastAbility due to mismatching slot: {self:?} | SlotType: {slot:?}");
+            return false;
         }
 
-        matching_id && can_use
+        return true;
     }
 }
 
