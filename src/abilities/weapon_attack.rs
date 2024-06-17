@@ -2,7 +2,11 @@ use bevy::prelude::*;
 
 use super::AbilityCatalog;
 use crate::{
-    game_logic::{commands, Ability, AbilityId, AbilitySlot, AbilitySlotType},
+    game_logic::{
+        commands,
+        damage_resolution::{DamageInstance, DealDamage},
+        Ability, AbilityId, AbilitySlot, AbilitySlotType,
+    },
     PerUpdateSet,
 };
 
@@ -21,6 +25,7 @@ fn add_to_ability_catalog(mut abilties_catalog: ResMut<AbilityCatalog>) {
 
 fn cast_ability(
     mut cast_ability_events: EventReader<commands::CastAbility>,
+    mut deal_damage_events: EventWriter<DealDamage>,
     ability_ids: Query<&AbilityId>,
     ability_slots: Query<&AbilitySlot>,
     ability_catalog: Res<AbilityCatalog>,
@@ -44,6 +49,15 @@ fn cast_ability(
         println!(
             "Casting ability: {THIS_ABILITY_ID:?} | Fight: {fight_e:?} | Caster: {caster_e:?} | Slot: {slot_e:?} [{slot:?}]"
         );
+
+        // TODO correctly determine target(s)
+        let target_e = *caster_e;
+
+        deal_damage_events.send(DealDamage(DamageInstance {
+            source: Some(*caster_e),
+            target: target_e,
+            amount: 13.37,
+        }));
     }
 }
 

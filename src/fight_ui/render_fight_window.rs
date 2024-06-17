@@ -46,7 +46,7 @@ pub fn render_fight_windows(
     // context for the primary (so far, only) window
     let Some(ui_ctx) = contexts.try_ctx_mut() else {
         // another workaround can be found in https://github.com/mvlabat/bevy_egui/issues/212
-        eprintln!("[render_fight_windows] No egui context, skipping rendering.");
+        warn!("No egui context, skipping rendering.");
         return;
     };
 

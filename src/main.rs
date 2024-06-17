@@ -74,6 +74,7 @@ enum PerUpdateSet {
     LogicUpdate,
     CommandSubmission,
     CommandResolution,
+    DamageResolution,
 }
 
 fn main() {
@@ -86,6 +87,7 @@ fn main() {
                 PerUpdateSet::LogicUpdate,
                 PerUpdateSet::CommandSubmission,
                 PerUpdateSet::CommandResolution,
+                PerUpdateSet::DamageResolution,
             )
                 .chain(),
         )

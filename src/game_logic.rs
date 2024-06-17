@@ -3,6 +3,7 @@ use std::borrow::Cow;
 use bevy::prelude::*;
 
 pub mod commands;
+pub mod damage_resolution;
 
 #[derive(Debug, Clone, Component, Reflect)]
 pub struct Fight;
@@ -78,6 +79,9 @@ impl Plugin for GameLogicPlugin {
             .register_type::<HasAbilities>()
             .register_type::<AbilityId>()
             .register_type::<HasAbilitySlots>()
-            .add_plugins(commands::CommandsPlugin);
+            .add_plugins((
+                commands::CommandsPlugin,
+                damage_resolution::DamageResolutionPlugin,
+            ));
     }
 }
