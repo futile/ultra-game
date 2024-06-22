@@ -5,6 +5,7 @@ use crate::{
     game_logic::{
         commands,
         damage_resolution::{DamageInstance, DealDamage},
+        faction::Faction,
         Ability, AbilityId, AbilitySlot, AbilitySlotType,
     },
     PerUpdateSet,
@@ -28,6 +29,7 @@ fn cast_ability(
     mut deal_damage_events: EventWriter<DealDamage>,
     ability_ids: Query<&AbilityId>,
     ability_slots: Query<&AbilitySlot>,
+    factions: Query<(Entity, &Faction)>,
     ability_catalog: Res<AbilityCatalog>,
 ) {
     let this_ability = ability_catalog
@@ -45,13 +47,13 @@ fn cast_ability(
         .filter(|c| c.is_valid_matching_ability_cast(this_ability, &ability_ids, &ability_slots))
     {
         let slot: Option<&AbilitySlot> = slot_e.map(|slot_e| ability_slots.get(slot_e).unwrap());
+        let (_, faction) = factions.get(*caster_e).unwrap();
+
+        let (target_e, _target_faction) = faction.find_single_enemy(&factions);
 
         println!(
-            "Casting ability: {THIS_ABILITY_ID:?} | Fight: {fight_e:?} | Caster: {caster_e:?} | Slot: {slot_e:?} [{slot:?}]"
+            "Casting ability: {THIS_ABILITY_ID:?} | Fight: {fight_e:?} | Caster: {caster_e:?} | Slot: {slot_e:?} [{slot:?}] | Target: {target_e:?}"
         );
-
-        // TODO correctly determine target(s)
-        let target_e = *caster_e;
 
         deal_damage_events.send(DealDamage(DamageInstance {
             source: Some(*caster_e),

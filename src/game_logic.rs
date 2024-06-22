@@ -4,6 +4,7 @@ use bevy::prelude::*;
 
 pub mod commands;
 pub mod damage_resolution;
+pub mod faction;
 
 #[derive(Debug, Clone, Component, Reflect)]
 pub struct Fight;
@@ -21,12 +22,6 @@ impl Health {
             max: current_and_max,
         }
     }
-}
-
-#[derive(Debug, Clone, Component, Reflect, PartialEq, Eq, Hash)]
-pub enum Faction {
-    Player,
-    Enemy,
 }
 
 #[derive(Debug, Component, Reflect)]
@@ -75,11 +70,11 @@ impl Plugin for GameLogicPlugin {
         // from https://github.com/jakobhellermann/bevy-inspector-egui/discussions/130
         app.register_type::<Fight>()
             .register_type::<Health>()
-            .register_type::<Faction>()
             .register_type::<HasAbilities>()
             .register_type::<AbilityId>()
             .register_type::<HasAbilitySlots>()
             .add_plugins((
+                faction::FactionPlugin,
                 commands::CommandsPlugin,
                 damage_resolution::DamageResolutionPlugin,
             ));

@@ -8,7 +8,7 @@ use itertools::Itertools;
 use super::FightWindow;
 use crate::{
     abilities::AbilityCatalog,
-    game_logic::{commands, AbilityId, AbilitySlot, Faction, Health},
+    game_logic::{commands, faction::Faction, AbilityId, AbilitySlot, Health},
     AbilitySlotType, Fight, HasAbilities, HasAbilitySlots,
 };
 
