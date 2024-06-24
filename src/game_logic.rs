@@ -22,6 +22,14 @@ impl Health {
             max: current_and_max,
         }
     }
+
+    pub fn is_alive(&self) -> bool {
+        self.current > 0.0f64
+    }
+
+    pub fn is_dead(&self) -> bool {
+        !self.is_alive()
+    }
 }
 
 #[derive(Debug, Component, Reflect)]
