@@ -3,8 +3,8 @@ use bevy::prelude::*;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use fight_ui::FightUiPlugin;
 use game_logic::{
-    faction::Faction, AbilityId, AbilitySlot, AbilitySlotType, Fight, GameLogicPlugin,
-    HasAbilities, HasAbilitySlots, Health,
+    faction::Faction, health::Health, AbilityId, AbilitySlot, AbilitySlotType, Fight,
+    GameLogicPlugin, HasAbilities, HasAbilitySlots,
 };
 
 pub mod abilities;

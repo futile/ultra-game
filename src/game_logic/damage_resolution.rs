@@ -1,7 +1,6 @@
 use bevy::prelude::*;
 
-use super::Health;
-use crate::PerUpdateSet;
+use crate::{game_logic::health::Health, PerUpdateSet};
 
 #[derive(Debug, Clone, Component, Reflect, PartialEq)]
 pub struct DamageInstance {

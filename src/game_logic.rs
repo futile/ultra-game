@@ -5,32 +5,10 @@ use bevy::prelude::*;
 pub mod commands;
 pub mod damage_resolution;
 pub mod faction;
+pub mod health;
 
 #[derive(Debug, Clone, Component, Reflect)]
 pub struct Fight;
-
-#[derive(Debug, Clone, Component, Reflect)]
-pub struct Health {
-    pub current: f64,
-    pub max: f64,
-}
-
-impl Health {
-    pub fn new(current_and_max: f64) -> Self {
-        Self {
-            current: current_and_max,
-            max: current_and_max,
-        }
-    }
-
-    pub fn is_alive(&self) -> bool {
-        self.current > 0.0f64
-    }
-
-    pub fn is_dead(&self) -> bool {
-        !self.is_alive()
-    }
-}
 
 #[derive(Debug, Component, Reflect)]
 pub struct HasAbilitySlots {
@@ -77,7 +55,6 @@ impl Plugin for GameLogicPlugin {
     fn build(&self, app: &mut App) {
         // from https://github.com/jakobhellermann/bevy-inspector-egui/discussions/130
         app.register_type::<Fight>()
-            .register_type::<Health>()
             .register_type::<HasAbilities>()
             .register_type::<AbilityId>()
             .register_type::<HasAbilitySlots>()
@@ -85,6 +62,7 @@ impl Plugin for GameLogicPlugin {
                 faction::FactionPlugin,
                 commands::CommandsPlugin,
                 damage_resolution::DamageResolutionPlugin,
+                health::HealthInterfacePlugin,
             ));
     }
 }
