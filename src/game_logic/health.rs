@@ -34,9 +34,15 @@ impl Health {
 #[derive(Debug)]
 pub struct AlreadyDeadError;
 
-#[derive(Debug, SystemParam)]
+#[derive(Debug, Event)]
+pub enum LivenessChangeEvent {
+    EntityDied { which: Entity },
+}
+
+#[derive(SystemParam)]
 pub struct HealthInterface<'w, 's> {
     healths: Query<'w, 's, &'static mut Health>,
+    liveness_events: EventWriter<'w, LivenessChangeEvent>,
 }
 
 impl<'w, 's> HealthInterface<'w, 's> {
@@ -45,6 +51,12 @@ impl<'w, 's> HealthInterface<'w, 's> {
 
         if target_health.is_alive() {
             target_health.current -= amount;
+
+            if target_health.is_dead() {
+                self.liveness_events
+                    .send(LivenessChangeEvent::EntityDied { which: target });
+            }
+
             Ok(())
         } else {
             Err(AlreadyDeadError)
@@ -57,6 +69,7 @@ pub struct HealthInterfacePlugin;
 impl Plugin for HealthInterfacePlugin {
     fn build(&self, app: &mut App) {
         // from https://github.com/jakobhellermann/bevy-inspector-egui/discussions/130
-        app.register_type::<Health>();
+        app.register_type::<Health>()
+            .add_event::<LivenessChangeEvent>();
     }
 }
