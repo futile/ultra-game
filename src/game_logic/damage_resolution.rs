@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 
-use crate::{game_logic::health::Health, PerUpdateSet};
+use super::health::HealthInterface;
+use crate::{game_logic::health::AlreadyDeadError, PerUpdateSet};
 
 #[derive(Debug, Clone, Component, Reflect, PartialEq)]
 pub struct DamageInstance {
@@ -14,17 +15,16 @@ pub struct DealDamage(pub DamageInstance);
 
 fn damage_resolution_system(
     mut deal_damage_events: EventReader<DealDamage>,
-    mut healths: Query<&mut Health>,
+    mut health_interface: HealthInterface,
 ) {
     for deal_damage_event in deal_damage_events.read() {
         println!("{deal_damage_event:?}");
 
         let damage = &deal_damage_event.0;
 
-        let mut target_health = healths.get_mut(damage.target).unwrap();
-
-        if target_health.is_alive() {
-            target_health.current -= damage.amount;
+        let res = health_interface.lose_hp(damage.target, damage.amount);
+        match res {
+            Ok(()) | Err(AlreadyDeadError) => (),
         }
     }
 }

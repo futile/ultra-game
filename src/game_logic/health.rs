@@ -1,9 +1,9 @@
-use bevy::prelude::*;
+use bevy::{ecs::system::SystemParam, prelude::*};
 
 #[derive(Debug, Clone, Component, Reflect)]
 pub struct Health {
-    pub current: f64,
-    pub max: f64,
+    current: f64,
+    max: f64,
 }
 
 impl Health {
@@ -20,6 +20,35 @@ impl Health {
 
     pub fn is_dead(&self) -> bool {
         !self.is_alive()
+    }
+
+    pub fn current(&self) -> f64 {
+        self.current
+    }
+
+    pub fn max(&self) -> f64 {
+        self.max
+    }
+}
+
+#[derive(Debug)]
+pub struct AlreadyDeadError;
+
+#[derive(Debug, SystemParam)]
+pub struct HealthInterface<'w, 's> {
+    healths: Query<'w, 's, &'static mut Health>,
+}
+
+impl<'w, 's> HealthInterface<'w, 's> {
+    pub fn lose_hp(&mut self, target: Entity, amount: f64) -> Result<(), AlreadyDeadError> {
+        let mut target_health = self.healths.get_mut(target).unwrap();
+
+        if target_health.is_alive() {
+            target_health.current -= amount;
+            Ok(())
+        } else {
+            Err(AlreadyDeadError)
+        }
     }
 }
 
