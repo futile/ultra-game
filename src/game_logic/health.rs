@@ -34,9 +34,8 @@ impl Health {
 #[derive(Debug)]
 pub struct AlreadyDeadError;
 
-#[derive(Debug, Event)]
+#[derive(Debug, Event, PartialEq, Eq)]
 pub enum LivenessChangeEvent {
-    #[expect(dead_code)]
     EntityDied { which: Entity },
 }
 

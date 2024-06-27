@@ -58,7 +58,7 @@ fn cast_ability(
         deal_damage_events.send(DealDamage(DamageInstance {
             source: Some(*caster_e),
             target: target_e,
-            amount: 13.37,
+            amount: 51.0,
         }));
     }
 }

@@ -5,8 +5,10 @@ use bevy::prelude::*;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use fight_ui::FightUiPlugin;
 use game_logic::{
-    faction::Faction, health::Health, AbilityId, AbilitySlot, AbilitySlotType, Fight,
-    GameLogicPlugin, HasAbilities, HasAbilitySlots,
+    faction::Faction,
+    fight::{Fight, FightEndCondition},
+    health::Health,
+    AbilityId, AbilitySlot, AbilitySlotType, GameLogicPlugin, HasAbilities, HasAbilitySlots,
 };
 
 pub mod abilities;
@@ -67,7 +69,11 @@ fn setup(mut commands: Commands) {
         .id();
 
     commands
-        .spawn((Fight, Name::new("The Fight")))
+        .spawn((
+            Fight,
+            FightEndCondition::SingleFactionSurvives,
+            Name::new("The Fight"),
+        ))
         .push_children(&[player_character, enemy]);
 }
 
@@ -77,6 +83,7 @@ enum PerUpdateSet {
     CommandSubmission,
     CommandResolution,
     DamageResolution,
+    FightEndChecking,
 }
 
 fn main() {
@@ -90,6 +97,7 @@ fn main() {
                 PerUpdateSet::CommandSubmission,
                 PerUpdateSet::CommandResolution,
                 PerUpdateSet::DamageResolution,
+                PerUpdateSet::FightEndChecking,
             )
                 .chain(),
         )

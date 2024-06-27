@@ -5,10 +5,8 @@ use bevy::prelude::*;
 pub mod commands;
 pub mod damage_resolution;
 pub mod faction;
+pub mod fight;
 pub mod health;
-
-#[derive(Debug, Clone, Component, Reflect)]
-pub struct Fight;
 
 #[derive(Debug, Component, Reflect)]
 pub struct HasAbilitySlots {
@@ -54,11 +52,11 @@ pub struct GameLogicPlugin;
 impl Plugin for GameLogicPlugin {
     fn build(&self, app: &mut App) {
         // from https://github.com/jakobhellermann/bevy-inspector-egui/discussions/130
-        app.register_type::<Fight>()
-            .register_type::<HasAbilities>()
+        app.register_type::<HasAbilities>()
             .register_type::<AbilityId>()
             .register_type::<HasAbilitySlots>()
             .add_plugins((
+                fight::FightPlugin,
                 faction::FactionPlugin,
                 commands::CommandsPlugin,
                 damage_resolution::DamageResolutionPlugin,

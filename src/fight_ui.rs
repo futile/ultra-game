@@ -1,7 +1,7 @@
 use bevy::{ecs::entity::EntityHashSet, prelude::*};
 
 use self::render_fight_window::{render_fight_windows, FightWindowUiState};
-use crate::{game_logic::Fight, PerUpdateSet};
+use crate::{game_logic::fight::Fight, PerUpdateSet};
 
 mod render_fight_window;
 
