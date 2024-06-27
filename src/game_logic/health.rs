@@ -36,6 +36,7 @@ pub struct AlreadyDeadError;
 
 #[derive(Debug, Event)]
 pub enum LivenessChangeEvent {
+    #[expect(dead_code)]
     EntityDied { which: Entity },
 }
 
@@ -61,6 +62,11 @@ impl<'w, 's> HealthInterface<'w, 's> {
         } else {
             Err(AlreadyDeadError)
         }
+    }
+
+    #[expect(dead_code)]
+    pub fn healths(&self) -> Query<'_, 's, &'static Health> {
+        self.healths.to_readonly()
     }
 }
 
