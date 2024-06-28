@@ -64,18 +64,16 @@ pub fn render_fight_windows(
         let player_entity = factions
             .iter_many(fight_children)
             .filter(|(_e, faction)| **faction == Faction::Player)
-            .at_most_one()
-            .ok()
-            .flatten()
+            .exactly_one()
+            .ok() // the error doesn't impl `Debug`, so can't unwrap it
             .unwrap()
             .0;
 
         let enemy_entity = factions
             .iter_many(fight_children)
             .filter(|(_e, faction)| **faction == Faction::Enemy)
-            .at_most_one()
-            .ok()
-            .flatten()
+            .exactly_one()
+            .ok() // the error doesn't impl `Debug`, so can't unwrap it
             .unwrap()
             .0;
 
