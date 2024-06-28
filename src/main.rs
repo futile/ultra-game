@@ -1,5 +1,3 @@
-#![feature(lint_reasons)]
-
 use abilities::AbilitiesPlugin;
 use bevy::prelude::*;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
