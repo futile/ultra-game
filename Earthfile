@@ -41,5 +41,6 @@ build:
   # build with earthly's `rust`-lib, according to https://docs.earthly.dev/featured-guides/rust
   COPY --keep-ts Cargo.toml Cargo.lock ./
   COPY --keep-ts --dir src  ./
+  COPY --keep-ts --dir .cargo  ./
   DO rust+CARGO --args="build --release" --output="release/[^/\.]+"
   SAVE IMAGE ultra-game:latest
