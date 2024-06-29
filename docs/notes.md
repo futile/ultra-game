@@ -2,8 +2,21 @@
 
 ## Next:
 
-- Alternative: Implement damage, hp, etc. first, and simply make `Attack` target all/the first/etc. enemy.
-    - Also ok, maybe much easier, but probably better, because it forces me to work on actual gameplay, instead of building systems :see_no_evil:
+## Possible Next
+- [ ] Tooltips for Abilities (/Slots? probably later, start with abilities)
+
+- [ ] Proper Fight-Over Tracking and Handling
+  - [ ] `Ongoing` or `Finished` only for the start (new Component(s), check for `FightResult`?)
+  - [ ] UI should show a `"'{Faction}' won!"`-headline or sth. when the Fight is over
+  - [ ] Command Submission + Execution should be disabled (maybe also print/log) a warning
+  - [ ] UI should also be disabled (implicitly, maybe also explicitly?)
+
+- [ ] Feat to "pause" a fight, until resumed/a Command is given
+  - Pause key `<space>` for the start at least
+  - [ ] In the Systems: Have an `In<EntityList>` or sth. parameter, and another (generic?) system that gathers
+        active Fights and runs the System for each one's Entities.
+  - [ ] How to make Events per-Fight? Necessary?
+
 - Targeting-system for abilities (UI)
     - Targeting-state for UI when selecting an ability
     - Cancel using ESC?
@@ -34,7 +47,11 @@ Casting an ability has different kinds of information that determine castability
 All of these can be resolved/kept up to date individually.
 Finally, executability of a command, such as `CastAbility`, checks all of them to determine castability.
 
-
+---
+# Done
+---
+- [x] Alternative: Implement damage, hp, etc. first, and simply make `Attack` target all/the first/etc. enemy.
+    - Also ok, maybe much easier, but probably better, because it forces me to work on actual gameplay, instead of building systems :see_no_evil:
 
 ---
 # OLD STUFF
