@@ -1,7 +1,6 @@
 # Todos
 
 ## Next:
-- [ ] UI should show a `"'{Faction}' won!"`-headline or sth. when the Fight is over
 - [ ] `Ongoing` or `Finished` only for now (new Component(s), check for `FightResult`?)
 
 ## Possible Next
@@ -29,6 +28,7 @@
 ---
 - [x] Alternative: Implement damage, hp, etc. first, and simply make `Attack` target all/the first/etc. enemy.
     - Also ok, maybe much easier, but probably better, because it forces me to work on actual gameplay, instead of building systems :see_no_evil:
+- [x] UI should show a `"'{Faction}' won!"`-headline or sth. when the Fight is over
 
 # Notes
 
