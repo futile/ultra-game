@@ -1,4 +1,4 @@
-use bevy::{prelude::*, utils::HashSet};
+use bevy::{ecs::system::SystemParam, prelude::*, utils::HashSet};
 
 use super::{
     faction::Faction,
@@ -17,6 +17,28 @@ pub enum FightEndCondition {
 #[derive(Debug, Component, Reflect)]
 pub enum FightResult {
     FactionVictory { which: Faction },
+}
+
+#[derive(Debug, PartialEq, Eq, Reflect)]
+pub enum FightStatus {
+    Ongoing,
+    Ended,
+}
+
+#[derive(SystemParam)]
+pub struct FightInterface<'w, 's> {
+    fights: Query<'w, 's, (&'static Fight, Option<&'static FightResult>)>,
+}
+
+impl<'w, 's> FightInterface<'w, 's> {
+    pub fn get_fight_status(&self, fight_e: Entity) -> FightStatus {
+        let (_, fight_result) = self.fights.get(fight_e).unwrap();
+
+        match fight_result {
+            None => FightStatus::Ongoing,
+            Some(_) => FightStatus::Ended,
+        }
+    }
 }
 
 fn single_faction_survives_check(

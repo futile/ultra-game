@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{ecs::system::SystemParam, prelude::*};
 
 use super::{Ability, AbilityId, AbilitySlot};
 
@@ -37,6 +37,15 @@ impl CastAbility {
         }
 
         true
+    }
+}
+
+#[derive(Debug, SystemParam)]
+pub struct CastAbilityInterface {}
+
+impl CastAbilityInterface {
+    pub fn is_valid_cast(&self, cast: &CastAbility) -> bool {
+        todo!()
     }
 }
 
