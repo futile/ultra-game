@@ -7,10 +7,8 @@ use itertools::Itertools;
 
 use super::FightWindow;
 use crate::{
-    abilities::AbilityCatalog,
-    game_logic::{
-        commands, faction::Faction, fight::FightResult, health::Health, AbilityId, AbilitySlot,
-    },
+    abilities::AbilityInterface,
+    game_logic::{commands, faction::Faction, fight::FightResult, health::Health, AbilitySlot},
     AbilitySlotType, Fight, HasAbilities, HasAbilitySlots,
 };
 
@@ -29,7 +27,7 @@ impl Default for FightWindowUiState {
     }
 }
 
-#[allow(clippy::too_many_arguments)]
+#[expect(clippy::too_many_arguments)]
 pub fn render_fight_windows(
     mut _commands: Commands,
     mut fight_windows: Query<(Entity, &mut FightWindow)>,
@@ -40,9 +38,8 @@ pub fn render_fight_windows(
     has_ability_slots: Query<&HasAbilitySlots>,
     has_abilities: Query<&HasAbilities>,
     children: Query<&Children>,
-    ability_ids: Query<&AbilityId>,
     ability_slots: Query<&AbilitySlot>,
-    ability_catalog: Res<AbilityCatalog>,
+    ability_interface: AbilityInterface,
     mut cast_ability: EventWriter<commands::CastAbility>,
     mut contexts: EguiContexts,
 ) {
@@ -111,9 +108,8 @@ pub fn render_fight_windows(
                         &has_ability_slots,
                         &has_abilities,
                         &children,
-                        &ability_ids,
                         &ability_slots,
-                        &ability_catalog,
+                        &ability_interface,
                         &mut cast_ability,
                     );
 
@@ -129,9 +125,8 @@ pub fn render_fight_windows(
                         &has_ability_slots,
                         &has_abilities,
                         &children,
-                        &ability_ids,
                         &ability_slots,
-                        &ability_catalog,
+                        &ability_interface,
                         &mut cast_ability,
                     );
                 });
@@ -169,7 +164,7 @@ impl AbilitySlotsSectionUiState {
     }
 }
 
-#[allow(clippy::too_many_arguments)]
+#[expect(clippy::too_many_arguments)]
 fn ui_fight_column(
     ui: &mut Ui,
     ui_column_state: &mut FightColumnUiState,
@@ -180,9 +175,8 @@ fn ui_fight_column(
     has_ability_slots: &Query<&HasAbilitySlots>,
     has_abilities: &Query<&HasAbilities>,
     children: &Query<&Children>,
-    ability_ids: &Query<&AbilityId>,
     ability_slots: &Query<&AbilitySlot>,
-    ability_catalog: &Res<AbilityCatalog>,
+    ability_interface: &AbilityInterface,
     cast_ability: &mut EventWriter<commands::CastAbility>,
 ) {
     ui.indent(ui.id().with("entity_overview_section"), |ui: &mut Ui| {
@@ -222,9 +216,8 @@ fn ui_fight_column(
             fight_e,
             abilities,
             children,
-            ability_ids,
+            ability_interface,
             ability_slots,
-            ability_catalog,
             cast_ability,
             ui_column_state,
         )
@@ -304,16 +297,15 @@ fn ui_ability_slots(
     });
 }
 
-#[allow(clippy::too_many_arguments)]
+#[expect(clippy::too_many_arguments)]
 fn ui_abilities(
     ui: &mut Ui,
     model: Entity,
     fight_e: Entity,
     abilities: &HasAbilities,
     children: &Query<&Children>,
-    ability_ids: &Query<&AbilityId>,
+    ability_interface: &AbilityInterface,
     ability_slots: &Query<&AbilitySlot>,
-    ability_catalog: &Res<AbilityCatalog>,
     cast_ability: &mut EventWriter<commands::CastAbility>,
     ui_state: &mut FightColumnUiState,
 ) {
@@ -330,13 +322,15 @@ fn ui_abilities(
             .iter()
             .enumerate()
         {
-            let ability_id = ability_ids
-                .get(*ability_id_e)
-                .expect("ability without AbilityId");
-            let ability = ability_catalog
-                .0
-                .get(ability_id)
-                .unwrap_or_else(|| panic!("AbilityId `{:?}` not in catalog", ability_id));
+            let ability = ability_interface.get_ability_from_entity(*ability_id_e);
+            let possible_cast = commands::CastAbility {
+                caster_e: model,
+                slot_e: selected_slot_e,
+                ability_e: *ability_id_e,
+                fight_e,
+            };
+            // TODO: forward/refactor so we have `CastAbilityInterface` here, and use that for
+            // checking instead
             let ability_usable = ability.can_use(selected_slot);
 
             let keyboard_shortcut: Option<KeyboardShortcut> = if user_interactable {
@@ -362,12 +356,7 @@ fn ui_abilities(
                     );
 
                     if ability_usable && (shortcut_pressed || ability_button.clicked()) {
-                        cast_ability.send(commands::CastAbility {
-                            caster_e: model,
-                            slot_e: selected_slot_e,
-                            ability_e: *ability_id_e,
-                            fight_e,
-                        });
+                        cast_ability.send(possible_cast);
 
                         // clear the selected slot, because it was used.
                         ui_state.abilities_section_state.selected_slot = None;

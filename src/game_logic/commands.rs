@@ -1,6 +1,7 @@
 use bevy::{ecs::system::SystemParam, prelude::*};
 
-use super::{Ability, AbilityId, AbilitySlot};
+use super::{fight::FightInterface, Ability, AbilityId, AbilitySlot};
+use crate::{abilities::AbilityInterface, game_logic::fight::FightStatus};
 
 #[derive(Debug, Event)]
 pub struct CastAbility {
@@ -40,12 +41,31 @@ impl CastAbility {
     }
 }
 
-#[derive(Debug, SystemParam)]
-pub struct CastAbilityInterface {}
+#[derive(SystemParam)]
+pub struct CastAbilityInterface<'w, 's> {
+    ability_slots: Query<'w, 's, &'static AbilitySlot>,
+    ability_interface: AbilityInterface<'w, 's>,
+    fight_interface: FightInterface<'w, 's>,
+}
 
-impl CastAbilityInterface {
+impl<'w, 's> CastAbilityInterface<'w, 's> {
     pub fn is_valid_cast(&self, cast: &CastAbility) -> bool {
-        todo!()
+        match self.fight_interface.get_fight_status(cast.fight_e) {
+            FightStatus::Ongoing => (),
+            FightStatus::Ended => return false,
+        };
+
+        let ability = self
+            .ability_interface
+            .get_ability_from_entity(cast.ability_e);
+        let slot: Option<&AbilitySlot> = cast
+            .slot_e
+            .map(|slot_e| self.ability_slots.get(slot_e).unwrap());
+
+        let can_use_slot = ability.can_use(slot);
+
+        #[expect(clippy::let_and_return, reason = "better readability")]
+        can_use_slot
     }
 }
 

@@ -2,6 +2,7 @@
 
 ## Next:
 - [ ] `Ongoing` or `Finished` only for now (new Component(s), check for `FightResult`?)
+- [ ] 1 or 2 basic tests, also just to try out how well it works/how easy it is
 
 ## Possible Next
 - [ ] Tooltips for Abilities (/Slots? probably later, start with abilities)
