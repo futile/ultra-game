@@ -8,7 +8,9 @@ use itertools::Itertools;
 use super::FightWindow;
 use crate::{
     abilities::AbilityCatalog,
-    game_logic::{commands, faction::Faction, health::Health, AbilityId, AbilitySlot},
+    game_logic::{
+        commands, faction::Faction, fight::FightResult, health::Health, AbilityId, AbilitySlot,
+    },
     AbilitySlotType, Fight, HasAbilities, HasAbilitySlots,
 };
 
@@ -31,7 +33,7 @@ impl Default for FightWindowUiState {
 pub fn render_fight_windows(
     mut _commands: Commands,
     mut fight_windows: Query<(Entity, &mut FightWindow)>,
-    fights: Query<&Fight>,
+    fights: Query<(&Fight, Option<&FightResult>)>,
     factions: Query<(Entity, &Faction)>,
     names: Query<&Name>,
     healths: Query<&Health>,
@@ -57,7 +59,7 @@ pub fn render_fight_windows(
     for (window_e, fight_window) in &mut fight_windows {
         let fight_e = fight_window.model;
 
-        fights
+        let (_, fight_result) = fights
             .get(fight_e)
             .expect("FightWindow.model doesn't have a Fight");
 
@@ -83,6 +85,19 @@ pub fn render_fight_windows(
         egui::Window::new("Fight")
             .id(Id::new(window_e))
             .show(ui_ctx, |ui: &mut Ui| {
+                if let Some(fight_result) = fight_result {
+                    match fight_result {
+                        FightResult::FactionVictory { which: win_faction } => {
+                            ui.vertical_centered(|ui| {
+                                ui.label(
+                                    RichText::new(format!("'{win_faction}' won!"))
+                                        .heading()
+                                        .strong(),
+                                );
+                            });
+                        }
+                    }
+                }
                 ui.columns(2, |columns: &mut [Ui]| {
                     columns[0].label(RichText::new("Player").heading().strong());
 

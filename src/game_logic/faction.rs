@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use itertools::Itertools;
 
-#[derive(Debug, Clone, Component, Reflect, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Component, Reflect, PartialEq, Eq, Hash, derive_more::Display)]
 pub enum Faction {
     Player,
     Enemy,
