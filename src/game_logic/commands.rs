@@ -36,7 +36,7 @@ impl CastAbility {
             return false;
         }
 
-        return true;
+        true
     }
 }
 

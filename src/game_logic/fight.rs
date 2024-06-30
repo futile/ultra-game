@@ -62,7 +62,7 @@ fn single_faction_survives_check(
         }
 
         // TODO: can all factions lose at the same time? Draw?
-        assert!(alive_factions.len() > 0);
+        assert!(!alive_factions.is_empty());
 
         if alive_factions.len() == 1 {
             let winning_faction = alive_factions.into_iter().next().unwrap();

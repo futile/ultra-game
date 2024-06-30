@@ -22,7 +22,7 @@ impl Faction {
             .filter(|(_, other_faction)| self.is_enemy(other_faction))
             .exactly_one()
         {
-            Ok((e, f)) => return (e, f.clone()),
+            Ok((e, f)) => (e, f.clone()),
             Err(multiple) => {
                 panic!(
                     "expected exactly one enemy, but found multiple: {:?}",

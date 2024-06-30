@@ -27,6 +27,7 @@ impl Default for FightWindowUiState {
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn render_fight_windows(
     mut _commands: Commands,
     mut fight_windows: Query<(Entity, &mut FightWindow)>,
@@ -153,6 +154,7 @@ impl AbilitySlotsSectionUiState {
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn ui_fight_column(
     ui: &mut Ui,
     ui_column_state: &mut FightColumnUiState,
@@ -169,13 +171,13 @@ fn ui_fight_column(
     cast_ability: &mut EventWriter<commands::CastAbility>,
 ) {
     ui.indent(ui.id().with("entity_overview_section"), |ui: &mut Ui| {
-        if let Some(name) = names.get(model_e).ok() {
+        if let Ok(name) = names.get(model_e) {
             ui.label(name.as_str());
         } else {
             ui.label("<No Name>");
         }
 
-        if let Some(health) = healths.get(model_e).ok() {
+        if let Ok(health) = healths.get(model_e) {
             ui.label(format!(
                 "Health: {:.2}/{:.2}",
                 health.current(),
@@ -186,7 +188,7 @@ fn ui_fight_column(
         }
     });
 
-    if let Some(slots) = has_ability_slots.get(model_e).ok() {
+    if let Ok(slots) = has_ability_slots.get(model_e) {
         ui.add_space(10.);
         ui_ability_slots(
             ui,
@@ -197,7 +199,7 @@ fn ui_fight_column(
         );
     }
 
-    if let Some(abilities) = has_abilities.get(model_e).ok() {
+    if let Ok(abilities) = has_abilities.get(model_e) {
         ui.add_space(10.);
         ui_abilities(
             ui,
@@ -287,6 +289,7 @@ fn ui_ability_slots(
     });
 }
 
+#[allow(clippy::too_many_arguments)]
 fn ui_abilities(
     ui: &mut Ui,
     model: Entity,
@@ -318,7 +321,7 @@ fn ui_abilities(
             let ability = ability_catalog
                 .0
                 .get(ability_id)
-                .expect(&format!("AbilityId `{:?}` not in catalog", ability_id));
+                .unwrap_or_else(|| panic!("AbilityId `{:?}` not in catalog", ability_id));
             let ability_usable = ability.can_use(selected_slot);
 
             let keyboard_shortcut: Option<KeyboardShortcut> = if user_interactable {
@@ -364,12 +367,12 @@ fn monospace_checked_shortcut(ui: &mut Ui, shortcut: Option<&KeyboardShortcut>) 
     let shortcut_pressed: bool = match shortcut {
         // TODO: somehow check if the current egui window has keyboard focus.
         // Window.show().response.has_focus() is always false, so dunno how to do this.
-        Some(shortcut) => ui.input_mut(|i| i.consume_shortcut(&shortcut)),
+        Some(shortcut) => ui.input_mut(|i| i.consume_shortcut(shortcut)),
         None => false,
     };
 
     let shortcut_text: String = match shortcut {
-        Some(shortcut) => ui.ctx().format_shortcut(&shortcut),
+        Some(shortcut) => ui.ctx().format_shortcut(shortcut),
         None => String::from(" "),
     };
 
