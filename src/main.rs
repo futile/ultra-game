@@ -10,8 +10,9 @@ use game_logic::{
 };
 
 pub mod abilities;
-mod fight_ui;
-mod game_logic;
+pub mod fight_ui;
+pub mod game_logic;
+pub mod utils;
 
 fn setup(mut commands: Commands) {
     commands.spawn(Camera2dBundle::default());
