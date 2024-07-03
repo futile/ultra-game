@@ -28,10 +28,53 @@ impl Default for FightWindowUiState {
     }
 }
 
-#[expect(clippy::too_many_arguments)]
 pub fn render_fight_windows(
-    mut _commands: Commands,
-    mut fight_windows: Query<(Entity, &mut FightWindow)>,
+    world: &mut World,
+    params: &mut SystemState<(EguiContexts, Query<Entity, With<FightWindow>>)>,
+) {
+    let (ui_ctx, fight_windows) = {
+        let (mut egui_contexts, fight_windows) = params.get_mut(world);
+
+        // context for the primary (so far, only) window
+        let ui_ctx = match egui_contexts.try_ctx_mut() {
+            None => {
+                // prevent/avoid a panic when bevy exits.
+                // another workaround can be found in https://github.com/mvlabat/bevy_egui/issues/212
+                warn!("No egui context, skipping rendering.");
+                return;
+            }
+            // have to make sure not to borrow world. cloning `Context` is cheap.
+            Some(ui_ctx) => ui_ctx.clone(),
+        };
+
+        // need this owned/non-borrowed as well, so we can still use `world`
+        let fight_windows = fight_windows.iter().collect_vec();
+
+        (ui_ctx, fight_windows)
+    };
+
+    // enable light style: https://github.com/emilk/egui/discussions/1627
+    ui_ctx.style_mut(|style| style.visuals = Visuals::light());
+
+    for fight_window_e in fight_windows.into_iter() {
+        egui::Window::new("Fight")
+            .id(Id::new(fight_window_e))
+            .show(&ui_ctx, |ui: &mut Ui| {
+                run_ui_system(
+                    ui,
+                    world,
+                    Id::new("fight_window").with(fight_window_e),
+                    fight_window_e,
+                    render_fight_window,
+                );
+            });
+    }
+}
+
+#[expect(clippy::too_many_arguments)]
+pub fn render_fight_window(
+    In((mut ui, fight_window_e)): In<(Ui, Entity)>,
+    mut fight_windows: Query<&mut FightWindow>,
     fights: Query<(&Fight, Option<&FightResult>)>,
     factions: Query<(Entity, &Faction)>,
     names: Query<&Name>,
@@ -42,127 +85,81 @@ pub fn render_fight_windows(
     ability_slots: Query<&AbilitySlot>,
     ability_interface: AbilityInterface,
     mut cast_ability: EventWriter<commands::CastAbility>,
-    mut contexts: EguiContexts,
-) {
-    // context for the primary (so far, only) window
-    let Some(ui_ctx) = contexts.try_ctx_mut() else {
-        // another workaround can be found in https://github.com/mvlabat/bevy_egui/issues/212
-        warn!("No egui context, skipping rendering.");
-        return;
-    };
+) -> (Ui, ()) {
+    let mut fight_window = fight_windows.get_mut(fight_window_e).unwrap();
+    let fight_e = fight_window.model;
 
-    // enable light style: https://github.com/emilk/egui/discussions/1627
-    ui_ctx.style_mut(|style| style.visuals = Visuals::light());
+    let (_, fight_result) = fights
+        .get(fight_e)
+        .expect("FightWindow.model doesn't have a Fight");
 
-    for (window_e, fight_window) in &mut fight_windows {
-        let fight_e = fight_window.model;
+    let fight_children = children.get(fight_e).expect("Fight without Children");
+    let player_entity = factions
+        .iter_many(fight_children)
+        .filter(|(_e, faction)| **faction == Faction::Player)
+        .exactly_one()
+        .ok() // the error doesn't impl `Debug`, so can't unwrap it
+        .unwrap()
+        .0;
 
-        let (_, fight_result) = fights
-            .get(fight_e)
-            .expect("FightWindow.model doesn't have a Fight");
+    let enemy_entity = factions
+        .iter_many(fight_children)
+        .filter(|(_e, faction)| **faction == Faction::Enemy)
+        .exactly_one()
+        .ok() // the error doesn't impl `Debug`, so can't unwrap it
+        .unwrap()
+        .0;
 
-        let fight_children = children.get(fight_e).expect("Fight without Children");
-        let player_entity = factions
-            .iter_many(fight_children)
-            .filter(|(_e, faction)| **faction == Faction::Player)
-            .exactly_one()
-            .ok() // the error doesn't impl `Debug`, so can't unwrap it
-            .unwrap()
-            .0;
+    let ui_state = &mut fight_window.ui_state;
 
-        let enemy_entity = factions
-            .iter_many(fight_children)
-            .filter(|(_e, faction)| **faction == Faction::Enemy)
-            .exactly_one()
-            .ok() // the error doesn't impl `Debug`, so can't unwrap it
-            .unwrap()
-            .0;
-
-        let mut ui_state = fight_window.map_unchanged(|fw| &mut fw.ui_state);
-
-        egui::Window::new("Fight")
-            .id(Id::new(window_e))
-            .show(ui_ctx, |ui: &mut Ui| {
-                if let Some(fight_result) = fight_result {
-                    match fight_result {
-                        FightResult::FactionVictory { which: win_faction } => {
-                            ui.vertical_centered(|ui| {
-                                ui.label(
-                                    RichText::new(format!("'{win_faction}' won!"))
-                                        .heading()
-                                        .strong(),
-                                );
-                            });
-                        }
-                    }
-                }
-                ui.columns(2, |columns: &mut [Ui]| {
-                    columns[0].label(RichText::new("Player").heading().strong());
-
-                    ui_fight_column(
-                        &mut columns[0],
-                        &mut ui_state.player_column_state,
-                        player_entity,
-                        fight_e,
-                        &names,
-                        &healths,
-                        &has_ability_slots,
-                        &has_abilities,
-                        &children,
-                        &ability_slots,
-                        &ability_interface,
-                        &mut cast_ability,
-                    );
-
-                    columns[1].label(RichText::new("Enemy").heading().strong());
-
-                    ui_fight_column(
-                        &mut columns[1],
-                        &mut ui_state.enemy_column_state,
-                        enemy_entity,
-                        fight_e,
-                        &names,
-                        &healths,
-                        &has_ability_slots,
-                        &has_abilities,
-                        &children,
-                        &ability_slots,
-                        &ability_interface,
-                        &mut cast_ability,
+    if let Some(fight_result) = fight_result {
+        match fight_result {
+            FightResult::FactionVictory { which: win_faction } => {
+                ui.vertical_centered(|ui| {
+                    ui.label(
+                        RichText::new(format!("'{win_faction}' won!"))
+                            .heading()
+                            .strong(),
                     );
                 });
-            });
-    }
-}
-
-pub fn render_ui_test(world: &mut World, params: &mut SystemState<(EguiContexts,)>) {
-    let (mut egui_contexts,) = params.get_mut(world);
-
-    // context for the primary (so far, only) window
-    let ui_ctx = match egui_contexts.try_ctx_mut() {
-        None => {
-            // another workaround can be found in https://github.com/mvlabat/bevy_egui/issues/212
-            warn!("No egui context, skipping rendering.");
-            return;
+            }
         }
-        // have to make sure not to borrow world. cloning `Context` is cheap.
-        Some(ui_ctx) => ui_ctx.clone(),
-    };
-
-    egui::Window::new("Ui-System Test")
-        .id(Id::new("foobarlol"))
-        .show(&ui_ctx, |ui: &mut Ui| {
-            run_ui_system(ui, world, "foobarlol", (), ui_system_test);
-        });
-}
-
-// draw ui _and_ take system parameters!
-fn ui_system_test(In((mut ui, ())): In<(Ui, ())>, names: Query<&Name>) -> (Ui, ()) {
-    ui.label("yay!!");
-
-    for name in &names {
-        ui.label(name.as_str());
     }
+    ui.columns(2, |columns: &mut [Ui]| {
+        columns[0].label(RichText::new("Player").heading().strong());
+
+        ui_fight_column(
+            &mut columns[0],
+            &mut ui_state.player_column_state,
+            player_entity,
+            fight_e,
+            &names,
+            &healths,
+            &has_ability_slots,
+            &has_abilities,
+            &children,
+            &ability_slots,
+            &ability_interface,
+            &mut cast_ability,
+        );
+
+        columns[1].label(RichText::new("Enemy").heading().strong());
+
+        ui_fight_column(
+            &mut columns[1],
+            &mut ui_state.enemy_column_state,
+            enemy_entity,
+            fight_e,
+            &names,
+            &healths,
+            &has_ability_slots,
+            &has_abilities,
+            &children,
+            &ability_slots,
+            &ability_interface,
+            &mut cast_ability,
+        );
+    });
 
     (ui, ())
 }
