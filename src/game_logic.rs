@@ -42,7 +42,7 @@ pub struct Ability {
 }
 
 impl Ability {
-    pub fn can_use(&self, selected_ability_slot: Option<&AbilitySlot>) -> bool {
+    pub fn can_use_slot(&self, selected_ability_slot: Option<&AbilitySlot>) -> bool {
         selected_ability_slot.is_some_and(|s| s.tpe == self.slot_type)
     }
 }

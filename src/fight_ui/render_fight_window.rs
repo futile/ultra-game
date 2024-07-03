@@ -331,7 +331,7 @@ fn ui_abilities(
             };
             // TODO: forward/refactor so we have `CastAbilityInterface` here, and use that for
             // checking instead
-            let ability_usable = ability.can_use(selected_slot);
+            let ability_usable = ability.can_use_slot(selected_slot);
 
             let keyboard_shortcut: Option<KeyboardShortcut> = if user_interactable {
                 let key: Option<Key> = match idx {

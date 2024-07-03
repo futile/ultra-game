@@ -30,7 +30,7 @@ impl CastAbility {
         let slot: Option<&AbilitySlot> =
             self.slot_e.map(|slot_e| ability_slots.get(slot_e).unwrap());
 
-        let can_use = ability.can_use(slot);
+        let can_use = ability.can_use_slot(slot);
 
         if !can_use {
             eprintln!("Cannot execute commands::CastAbility due to mismatching slot: {self:?} | SlotType: {slot:?}");
@@ -62,7 +62,7 @@ impl<'w, 's> CastAbilityInterface<'w, 's> {
             .slot_e
             .map(|slot_e| self.ability_slots.get(slot_e).unwrap());
 
-        let can_use_slot = ability.can_use(slot);
+        let can_use_slot = ability.can_use_slot(slot);
 
         #[expect(clippy::let_and_return, reason = "better readability")]
         can_use_slot
