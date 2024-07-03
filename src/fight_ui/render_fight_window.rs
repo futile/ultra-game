@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{ecs::system::SystemState, prelude::*};
 use bevy_inspector_egui::{
     bevy_egui::EguiContexts,
     egui::{self, Id, Key, KeyboardShortcut, Modifiers, RichText, Ui, Visuals},
@@ -9,6 +9,7 @@ use super::FightWindow;
 use crate::{
     abilities::AbilityInterface,
     game_logic::{commands, faction::Faction, fight::FightResult, health::Health, AbilitySlot},
+    utils::egui_systems::run_ui_system,
     AbilitySlotType, Fight, HasAbilities, HasAbilitySlots,
 };
 
@@ -132,6 +133,38 @@ pub fn render_fight_windows(
                 });
             });
     }
+}
+
+pub fn render_ui_test(world: &mut World, params: &mut SystemState<(EguiContexts,)>) {
+    let (mut egui_contexts,) = params.get_mut(world);
+
+    // context for the primary (so far, only) window
+    let ui_ctx = match egui_contexts.try_ctx_mut() {
+        None => {
+            // another workaround can be found in https://github.com/mvlabat/bevy_egui/issues/212
+            warn!("No egui context, skipping rendering.");
+            return;
+        }
+        // have to make sure not to borrow world. cloning `Context` is cheap.
+        Some(ui_ctx) => ui_ctx.clone(),
+    };
+
+    egui::Window::new("Ui-System Test")
+        .id(Id::new("foobarlol"))
+        .show(&ui_ctx, |ui: &mut Ui| {
+            run_ui_system(ui, world, "foobarlol", (), ui_system_test);
+        });
+}
+
+// draw ui _and_ take system parameters!
+fn ui_system_test(In((mut ui, ())): In<(Ui, ())>, names: Query<&Name>) -> (Ui, ()) {
+    ui.label("yay!!");
+
+    for name in &names {
+        ui.label(name.as_str());
+    }
+
+    (ui, ())
 }
 
 #[derive(Debug, Reflect)]

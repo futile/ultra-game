@@ -103,7 +103,7 @@ where
     result
 }
 
-pub fn ui_syscall<H, I, O, S, Marker>(
+pub fn run_ui_system<H, I, O, S, Marker>(
     ui: &mut Ui,
     world: &mut World,
     id: H,
