@@ -44,6 +44,8 @@ fn cast_ability(
         fight_e,
     } in cast_ability_events
         .read()
+        // TODO:NEXT also check `CastAbilityInterface.is_valid_cast()` here (maybe add to
+        // `is_valid_matching_ability_cast()`)
         .filter(|c| c.is_valid_matching_ability_cast(this_ability, &ability_ids, &ability_slots))
     {
         let slot: Option<&AbilitySlot> = slot_e.map(|slot_e| ability_slots.get(slot_e).unwrap());

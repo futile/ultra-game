@@ -103,7 +103,7 @@ where
     result
 }
 
-// TODO: add `run_ui_system_input` as well, and make only that take the `input` parameter
+// NOTE: add `run_ui_system_input` as well, and make only that take the `input` parameter
 // gets rid of the `(Ui, ())` extra brackets/empty pair, that causes nasty bugs when forgotten.
 pub fn run_ui_system<H, I, O, S, Marker>(
     ui: &mut Ui,
