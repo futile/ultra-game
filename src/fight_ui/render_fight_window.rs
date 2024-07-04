@@ -8,7 +8,13 @@ use itertools::Itertools;
 use super::FightWindow;
 use crate::{
     abilities::AbilityInterface,
-    game_logic::{commands, faction::Faction, fight::FightResult, health::Health, AbilitySlot},
+    game_logic::{
+        commands::{self, CastAbilityInterface},
+        faction::Faction,
+        fight::FightResult,
+        health::Health,
+        AbilitySlot,
+    },
     utils::egui_systems::run_ui_system,
     AbilitySlotType, Fight, HasAbilities, HasAbilitySlots,
 };
@@ -336,7 +342,7 @@ fn ui_abilities(
         Query<&HasAbilities>,
         Query<&Children>,
         AbilityInterface,
-        Query<&AbilitySlot>,
+        CastAbilityInterface,
         EventWriter<commands::CastAbility>,
     )>,
 ) -> (Ui, FightColumnUiState) {
@@ -346,13 +352,12 @@ fn ui_abilities(
             has_abilities,
             children,
             ability_interface,
-            ability_slots,
+            cast_ability_interface,
             mut cast_ability,
         ) = params.get_mut(world);
 
         let user_interactable = ui_column_state.user_interactable;
         let selected_slot_e = ui_column_state.abilities_section_state.selected_slot;
-        let selected_slot = selected_slot_e.and_then(|s| ability_slots.get(s).ok());
 
         ui.heading("Abilities");
 
@@ -372,9 +377,7 @@ fn ui_abilities(
                     ability_e: *ability_id_e,
                     fight_e,
                 };
-                // TODO: forward/refactor so we have `CastAbilityInterface` here, and use that for
-                // checking instead
-                let ability_usable = ability.can_use_slot(selected_slot);
+                let ability_usable = cast_ability_interface.is_valid_cast(&possible_cast);
 
                 let keyboard_shortcut: Option<KeyboardShortcut> = if user_interactable {
                     let key: Option<Key> = match idx {
