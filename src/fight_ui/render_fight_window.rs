@@ -13,7 +13,7 @@ use crate::{
     AbilitySlotType, Fight, HasAbilities, HasAbilitySlots,
 };
 
-#[derive(Debug, Component, Reflect)]
+#[derive(Debug, Clone, Component, Reflect)]
 pub struct FightWindowUiState {
     player_column_state: FightColumnUiState,
     enemy_column_state: FightColumnUiState,
@@ -50,6 +50,11 @@ pub fn render_fight_windows(
         // need this owned/non-borrowed as well, so we can still use `world`
         let fight_windows = fight_windows.iter().collect_vec();
 
+        // in case we ever have things that need to be applied, e.g., `Commands`.
+        // should be done when we are done with the `SystemState`.
+        // should this be done later? I would think it doesn't hurt to do it here..
+        params.apply(world);
+
         (ui_ctx, fight_windows)
     };
 
@@ -71,31 +76,28 @@ pub fn render_fight_windows(
     }
 }
 
-#[expect(clippy::too_many_arguments)]
 pub fn render_fight_window(
     In((mut ui, fight_window_e)): In<(Ui, Entity)>,
-    mut fight_windows: Query<&mut FightWindow>,
-    fights: Query<(&Fight, Option<&FightResult>)>,
-    factions: Query<(Entity, &Faction)>,
-    names: Query<&Name>,
-    healths: Query<&Health>,
-    has_ability_slots: Query<&HasAbilitySlots>,
-    has_abilities: Query<&HasAbilities>,
-    children: Query<&Children>,
-    ability_slots: Query<&AbilitySlot>,
-    ability_interface: AbilityInterface,
-    mut cast_ability: EventWriter<commands::CastAbility>,
+    world: &mut World,
+    fight_windows: &mut QueryState<&mut FightWindow>,
+    fights: &mut QueryState<(&Fight, Option<&FightResult>)>,
+    factions: &mut QueryState<(Entity, &Faction)>,
+    children: &mut QueryState<&Children>,
 ) -> (Ui, ()) {
-    let mut fight_window = fight_windows.get_mut(fight_window_e).unwrap();
+    let fight_window = fight_windows.get_mut(world, fight_window_e).unwrap();
+
     let fight_e = fight_window.model;
+    let mut ui_state = fight_window.ui_state.clone();
 
     let (_, fight_result) = fights
-        .get(fight_e)
+        .get(world, fight_e)
         .expect("FightWindow.model doesn't have a Fight");
 
-    let fight_children = children.get(fight_e).expect("Fight without Children");
+    let fight_children = children
+        .get(world, fight_e)
+        .expect("Fight without Children");
     let player_entity = factions
-        .iter_many(fight_children)
+        .iter_many(world, fight_children)
         .filter(|(_e, faction)| **faction == Faction::Player)
         .exactly_one()
         .ok() // the error doesn't impl `Debug`, so can't unwrap it
@@ -103,14 +105,12 @@ pub fn render_fight_window(
         .0;
 
     let enemy_entity = factions
-        .iter_many(fight_children)
+        .iter_many(world, fight_children)
         .filter(|(_e, faction)| **faction == Faction::Enemy)
         .exactly_one()
         .ok() // the error doesn't impl `Debug`, so can't unwrap it
         .unwrap()
         .0;
-
-    let ui_state = &mut fight_window.ui_state;
 
     if let Some(fight_result) = fight_result {
         match fight_result {
@@ -128,43 +128,38 @@ pub fn render_fight_window(
     ui.columns(2, |columns: &mut [Ui]| {
         columns[0].label(RichText::new("Player").heading().strong());
 
-        ui_fight_column(
+        ui_state.player_column_state = run_ui_system(
             &mut columns[0],
-            &mut ui_state.player_column_state,
-            player_entity,
-            fight_e,
-            &names,
-            &healths,
-            &has_ability_slots,
-            &has_abilities,
-            &children,
-            &ability_slots,
-            &ability_interface,
-            &mut cast_ability,
+            world,
+            Id::new("fight_column")
+                .with(fight_window_e)
+                .with(player_entity),
+            (ui_state.player_column_state.clone(), player_entity, fight_e),
+            ui_fight_column,
         );
 
         columns[1].label(RichText::new("Enemy").heading().strong());
 
-        ui_fight_column(
+        ui_state.enemy_column_state = run_ui_system(
             &mut columns[1],
-            &mut ui_state.enemy_column_state,
-            enemy_entity,
-            fight_e,
-            &names,
-            &healths,
-            &has_ability_slots,
-            &has_abilities,
-            &children,
-            &ability_slots,
-            &ability_interface,
-            &mut cast_ability,
+            world,
+            Id::new("fight_column")
+                .with(fight_window_e)
+                .with(enemy_entity),
+            (ui_state.enemy_column_state.clone(), enemy_entity, fight_e),
+            ui_fight_column,
         );
     });
+
+    fight_windows
+        .get_mut(world, fight_window_e)
+        .unwrap()
+        .ui_state = ui_state;
 
     (ui, ())
 }
 
-#[derive(Debug, Reflect)]
+#[derive(Debug, Clone, Reflect)]
 struct FightColumnUiState {
     abilities_section_state: AbilitySlotsSectionUiState,
     user_interactable: bool,
@@ -179,7 +174,7 @@ impl FightColumnUiState {
     }
 }
 
-#[derive(Debug, Reflect)]
+#[derive(Debug, Clone, Reflect)]
 struct AbilitySlotsSectionUiState {
     selected_slot: Option<Entity>,
     user_interactable: bool,
@@ -194,29 +189,25 @@ impl AbilitySlotsSectionUiState {
     }
 }
 
-#[expect(clippy::too_many_arguments)]
 fn ui_fight_column(
-    ui: &mut Ui,
-    ui_column_state: &mut FightColumnUiState,
-    model_e: Entity,
-    fight_e: Entity,
-    names: &Query<&Name>,
-    healths: &Query<&Health>,
-    has_ability_slots: &Query<&HasAbilitySlots>,
-    has_abilities: &Query<&HasAbilities>,
-    children: &Query<&Children>,
-    ability_slots: &Query<&AbilitySlot>,
-    ability_interface: &AbilityInterface,
-    cast_ability: &mut EventWriter<commands::CastAbility>,
-) {
+    In((mut ui, (mut ui_column_state, model_e, fight_e))): In<(
+        Ui,
+        (FightColumnUiState, Entity, Entity),
+    )>,
+    world: &mut World,
+    names: &mut QueryState<&Name>,
+    healths: &mut QueryState<&Health>,
+    has_ability_slots: &mut QueryState<&HasAbilitySlots>,
+    has_abilities: &mut QueryState<&HasAbilities>,
+) -> (Ui, FightColumnUiState) {
     ui.indent(ui.id().with("entity_overview_section"), |ui: &mut Ui| {
-        if let Ok(name) = names.get(model_e) {
+        if let Ok(name) = names.get(world, model_e) {
             ui.label(name.as_str());
         } else {
             ui.label("<No Name>");
         }
 
-        if let Ok(health) = healths.get(model_e) {
+        if let Ok(health) = healths.get(world, model_e) {
             ui.label(format!(
                 "Health: {:.2}/{:.2}",
                 health.current(),
@@ -227,58 +218,63 @@ fn ui_fight_column(
         }
     });
 
-    if let Ok(slots) = has_ability_slots.get(model_e) {
+    if has_ability_slots.get(world, model_e).is_ok() {
         ui.add_space(10.);
-        ui_ability_slots(
-            ui,
-            &mut ui_column_state.abilities_section_state,
-            slots,
-            children,
-            ability_slots,
+
+        ui_column_state.abilities_section_state = run_ui_system(
+            &mut ui,
+            world,
+            Id::new("slots_section").with(model_e),
+            (model_e, ui_column_state.abilities_section_state.clone()),
+            ui_ability_slots,
         );
     }
 
-    if let Ok(abilities) = has_abilities.get(model_e) {
+    if has_abilities.get(world, model_e).is_ok() {
         ui.add_space(10.);
-        ui_abilities(
-            ui,
-            model_e,
-            fight_e,
-            abilities,
-            children,
-            ability_interface,
-            ability_slots,
-            cast_ability,
-            ui_column_state,
-        )
+
+        ui_column_state = run_ui_system(
+            &mut ui,
+            world,
+            Id::new("abilities_section").with(model_e),
+            (model_e, fight_e, ui_column_state.clone()),
+            ui_abilities,
+        );
     }
+
+    (ui, ui_column_state)
 }
 
 fn ui_ability_slots(
-    ui: &mut Ui,
-    abilities_section_state: &mut AbilitySlotsSectionUiState,
-    slots: &HasAbilitySlots,
-    children: &Query<&Children>,
-    ability_slots: &Query<&AbilitySlot>,
-) {
+    In((mut ui, (model_e, mut slots_section_state))): In<(
+        Ui,
+        (Entity, AbilitySlotsSectionUiState),
+    )>,
+    world: &mut World,
+    slots: &mut QueryState<&HasAbilitySlots>,
+    children: &mut QueryState<&Children>,
+    ability_slots: &mut QueryState<&AbilitySlot>,
+) -> (Ui, AbilitySlotsSectionUiState) {
     // TODO: add colors (again) at some point (if it fits..)
     // old colors for reference:
     // AbilitySlotType::WeaponAttack => Color::LIME_GREEN,
     // AbilitySlotType::ShieldDefend => Color::PINK,
 
-    let user_interactable = abilities_section_state.user_interactable;
+    let user_interactable = slots_section_state.user_interactable;
 
     ui.heading("Ability Slots");
 
+    let slots_holder = slots.get(world, model_e).unwrap().holder;
+
     ui.indent(ui.id().with("ability_slots"), |ui: &mut Ui| {
         for (idx, &slot_e) in children
-            .get(slots.holder)
+            .get(world, slots_holder)
             .expect("HasAbilitySlots.holder without Children")
             .iter()
             .enumerate()
         {
             let slot = ability_slots
-                .get(slot_e)
+                .get(world, slot_e)
                 .expect("ability slot without AbilitySlot");
 
             let keyboard_shortcut: Option<KeyboardShortcut> = if user_interactable {
@@ -295,7 +291,7 @@ fn ui_ability_slots(
                 None
             };
 
-            let slot_is_selected: bool = abilities_section_state
+            let slot_is_selected: bool = slots_section_state
                 .selected_slot
                 .is_some_and(|s| s == slot_e);
 
@@ -315,7 +311,7 @@ fn ui_ability_slots(
                     .inner;
 
                 if shortcut_pressed || label_response.clicked() {
-                    abilities_section_state.selected_slot =
+                    slots_section_state.selected_slot =
                         if slot_is_selected { None } else { Some(slot_e) };
 
                     // not 100% sure why this is needed, but `Ui::selectable_value()` does it as
@@ -325,76 +321,98 @@ fn ui_ability_slots(
             });
         }
     });
+
+    (ui, slots_section_state)
 }
 
-#[expect(clippy::too_many_arguments)]
+#[expect(clippy::type_complexity)]
 fn ui_abilities(
-    ui: &mut Ui,
-    model: Entity,
-    fight_e: Entity,
-    abilities: &HasAbilities,
-    children: &Query<&Children>,
-    ability_interface: &AbilityInterface,
-    ability_slots: &Query<&AbilitySlot>,
-    cast_ability: &mut EventWriter<commands::CastAbility>,
-    ui_state: &mut FightColumnUiState,
-) {
-    let user_interactable = ui_state.user_interactable;
-    let selected_slot_e = ui_state.abilities_section_state.selected_slot;
-    let selected_slot = selected_slot_e.and_then(|s| ability_slots.get(s).ok());
+    In((mut ui, (model_e, fight_e, mut ui_column_state))): In<(
+        Ui,
+        (Entity, Entity, FightColumnUiState),
+    )>,
+    world: &mut World,
+    params: &mut SystemState<(
+        Query<&HasAbilities>,
+        Query<&Children>,
+        AbilityInterface,
+        Query<&AbilitySlot>,
+        EventWriter<commands::CastAbility>,
+    )>,
+) -> (Ui, FightColumnUiState) {
+    {
+        #[rustfmt::skip]
+        let (
+            has_abilities,
+            children,
+            ability_interface,
+            ability_slots,
+            mut cast_ability,
+        ) = params.get_mut(world);
 
-    ui.heading("Abilities");
+        let user_interactable = ui_column_state.user_interactable;
+        let selected_slot_e = ui_column_state.abilities_section_state.selected_slot;
+        let selected_slot = selected_slot_e.and_then(|s| ability_slots.get(s).ok());
 
-    ui.indent(ui.id().with("abilities"), |ui: &mut Ui| {
-        for (idx, ability_id_e) in children
-            .get(abilities.holder)
-            .expect("HasAbilities.holder without Children")
-            .iter()
-            .enumerate()
-        {
-            let ability = ability_interface.get_ability_from_entity(*ability_id_e);
-            let possible_cast = commands::CastAbility {
-                caster_e: model,
-                slot_e: selected_slot_e,
-                ability_e: *ability_id_e,
-                fight_e,
-            };
-            // TODO: forward/refactor so we have `CastAbilityInterface` here, and use that for
-            // checking instead
-            let ability_usable = ability.can_use_slot(selected_slot);
+        ui.heading("Abilities");
 
-            let keyboard_shortcut: Option<KeyboardShortcut> = if user_interactable {
-                let key: Option<Key> = match idx {
-                    0 => Some(Key::X),
-                    // 1 => Some(Key::Num2),
-                    _ => None,
+        let abilities = has_abilities.get(model_e).unwrap();
+
+        ui.indent(ui.id().with("abilities"), |ui: &mut Ui| {
+            for (idx, ability_id_e) in children
+                .get(abilities.holder)
+                .expect("HasAbilities.holder without Children")
+                .iter()
+                .enumerate()
+            {
+                let ability = ability_interface.get_ability_from_entity(*ability_id_e);
+                let possible_cast = commands::CastAbility {
+                    caster_e: model_e,
+                    slot_e: selected_slot_e,
+                    ability_e: *ability_id_e,
+                    fight_e,
+                };
+                // TODO: forward/refactor so we have `CastAbilityInterface` here, and use that for
+                // checking instead
+                let ability_usable = ability.can_use_slot(selected_slot);
+
+                let keyboard_shortcut: Option<KeyboardShortcut> = if user_interactable {
+                    let key: Option<Key> = match idx {
+                        0 => Some(Key::X),
+                        // 1 => Some(Key::Num2),
+                        _ => None,
+                    };
+
+                    key.map(|key| KeyboardShortcut::new(Modifiers::NONE, key))
+                } else {
+                    None
                 };
 
-                key.map(|key| KeyboardShortcut::new(Modifiers::NONE, key))
-            } else {
-                None
-            };
+                ui.add_enabled_ui(ability_usable, |ui: &mut Ui| {
+                    ui.horizontal(|ui: &mut Ui| {
+                        let shortcut_pressed =
+                            monospace_checked_shortcut(ui, keyboard_shortcut.as_ref());
 
-            ui.add_enabled_ui(ability_usable, |ui: &mut Ui| {
-                ui.horizontal(|ui: &mut Ui| {
-                    let shortcut_pressed =
-                        monospace_checked_shortcut(ui, keyboard_shortcut.as_ref());
+                        let ability_button = ui.add_enabled(
+                            user_interactable,
+                            egui::Button::new(format!("{}", ability.name)),
+                        );
 
-                    let ability_button = ui.add_enabled(
-                        user_interactable,
-                        egui::Button::new(format!("{}", ability.name)),
-                    );
+                        if ability_usable && (shortcut_pressed || ability_button.clicked()) {
+                            cast_ability.send(possible_cast);
 
-                    if ability_usable && (shortcut_pressed || ability_button.clicked()) {
-                        cast_ability.send(possible_cast);
-
-                        // clear the selected slot, because it was used.
-                        ui_state.abilities_section_state.selected_slot = None;
-                    }
+                            // clear the selected slot, because it was used.
+                            ui_column_state.abilities_section_state.selected_slot = None;
+                        }
+                    });
                 });
-            });
-        }
-    });
+            }
+        });
+    }
+
+    params.apply(world);
+
+    (ui, ui_column_state)
 }
 
 fn monospace_checked_shortcut(ui: &mut Ui, shortcut: Option<&KeyboardShortcut>) -> bool {
