@@ -257,76 +257,83 @@ fn ui_ability_slots(
         (Entity, AbilitySlotsSectionUiState),
     )>,
     world: &mut World,
-    slots: &mut QueryState<&HasAbilitySlots>,
-    children: &mut QueryState<&Children>,
-    ability_slots: &mut QueryState<&AbilitySlot>,
+    params: &mut SystemState<(
+        Query<&HasAbilitySlots>,
+        Query<&Children>,
+        Query<&AbilitySlot>,
+    )>,
 ) -> (Ui, AbilitySlotsSectionUiState) {
     // TODO: add colors (again) at some point (if it fits..)
     // old colors for reference:
     // AbilitySlotType::WeaponAttack => Color::LIME_GREEN,
     // AbilitySlotType::ShieldDefend => Color::PINK,
 
-    let user_interactable = slots_section_state.user_interactable;
+    {
+        let (slots, children, ability_slots) = params.get_mut(world);
 
-    ui.heading("Ability Slots");
+        let user_interactable = slots_section_state.user_interactable;
 
-    let slots_holder = slots.get(world, model_e).unwrap().holder;
+        ui.heading("Ability Slots");
 
-    ui.indent(ui.id().with("ability_slots"), |ui: &mut Ui| {
-        for (idx, &slot_e) in children
-            .get(world, slots_holder)
-            .expect("HasAbilitySlots.holder without Children")
-            .iter()
-            .enumerate()
-        {
-            let slot = ability_slots
-                .get(world, slot_e)
-                .expect("ability slot without AbilitySlot");
+        let slots_holder = slots.get(model_e).unwrap().holder;
 
-            let keyboard_shortcut: Option<KeyboardShortcut> = if user_interactable {
-                let key: Option<Key> = match idx {
-                    0 => Some(Key::Num1),
-                    1 => Some(Key::Num2),
-                    2 => Some(Key::Num3),
-                    3 => Some(Key::Num4),
-                    _ => None,
+        ui.indent(ui.id().with("ability_slots"), |ui: &mut Ui| {
+            for (idx, &slot_e) in children
+                .get(slots_holder)
+                .expect("HasAbilitySlots.holder without Children")
+                .iter()
+                .enumerate()
+            {
+                let slot = ability_slots
+                    .get(slot_e)
+                    .expect("ability slot without AbilitySlot");
+
+                let keyboard_shortcut: Option<KeyboardShortcut> = if user_interactable {
+                    let key: Option<Key> = match idx {
+                        0 => Some(Key::Num1),
+                        1 => Some(Key::Num2),
+                        2 => Some(Key::Num3),
+                        3 => Some(Key::Num4),
+                        _ => None,
+                    };
+
+                    key.map(|key| KeyboardShortcut::new(Modifiers::NONE, key))
+                } else {
+                    None
                 };
 
-                key.map(|key| KeyboardShortcut::new(Modifiers::NONE, key))
-            } else {
-                None
-            };
+                let slot_is_selected: bool = slots_section_state
+                    .selected_slot
+                    .is_some_and(|s| s == slot_e);
 
-            let slot_is_selected: bool = slots_section_state
-                .selected_slot
-                .is_some_and(|s| s == slot_e);
+                ui.horizontal(|ui: &mut Ui| {
+                    let shortcut_pressed =
+                        monospace_checked_shortcut(ui, keyboard_shortcut.as_ref());
 
-            ui.horizontal(|ui: &mut Ui| {
-                let shortcut_pressed = monospace_checked_shortcut(ui, keyboard_shortcut.as_ref());
+                    let mut label_response = ui
+                        .add_enabled_ui(user_interactable, |ui: &mut Ui| {
+                            ui.selectable_label(
+                                slot_is_selected,
+                                match slot.tpe {
+                                    AbilitySlotType::WeaponAttack => "Weapon Attack",
+                                    AbilitySlotType::ShieldDefend => "Shield Defend",
+                                },
+                            )
+                        })
+                        .inner;
 
-                let mut label_response = ui
-                    .add_enabled_ui(user_interactable, |ui: &mut Ui| {
-                        ui.selectable_label(
-                            slot_is_selected,
-                            match slot.tpe {
-                                AbilitySlotType::WeaponAttack => "Weapon Attack",
-                                AbilitySlotType::ShieldDefend => "Shield Defend",
-                            },
-                        )
-                    })
-                    .inner;
+                    if shortcut_pressed || label_response.clicked() {
+                        slots_section_state.selected_slot =
+                            if slot_is_selected { None } else { Some(slot_e) };
 
-                if shortcut_pressed || label_response.clicked() {
-                    slots_section_state.selected_slot =
-                        if slot_is_selected { None } else { Some(slot_e) };
-
-                    // not 100% sure why this is needed, but `Ui::selectable_value()` does it as
-                    // well, so it might be necessary.
-                    label_response.mark_changed();
-                }
-            });
-        }
-    });
+                        // not 100% sure why this is needed, but `Ui::selectable_value()` does it as
+                        // well, so it might be necessary.
+                        label_response.mark_changed();
+                    }
+                });
+            }
+        });
+    }
 
     (ui, slots_section_state)
 }

@@ -1,18 +1,20 @@
 # Todos
 
 ## Next:
-- [ ] `Ongoing` or `Finished` only for now (new Component(s), check for `FightResult`?)
-- [ ] 1 or 2 basic tests, also just to try out how well it works/how easy it is
+- [ ] Fight over tracking: UI should also be disabled (implicitly, maybe also explicitly?)
+  - [x] Abilities-/Command-sections are implicitly disabled (through, e.g., checking `CastAblity::is_valid_cast()`)
+  - [ ] Slots-section needs to be explicitly disabled (at least for now)
 
 ## Possible Next
 - [ ] Tooltips for Abilities (/Slots? probably later, start with abilities)
 
+- [ ] 1 or 2 basic tests, also just to try out how well it works/how easy it is
+
 - [ ] Proper Fight-Over Tracking and Handling
-  - [ ] Command Submission + Execution should be disabled (maybe also print/log) a warning
+  - [x] Command Submission + Execution should be disabled (maybe also print/log) a warning
     - [ ] In the Systems: Have an `In<EntityList>` or sth. parameter, and another (generic?) system that gathers
           active Fights and runs the System for each one's Entities.
     - [ ] How to make Events per-Fight? Necessary?
-  - [ ] UI should also be disabled (implicitly, maybe also explicitly?)
 
 - [ ] Feat to "pause" a fight, until resumed/a Command is given
   - Pause key `<space>` for the start at least
@@ -30,6 +32,7 @@
 - [x] Alternative: Implement damage, hp, etc. first, and simply make `Attack` target all/the first/etc. enemy.
     - Also ok, maybe much easier, but probably better, because it forces me to work on actual gameplay, instead of building systems :see_no_evil:
 - [x] UI should show a `"'{Faction}' won!"`-headline or sth. when the Fight is over
+- [x] `Ongoing` or `Finished` only for now (new Component(s), check for `FightResult`?)
 
 # Notes
 
