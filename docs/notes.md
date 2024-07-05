@@ -1,9 +1,7 @@
 # Todos
 
 ## Next:
-- [ ] Fight over tracking: UI should also be disabled (implicitly, maybe also explicitly?)
-  - [x] Abilities-/Command-sections are implicitly disabled (through, e.g., checking `CastAblity::is_valid_cast()`)
-  - [ ] Slots-section needs to be explicitly disabled (at least for now)
+- [ ] Update to bevy 0.14
 
 ## Possible Next
 - [ ] Tooltips for Abilities (/Slots? probably later, start with abilities)
@@ -14,6 +12,7 @@
   - [x] Command Submission + Execution should be disabled (maybe also print/log) a warning
     - [ ] In the Systems: Have an `In<EntityList>` or sth. parameter, and another (generic?) system that gathers
           active Fights and runs the System for each one's Entities.
+      - Only `(Fixed-)Update` systems or also event-based systems?
     - [ ] How to make Events per-Fight? Necessary?
 
 - [ ] Feat to "pause" a fight, until resumed/a Command is given
@@ -29,10 +28,16 @@
 ---
 # Done
 ---
+- [x] Fight over tracking: UI should also be disabled (implicitly, maybe also explicitly?)
+  - [x] Abilities-/Command-sections are implicitly disabled (through, e.g., checking `CastAblity::is_valid_cast()`)
+  - [x] Slots-section needs to be explicitly disabled (at least for now)
+
+- [x] `Ongoing` or `Finished` only for now (new Component(s), check for `FightResult`?)
+
+- [x] UI should show a `"'{Faction}' won!"`-headline or sth. when the Fight is over
+
 - [x] Alternative: Implement damage, hp, etc. first, and simply make `Attack` target all/the first/etc. enemy.
     - Also ok, maybe much easier, but probably better, because it forces me to work on actual gameplay, instead of building systems :see_no_evil:
-- [x] UI should show a `"'{Faction}' won!"`-headline or sth. when the Fight is over
-- [x] `Ongoing` or `Finished` only for now (new Component(s), check for `FightResult`?)
 
 # Notes
 

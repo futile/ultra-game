@@ -25,6 +25,12 @@ pub enum FightStatus {
     Ended,
 }
 
+impl FightStatus {
+    pub fn is_ended(&self) -> bool {
+        *self == FightStatus::Ended
+    }
+}
+
 #[derive(SystemParam)]
 pub struct FightInterface<'w, 's> {
     fights: Query<'w, 's, (&'static Fight, Option<&'static FightResult>)>,

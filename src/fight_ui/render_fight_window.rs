@@ -11,7 +11,7 @@ use crate::{
     game_logic::{
         commands::{self, CastAbilityInterface},
         faction::Faction,
-        fight::FightResult,
+        fight::{FightInterface, FightResult},
         health::Health,
         AbilitySlot,
     },
@@ -231,7 +231,11 @@ fn ui_fight_column(
             &mut ui,
             world,
             Id::new("slots_section").with(model_e),
-            (model_e, ui_column_state.abilities_section_state.clone()),
+            (
+                model_e,
+                fight_e,
+                ui_column_state.abilities_section_state.clone(),
+            ),
             ui_ability_slots,
         );
     }
@@ -251,16 +255,21 @@ fn ui_fight_column(
     (ui, ui_column_state)
 }
 
+#[expect(
+    clippy::type_complexity,
+    reason = "SystemState<..> big but ok, part of the ui-pattern (for now)"
+)]
 fn ui_ability_slots(
-    In((mut ui, (model_e, mut slots_section_state))): In<(
+    In((mut ui, (model_e, fight_e, mut slots_section_state))): In<(
         Ui,
-        (Entity, AbilitySlotsSectionUiState),
+        (Entity, Entity, AbilitySlotsSectionUiState),
     )>,
     world: &mut World,
     params: &mut SystemState<(
         Query<&HasAbilitySlots>,
         Query<&Children>,
         Query<&AbilitySlot>,
+        FightInterface,
     )>,
 ) -> (Ui, AbilitySlotsSectionUiState) {
     // TODO: add colors (again) at some point (if it fits..)
@@ -269,9 +278,10 @@ fn ui_ability_slots(
     // AbilitySlotType::ShieldDefend => Color::PINK,
 
     {
-        let (slots, children, ability_slots) = params.get_mut(world);
+        let (slots, children, ability_slots, fight_interface) = params.get_mut(world);
 
-        let user_interactable = slots_section_state.user_interactable;
+        let user_interactable = slots_section_state.user_interactable
+            && !fight_interface.get_fight_status(fight_e).is_ended();
 
         ui.heading("Ability Slots");
 
@@ -335,10 +345,15 @@ fn ui_ability_slots(
         });
     }
 
+    params.apply(world);
+
     (ui, slots_section_state)
 }
 
-#[expect(clippy::type_complexity)]
+#[expect(
+    clippy::type_complexity,
+    reason = "SystemState<..> big but ok, part of the ui-pattern (for now)"
+)]
 fn ui_abilities(
     In((mut ui, (model_e, fight_e, mut ui_column_state))): In<(
         Ui,
