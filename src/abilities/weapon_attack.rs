@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use super::AbilityCatalog;
 use crate::{
     game_logic::{
-        commands,
+        commands::{self, CastAbilityInterface},
         damage_resolution::{DamageInstance, DealDamage},
         faction::Faction,
         Ability, AbilityId, AbilitySlot, AbilitySlotType,
@@ -27,27 +27,30 @@ fn add_to_ability_catalog(mut abilties_catalog: ResMut<AbilityCatalog>) {
 fn cast_ability(
     mut cast_ability_events: EventReader<commands::CastAbility>,
     mut deal_damage_events: EventWriter<DealDamage>,
-    ability_ids: Query<&AbilityId>,
     ability_slots: Query<&AbilitySlot>,
     factions: Query<(Entity, &Faction)>,
-    ability_catalog: Res<AbilityCatalog>,
+    // ability_catalog: Res<AbilityCatalog>,
+    cast_ability_interface: CastAbilityInterface,
 ) {
-    let this_ability = ability_catalog
-        .0
-        .get(&THIS_ABILITY_ID)
-        .expect("AbilityCatalog does not contain this ability");
+    // let this_ability = ability_catalog
+    //     .0
+    //     .get(&THIS_ABILITY_ID)
+    //     .expect("AbilityCatalog does not contain this ability");
 
-    for commands::CastAbility {
+    for cast @ commands::CastAbility {
         caster_e,
         slot_e,
         ability_e: _,
         fight_e,
     } in cast_ability_events
         .read()
-        // TODO:NEXT also check `CastAbilityInterface.is_valid_cast()` here (maybe add to
-        // `is_valid_matching_ability_cast()`)
-        .filter(|c| c.is_valid_matching_ability_cast(this_ability, &ability_ids, &ability_slots))
+        .filter(|cast| cast_ability_interface.is_matching_cast(cast, &THIS_ABILITY_ID))
     {
+        if !cast_ability_interface.is_valid_cast(cast) {
+            warn!("invalid `CastAbility`: {cast:#?}");
+            continue;
+        }
+
         let slot: Option<&AbilitySlot> = slot_e.map(|slot_e| ability_slots.get(slot_e).unwrap());
         let (_, faction) = factions.get(*caster_e).unwrap();
 

@@ -1,6 +1,6 @@
 use bevy::{ecs::system::SystemParam, prelude::*};
 
-use super::{fight::FightInterface, Ability, AbilityId, AbilitySlot};
+use super::{fight::FightInterface, AbilityId, AbilitySlot};
 use crate::{abilities::AbilityInterface, game_logic::fight::FightStatus};
 
 #[derive(Debug, Event)]
@@ -11,44 +11,20 @@ pub struct CastAbility {
     pub fight_e: Entity,
 }
 
-impl CastAbility {
-    pub fn is_valid_matching_ability_cast(
-        &self,
-        ability: &Ability,
-        ability_ids: &Query<&AbilityId>,
-        ability_slots: &Query<&AbilitySlot>,
-    ) -> bool {
-        let matching_id = {
-            let ability_id = ability_ids.get(self.ability_e).unwrap();
-            ability_id == &ability.id
-        };
-
-        if !matching_id {
-            return false;
-        }
-
-        let slot: Option<&AbilitySlot> =
-            self.slot_e.map(|slot_e| ability_slots.get(slot_e).unwrap());
-
-        let can_use = ability.can_use_slot(slot);
-
-        if !can_use {
-            eprintln!("Cannot execute commands::CastAbility due to mismatching slot: {self:?} | SlotType: {slot:?}");
-            return false;
-        }
-
-        true
-    }
-}
-
 #[derive(SystemParam)]
 pub struct CastAbilityInterface<'w, 's> {
+    ability_ids: Query<'w, 's, &'static AbilityId>,
     ability_slots: Query<'w, 's, &'static AbilitySlot>,
     ability_interface: AbilityInterface<'w, 's>,
     fight_interface: FightInterface<'w, 's>,
 }
 
 impl<'w, 's> CastAbilityInterface<'w, 's> {
+    pub fn is_matching_cast(&self, cast: &CastAbility, id: &AbilityId) -> bool {
+        let ability_id = self.ability_ids.get(cast.ability_e).unwrap();
+        ability_id == id
+    }
+
     pub fn is_valid_cast(&self, cast: &CastAbility) -> bool {
         match self.fight_interface.get_fight_status(cast.fight_e) {
             FightStatus::Ongoing => (),
