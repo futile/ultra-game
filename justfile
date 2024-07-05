@@ -17,3 +17,7 @@ run-x11-on-wayland:
 # Build with detailed timing information (doesn't require a full rebuild)
 build-with-timings:
     cargo rustc -- -Ztime-passes
+
+# Update all cargo-dependencies, including breaking changes
+cargo-update-breaking:
+    cargo update -Z unstable-options --breaking --verbose

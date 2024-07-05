@@ -1,7 +1,6 @@
 # Todos
 
 ## Next:
-- [ ] Update to bevy 0.14
 
 ## Possible Next
 - [ ] Tooltips for Abilities (/Slots? probably later, start with abilities)
@@ -24,6 +23,10 @@
     - Re-use number-hotkeys?
     - Targetable enemies/entities/units have to be tracked through castability-system (see below).
     - Add `target` entity/unit to `commands::CastAbility`, maybe add optional targeting or new command type.
+
+- [ ] Update to bevy 0.14
+  - Tried 2024-07-05 (bevy 0.14 just released); `bevy_egui{,_inspector}` not yet upgradeable. Rest looks ok.
+    - Use `just cargo-update-breaking` for trying again
 
 ---
 # Done
