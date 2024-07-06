@@ -119,7 +119,9 @@ where
     S: IntoSystem<(Ui, I), (Ui, O), Marker> + Send + 'static + Sync,
 {
     // create an owned child `egui::Ui` to pass to the function
-    let child_ui = ui.child_ui(ui.available_rect_before_wrap(), *ui.layout());
+    // TODO: NEXT: check if `ui_stack_info: None` is correct/appropriate here; read (bevy_)egui
+    // docs/release-notes for that.
+    let child_ui = ui.child_ui(ui.available_rect_before_wrap(), *ui.layout(), None);
 
     // then run it and grab the rendered child Ui back
     let (child_ui, output) = named_syscall(world, id, (child_ui, input), system);

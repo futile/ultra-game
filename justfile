@@ -20,4 +20,4 @@ build-with-timings:
 
 # Update all cargo-dependencies, including breaking changes
 cargo-update-breaking:
-    cargo update -Z unstable-options --breaking --verbose
+    cargo update -Z unstable-options --breaking --verbose && cargo update
