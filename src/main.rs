@@ -107,16 +107,16 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugins(WorldInspectorPlugin::new())
         .configure_sets(
-            Update,
+            FixedUpdate,
             (
                 PerUpdateSet::LogicUpdate,
-                PerUpdateSet::CommandSubmission,
                 PerUpdateSet::CommandResolution,
                 PerUpdateSet::DamageResolution,
                 PerUpdateSet::FightEndChecking,
             )
                 .chain(),
         )
+        .configure_sets(Update, (PerUpdateSet::CommandSubmission,).chain())
         .add_plugins(AbilitiesPlugin)
         .add_plugins(GameLogicPlugin)
         .add_plugins(FightUiPlugin)
