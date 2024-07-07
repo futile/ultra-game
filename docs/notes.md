@@ -1,6 +1,7 @@
 # Todos
 
 ## Next:
+- [ ] Track & show fight stopwatch time
 - [ ] Feat to "pause" a fight, until resumed/a Command is given
   - Pause key `<space>` for the start at least
 
