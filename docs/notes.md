@@ -1,6 +1,8 @@
 # Todos
 
 ## Next:
+- [ ] Feat to "pause" a fight, until resumed/a Command is given
+  - Pause key `<space>` for the start at least
 
 ## Possible Next
 - [ ] Tooltips for Abilities (/Slots? probably later, start with abilities)
@@ -11,11 +13,11 @@
   - [x] Command Submission + Execution should be disabled (maybe also print/log) a warning
     - [ ] In the Systems: Have an `In<EntityList>` or sth. parameter, and another (generic?) system that gathers
           active Fights and runs the System for each one's Entities.
+      - [ ] How to make Events per-Fight? Necessary?
+      - This could use bevy's `SubApp`s, but they are pretty much tied to rendering.
+      - Subworlds are a feature that is planned in bevy, but not being worked anytime soon-ish it seems: https://github.com/bevyengine/rfcs/pull/16
       - Only `(Fixed-)Update` systems or also event-based systems?
-    - [ ] How to make Events per-Fight? Necessary?
-
-- [ ] Feat to "pause" a fight, until resumed/a Command is given
-  - Pause key `<space>` for the start at least
+      - -> All of this: Later
 
 - Targeting-system for abilities (UI)
     - Targeting-state for UI when selecting an ability
