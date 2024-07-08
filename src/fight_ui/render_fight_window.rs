@@ -11,12 +11,12 @@ use crate::{
     game_logic::{
         commands::{self, CastAbilityInterface},
         faction::Faction,
-        fight::{FightInterface, FightResult},
+        fight::{Fight, FightInterface, FightResult, FightTime},
         health::Health,
         AbilitySlot,
     },
     utils::egui_systems::run_ui_system,
-    AbilitySlotType, Fight, HasAbilities, HasAbilitySlots,
+    AbilitySlotType, HasAbilities, HasAbilitySlots,
 };
 
 #[derive(Debug, Clone, Component, Reflect)]
@@ -86,7 +86,7 @@ pub fn render_fight_window(
     In((mut ui, fight_window_e)): In<(Ui, Entity)>,
     world: &mut World,
     fight_windows: &mut QueryState<&mut FightWindow>,
-    fights: &mut QueryState<(&Fight, Option<&FightResult>)>,
+    fights: &mut QueryState<(&Fight, &FightTime, Option<&FightResult>)>,
     factions: &mut QueryState<(Entity, &Faction)>,
     children: &mut QueryState<&Children>,
 ) -> (Ui, ()) {
@@ -95,7 +95,7 @@ pub fn render_fight_window(
     let fight_e = fight_window.model;
     let mut ui_state = fight_window.ui_state.clone();
 
-    let (_, fight_result) = fights
+    let (_fight, fight_time, fight_result) = fights
         .get(world, fight_e)
         .expect("FightWindow.model doesn't have a Fight");
 
@@ -131,6 +131,21 @@ pub fn render_fight_window(
             }
         }
     }
+
+    let elapsed = fight_time.stop_watch.elapsed();
+
+    let minutes = elapsed.as_secs() / 60;
+    let secs = elapsed.as_secs() % 60;
+    let tenths = elapsed.subsec_millis() / 100;
+
+    ui.vertical_centered(|ui| {
+        ui.label(
+            RichText::new(format!("{minutes:02}:{secs:02}.{tenths:1}"))
+                .heading()
+                .strong(),
+        );
+    });
+
     ui.columns(2, |columns: &mut [Ui]| {
         columns[0].label(RichText::new("Player").heading().strong());
 

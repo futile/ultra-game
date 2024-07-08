@@ -3,10 +3,8 @@ use bevy::prelude::*;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use fight_ui::FightUiPlugin;
 use game_logic::{
-    faction::Faction,
-    fight::{Fight, FightEndCondition},
-    health::Health,
-    AbilityId, AbilitySlot, AbilitySlotType, GameLogicPlugin, HasAbilities, HasAbilitySlots,
+    faction::Faction, fight::FightBundle, health::Health, AbilityId, AbilitySlot, AbilitySlotType,
+    GameLogicPlugin, HasAbilities, HasAbilitySlots,
 };
 
 pub mod abilities;
@@ -68,11 +66,7 @@ fn setup(mut commands: Commands) {
         .id();
 
     commands
-        .spawn((
-            Fight,
-            FightEndCondition::SingleFactionSurvives,
-            Name::new("The Fight"),
-        ))
+        .spawn((FightBundle::new(), Name::new("The Fight")))
         .push_children(&[player_character, enemy]);
 }
 
@@ -95,11 +89,15 @@ fn close_on_esc(
 
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone, Copy)]
 enum PerUpdateSet {
+    // FixedUpdate
+    TimeUpdate,
     LogicUpdate,
     CommandSubmission,
-    CommandResolution,
     DamageResolution,
     FightEndChecking,
+
+    // Update
+    CommandResolution,
 }
 
 fn main() {
@@ -109,6 +107,7 @@ fn main() {
         .configure_sets(
             FixedUpdate,
             (
+                PerUpdateSet::TimeUpdate,
                 PerUpdateSet::LogicUpdate,
                 PerUpdateSet::CommandResolution,
                 PerUpdateSet::DamageResolution,

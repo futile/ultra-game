@@ -1,4 +1,4 @@
-use bevy::{ecs::system::SystemParam, prelude::*, utils::HashSet};
+use bevy::{ecs::system::SystemParam, prelude::*, time::Stopwatch, utils::HashSet};
 
 use super::{
     faction::Faction,
@@ -6,12 +6,37 @@ use super::{
 };
 use crate::PerUpdateSet;
 
-#[derive(Debug, Clone, Component, Reflect)]
+#[derive(Debug, Default, Clone, Component, Reflect)]
 pub struct Fight;
 
-#[derive(Debug, PartialEq, Eq, Component, Reflect)]
+#[derive(Debug, Default, PartialEq, Eq, Component, Reflect)]
 pub enum FightEndCondition {
+    #[default]
     SingleFactionSurvives,
+}
+
+#[derive(Debug, Default, Component, Reflect)]
+pub struct FightTime {
+    pub stop_watch: Stopwatch,
+}
+
+fn tick_fight_times(mut fight_times: Query<&mut FightTime>, time: Res<Time>) {
+    for mut fight_time in &mut fight_times {
+        fight_time.stop_watch.tick(time.delta());
+    }
+}
+
+#[derive(Debug, Bundle, Default)]
+pub struct FightBundle {
+    _fight: Fight,
+    fight_time: FightTime,
+    fight_end_condition: FightEndCondition,
+}
+
+impl FightBundle {
+    pub fn new() -> FightBundle {
+        default()
+    }
 }
 
 #[derive(Debug, Component, Reflect)]
@@ -104,6 +129,15 @@ fn single_faction_survives_check(
     }
 }
 
+// TODO: Use observer + trigger (with `FightEnded` or similar) instead?
+fn pause_just_ended_fights(
+    mut just_ended_fight_times: Query<&mut FightTime, (With<Fight>, Added<FightResult>)>,
+) {
+    for mut fight_time in &mut just_ended_fight_times {
+        fight_time.stop_watch.pause();
+    }
+}
+
 pub struct FightPlugin;
 
 impl Plugin for FightPlugin {
@@ -111,9 +145,15 @@ impl Plugin for FightPlugin {
         app.register_type::<Fight>()
             .register_type::<FightEndCondition>()
             .register_type::<FightResult>()
+            .register_type::<FightTime>()
             .add_systems(
-                Update,
-                single_faction_survives_check.in_set(PerUpdateSet::FightEndChecking),
+                FixedUpdate,
+                (
+                    tick_fight_times.in_set(PerUpdateSet::TimeUpdate),
+                    (single_faction_survives_check, pause_just_ended_fights)
+                        .chain()
+                        .in_set(PerUpdateSet::FightEndChecking),
+                ),
             );
     }
 }
