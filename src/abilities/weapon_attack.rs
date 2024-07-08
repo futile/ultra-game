@@ -6,6 +6,7 @@ use crate::{
         commands::{self, CastAbilityInterface},
         damage_resolution::{DamageInstance, DealDamage},
         faction::Faction,
+        fight::{Fight, FightTime},
         Ability, AbilityId, AbilitySlot, AbilitySlotType,
     },
     PerUpdateSet,
@@ -30,6 +31,7 @@ fn cast_ability(
     ability_slots: Query<&AbilitySlot>,
     factions: Query<(Entity, &Faction)>,
     // ability_catalog: Res<AbilityCatalog>,
+    mut fight_times: Query<&mut FightTime, With<Fight>>,
     cast_ability_interface: CastAbilityInterface,
 ) {
     // let this_ability = ability_catalog
@@ -59,6 +61,10 @@ fn cast_ability(
         println!(
             "Casting ability: {THIS_ABILITY_ID:?} | Fight: {fight_e:?} | Caster: {caster_e:?} | Slot: {slot_e:?} [{slot:?}] | Target: {target_e:?}"
         );
+
+        // unpause fight if it was paused.
+        // TODO: should not happen here, should happen if *any* (player?) command was accepted!
+        fight_times.get_mut(*fight_e).unwrap().stop_watch.unpause();
 
         deal_damage_events.send(DealDamage(DamageInstance {
             source: Some(*caster_e),

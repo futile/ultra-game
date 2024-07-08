@@ -1,8 +1,7 @@
 # Todos
 
 ## Next:
-- [ ] Feat to "pause" a fight, until resumed/a Command is given
-  - Pause key `<space>` for the start at least
+- [ ] Figure out what next :)
 
 ## Possible Next
 - [ ] Tooltips for Abilities (/Slots? probably later, start with abilities)
@@ -26,13 +25,14 @@
     - Targetable enemies/entities/units have to be tracked through castability-system (see below).
     - Add `target` entity/unit to `commands::CastAbility`, maybe add optional targeting or new command type.
 
-- [ ] Update to bevy 0.14
-  - Tried 2024-07-05 (bevy 0.14 just released); `bevy_egui{,_inspector}` not yet upgradeable. Rest looks ok.
-    - Use `just cargo-update-breaking` for trying again
-
 ---
 # Done
 ---
+- [x] Update to bevy 0.14
+  - Tried 2024-07-05 (bevy 0.14 just released); `bevy_egui{,_inspector}` not yet upgradeable. Rest looks ok.
+    - Use `just cargo-update-breaking` for trying again
+- [x] Feat to "pause" a fight, until resumed/a Command is given
+  - Pause key `<space>` for the start at least
 - [x] Track & show fight stopwatch time
 - [x] Fight over tracking: UI should also be disabled (implicitly, maybe also explicitly?)
   - [x] Abilities-/Command-sections are implicitly disabled (through, e.g., checking `CastAblity::is_valid_cast()`)
