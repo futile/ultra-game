@@ -1,7 +1,6 @@
 # Todos
 
 ## Next:
-- [ ] Track & show fight stopwatch time
 - [ ] Feat to "pause" a fight, until resumed/a Command is given
   - Pause key `<space>` for the start at least
 
@@ -34,6 +33,7 @@
 ---
 # Done
 ---
+- [x] Track & show fight stopwatch time
 - [x] Fight over tracking: UI should also be disabled (implicitly, maybe also explicitly?)
   - [x] Abilities-/Command-sections are implicitly disabled (through, e.g., checking `CastAblity::is_valid_cast()`)
   - [x] Slots-section needs to be explicitly disabled (at least for now)
