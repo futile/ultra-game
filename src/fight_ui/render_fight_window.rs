@@ -86,7 +86,7 @@ pub fn render_fight_window(
     In((mut ui, fight_window_e)): In<(Ui, Entity)>,
     world: &mut World,
     fight_windows: &mut QueryState<&mut FightWindow>,
-    fights: &mut QueryState<(&Fight, &FightTime, Option<&FightResult>)>,
+    fights: &mut QueryState<(&Fight, &mut FightTime, Option<&FightResult>)>,
     factions: &mut QueryState<(Entity, &Faction)>,
     children: &mut QueryState<&Children>,
 ) -> (Ui, ()) {
@@ -132,19 +132,43 @@ pub fn render_fight_window(
         }
     }
 
-    let elapsed = fight_time.stop_watch.elapsed();
+    let pause_toggled = {
+        let elapsed = fight_time.stop_watch.elapsed();
 
-    let minutes = elapsed.as_secs() / 60;
-    let secs = elapsed.as_secs() % 60;
-    let tenths = elapsed.subsec_millis() / 100;
+        let minutes = elapsed.as_secs() / 60;
+        let secs = elapsed.as_secs() % 60;
+        let tenths = elapsed.subsec_millis() / 100;
 
-    ui.vertical_centered(|ui| {
-        ui.label(
-            RichText::new(format!("{minutes:02}:{secs:02}.{tenths:1}"))
-                .heading()
-                .strong(),
-        );
-    });
+        let play_pause_interactable = fight_result.is_none();
+        let mut pause_toggled = false;
+
+        ui.vertical_centered(|ui| {
+            ui.allocate_ui_with_layout(
+                // x == 100.0 seems to.. just work here.
+                // tried a lot, but can't do much better, this is one of the prominent weaknesses
+                // of immediate mode GUIs.
+                egui::Vec2::new(100.0, 0.0),
+                egui::Layout::left_to_right(egui::Align::Center),
+                |ui| {
+                    ui.add_enabled_ui(play_pause_interactable, |ui| {
+                        let space_pressed = ui.input_mut(|i| {
+                            i.consume_shortcut(&KeyboardShortcut::new(Modifiers::NONE, Key::Space))
+                        });
+                        let timer_clicked = ui
+                            .button(
+                                RichText::new(format!("{minutes:02}:{secs:02}.{tenths:1}"))
+                                    .heading()
+                                    .strong(),
+                            )
+                            .clicked();
+                        pause_toggled = space_pressed || timer_clicked;
+                    });
+                },
+            );
+        });
+
+        pause_toggled
+    };
 
     ui.columns(2, |columns: &mut [Ui]| {
         columns[0].label(RichText::new("Player").heading().strong());
@@ -176,6 +200,18 @@ pub fn render_fight_window(
         .get_mut(world, fight_window_e)
         .unwrap()
         .ui_state = ui_state;
+
+    if pause_toggled {
+        let (_fight, mut fight_time, _fight_result) = fights
+            .get_mut(world, fight_e)
+            .expect("FightWindow.model doesn't have a Fight");
+
+        if fight_time.stop_watch.paused() {
+            fight_time.stop_watch.unpause();
+        } else {
+            fight_time.stop_watch.pause();
+        }
+    }
 
     (ui, ())
 }
