@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use bevy::{ecs::system::SystemState, prelude::*};
 use bevy_inspector_egui::{
     bevy_egui::EguiContexts,
@@ -373,13 +375,7 @@ fn ui_ability_slots(
 
                     let mut label_response = ui
                         .add_enabled_ui(user_interactable, |ui: &mut Ui| {
-                            ui.selectable_label(
-                                slot_is_selected,
-                                match slot.tpe {
-                                    AbilitySlotType::WeaponAttack => "Weapon Attack",
-                                    AbilitySlotType::ShieldDefend => "Shield Defend",
-                                },
-                            )
+                            ui.selectable_label(slot_is_selected, text_for_slot_type(&slot.tpe))
                         })
                         .inner;
 
@@ -520,6 +516,18 @@ fn monospace_checked_shortcut(ui: &mut Ui, shortcut: Option<&KeyboardShortcut>) 
 
 fn tooltip_for_ability(ability: Ability) -> impl FnOnce(&mut Ui) {
     move |ui| {
+        ui.label(format!(
+            "Required Slot: {}\n",
+            text_for_slot_type(&ability.slot_type)
+        ));
+
         ui.label(ability.description.clone());
+    }
+}
+
+fn text_for_slot_type(slot_type: &AbilitySlotType) -> Cow<'static, str> {
+    match slot_type {
+        AbilitySlotType::WeaponAttack => Cow::from("Weapon Attack"),
+        AbilitySlotType::ShieldDefend => Cow::from("Shield Defend"),
     }
 }

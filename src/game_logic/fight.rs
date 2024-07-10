@@ -16,9 +16,18 @@ pub enum FightEndCondition {
     SingleFactionSurvives,
 }
 
-#[derive(Debug, Default, Component, Reflect)]
+// Starts paused.
+#[derive(Debug, Component, Reflect)]
 pub struct FightTime {
     pub stop_watch: Stopwatch,
+}
+
+impl Default for FightTime {
+    fn default() -> Self {
+        let mut stop_watch = Stopwatch::new();
+        stop_watch.pause();
+        Self { stop_watch }
+    }
 }
 
 fn tick_fight_times(mut fight_times: Query<&mut FightTime>, time: Res<Time>) {
