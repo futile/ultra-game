@@ -34,11 +34,12 @@ pub enum AbilityId {
     Attack,
 }
 
-#[derive(Debug, Reflect)]
+#[derive(Debug, Clone, Reflect)]
 pub struct Ability {
     pub name: Cow<'static, str>,
     pub id: AbilityId,
     pub slot_type: AbilitySlotType,
+    pub description: Cow<'static, str>,
 }
 
 impl Ability {

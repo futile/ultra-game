@@ -13,6 +13,8 @@ use crate::{
 
 const THIS_ABILITY_ID: AbilityId = AbilityId::Attack;
 
+const THIS_ABILITY_DAMAGE: f64 = 51.0;
+
 fn add_to_ability_catalog(mut abilties_catalog: ResMut<AbilityCatalog>) {
     abilties_catalog.0.insert(
         AbilityId::Attack,
@@ -20,6 +22,8 @@ fn add_to_ability_catalog(mut abilties_catalog: ResMut<AbilityCatalog>) {
             name: "Attack".into(),
             id: THIS_ABILITY_ID,
             slot_type: AbilitySlotType::WeaponAttack,
+            description: format!("Strike with your weapon, dealing {THIS_ABILITY_DAMAGE} damage.")
+                .into(),
         },
     );
 }

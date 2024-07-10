@@ -13,7 +13,7 @@ use crate::{
         faction::Faction,
         fight::{Fight, FightInterface, FightResult, FightTime},
         health::Health,
-        AbilitySlot,
+        Ability, AbilitySlot,
     },
     utils::egui_systems::run_ui_system,
     AbilitySlotType, HasAbilities, HasAbilitySlots,
@@ -444,13 +444,13 @@ fn ui_abilities(
                 .enumerate()
             {
                 let ability = ability_interface.get_ability_from_entity(*ability_id_e);
-                let intended_cast = commands::CastAbility {
+                let possible_cast = commands::CastAbility {
                     caster_e: model_e,
                     slot_e: selected_slot_e,
                     ability_e: *ability_id_e,
                     fight_e,
                 };
-                let ability_usable = cast_ability_interface.is_valid_cast(&intended_cast);
+                let ability_usable = cast_ability_interface.is_valid_cast(&possible_cast);
 
                 let keyboard_shortcut: Option<KeyboardShortcut> = if user_interactable {
                     let key: Option<Key> = match idx {
@@ -471,11 +471,20 @@ fn ui_abilities(
 
                         let ability_button = ui.add_enabled(
                             user_interactable,
-                            egui::Button::new(format!("{}", ability.name)),
+                            egui::Button::new(ability.name.clone()),
                         );
 
+                        if ability_button.contains_pointer() {
+                            egui::containers::popup::show_tooltip_at_pointer(
+                                ui.ctx(),
+                                ui.layer_id(),
+                                Id::new("AbilityTooltip").with(idx),
+                                tooltip_for_ability(ability.clone()),
+                            );
+                        }
+
                         if ability_usable && (shortcut_pressed || ability_button.clicked()) {
-                            game_commands.send(GameCommand::new_from_user(intended_cast.into()));
+                            game_commands.send(GameCommand::new_from_user(possible_cast.into()));
 
                             // clear the selected slot, because it was used.
                             ui_column_state.abilities_section_state.selected_slot = None;
@@ -507,4 +516,10 @@ fn monospace_checked_shortcut(ui: &mut Ui, shortcut: Option<&KeyboardShortcut>) 
     ui.monospace(shortcut_text);
 
     shortcut_pressed
+}
+
+fn tooltip_for_ability(ability: Ability) -> impl FnOnce(&mut Ui) {
+    move |ui| {
+        ui.label(ability.description.clone());
+    }
 }
