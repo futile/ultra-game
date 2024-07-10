@@ -470,7 +470,7 @@ fn ui_abilities(
                             egui::Button::new(ability.name.clone()),
                         );
 
-                        // `hovered()`, `show_tooltip_at_pointer()` etc., all don't work when
+                        // `hovered()`, `show_tooltip_at_pointer()`, etc., all don't work when
                         // disabled. but we wan't tooltips for disabled abilities as well.
                         if ability_button.contains_pointer() {
                             egui::containers::popup::show_tooltip_at_pointer(
