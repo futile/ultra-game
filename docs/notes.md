@@ -1,7 +1,7 @@
 # Todos
 
 ## Next:
-- [ ] Tooltips for Abilities (/Slots? probably later, start with abilities)
+- [ ] Figure out what's next :) More complicated abilities? More units per side? Buffs/effects/hexes/other name? AI :O?
 
 ## Possible Next
 - [ ] 1 or 2 basic tests, also just to try out how well it works/how easy it is
@@ -27,6 +27,8 @@
 ---
 # Done
 ---
+- [x] Tooltips for Abilities (/Slots? probably later, start with abilities)
+
 - [x] Event when a `command` is accepted with trigger
   - [x] Use `command`-accepted event to unpause fight_time (if paused)
 
