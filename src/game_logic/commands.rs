@@ -1,9 +1,36 @@
 use bevy::{ecs::system::SystemParam, prelude::*};
+use derive_more::From;
 
 use super::{fight::FightInterface, AbilityId, AbilitySlot};
 use crate::{abilities::AbilityInterface, game_logic::fight::FightStatus};
 
 #[derive(Debug, Event)]
+pub struct GameCommand {
+    pub source: GameCommandSource,
+    pub kind: GameCommandKind,
+}
+
+impl GameCommand {
+    pub fn new(source: GameCommandSource, kind: GameCommandKind) -> Self {
+        Self { source, kind }
+    }
+
+    pub fn new_from_user(kind: GameCommandKind) -> Self {
+        Self::new(GameCommandSource::UserInteraction, kind)
+    }
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub enum GameCommandSource {
+    UserInteraction,
+}
+
+#[derive(Debug, From)]
+pub enum GameCommandKind {
+    CastAbility(CastAbility),
+}
+
+#[derive(Debug)]
 pub struct CastAbility {
     pub caster_e: Entity,
     pub slot_e: Option<Entity>,
@@ -49,6 +76,6 @@ pub struct CommandsPlugin;
 
 impl Plugin for CommandsPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<CastAbility>();
+        app.add_event::<GameCommand>();
     }
 }

@@ -9,7 +9,7 @@ use super::FightWindow;
 use crate::{
     abilities::AbilityInterface,
     game_logic::{
-        commands::{self, CastAbilityInterface},
+        commands::{self, CastAbilityInterface, GameCommand},
         faction::Faction,
         fight::{Fight, FightInterface, FightResult, FightTime},
         health::Health,
@@ -416,7 +416,7 @@ fn ui_abilities(
         Query<&Children>,
         AbilityInterface,
         CastAbilityInterface,
-        EventWriter<commands::CastAbility>,
+        EventWriter<GameCommand>,
     )>,
 ) -> (Ui, FightColumnUiState) {
     {
@@ -426,7 +426,7 @@ fn ui_abilities(
             children,
             ability_interface,
             cast_ability_interface,
-            mut cast_ability,
+            mut game_commands,
         ) = params.get_mut(world);
 
         let user_interactable = ui_column_state.user_interactable;
@@ -444,13 +444,13 @@ fn ui_abilities(
                 .enumerate()
             {
                 let ability = ability_interface.get_ability_from_entity(*ability_id_e);
-                let possible_cast = commands::CastAbility {
+                let intended_cast = commands::CastAbility {
                     caster_e: model_e,
                     slot_e: selected_slot_e,
                     ability_e: *ability_id_e,
                     fight_e,
                 };
-                let ability_usable = cast_ability_interface.is_valid_cast(&possible_cast);
+                let ability_usable = cast_ability_interface.is_valid_cast(&intended_cast);
 
                 let keyboard_shortcut: Option<KeyboardShortcut> = if user_interactable {
                     let key: Option<Key> = match idx {
@@ -475,7 +475,7 @@ fn ui_abilities(
                         );
 
                         if ability_usable && (shortcut_pressed || ability_button.clicked()) {
-                            cast_ability.send(possible_cast);
+                            game_commands.send(GameCommand::new_from_user(intended_cast.into()));
 
                             // clear the selected slot, because it was used.
                             ui_column_state.abilities_section_state.selected_slot = None;

@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use super::AbilityCatalog;
 use crate::{
     game_logic::{
-        commands::{self, CastAbilityInterface},
+        commands::{CastAbility, CastAbilityInterface, GameCommand, GameCommandKind},
         damage_resolution::{DamageInstance, DealDamage},
         faction::Faction,
         fight::{Fight, FightTime},
@@ -26,7 +26,7 @@ fn add_to_ability_catalog(mut abilties_catalog: ResMut<AbilityCatalog>) {
 }
 
 fn cast_ability(
-    mut cast_ability_events: EventReader<commands::CastAbility>,
+    mut game_commands: EventReader<GameCommand>,
     mut deal_damage_events: EventWriter<DealDamage>,
     ability_slots: Query<&AbilitySlot>,
     factions: Query<(Entity, &Faction)>,
@@ -39,15 +39,28 @@ fn cast_ability(
     //     .get(&THIS_ABILITY_ID)
     //     .expect("AbilityCatalog does not contain this ability");
 
-    for cast @ commands::CastAbility {
-        caster_e,
-        slot_e,
-        ability_e: _,
-        fight_e,
-    } in cast_ability_events
-        .read()
-        .filter(|cast| cast_ability_interface.is_matching_cast(cast, &THIS_ABILITY_ID))
-    {
+    for cmd in game_commands.read() {
+        #[expect(irrefutable_let_patterns, reason = "only one enum variant for now")]
+        let GameCommand {
+            source: _,
+            kind:
+                GameCommandKind::CastAbility(
+                    cast @ CastAbility {
+                        caster_e,
+                        slot_e,
+                        ability_e: _,
+                        fight_e,
+                    },
+                ),
+        } = cmd
+        else {
+            continue;
+        };
+
+        if !cast_ability_interface.is_matching_cast(cast, &THIS_ABILITY_ID) {
+            continue;
+        }
+
         if !cast_ability_interface.is_valid_cast(cast) {
             warn!("invalid `CastAbility`: {cast:#?}");
             continue;

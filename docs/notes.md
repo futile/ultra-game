@@ -1,7 +1,9 @@
 # Todos
 
 ## Next:
-- [ ] Figure out what next :)
+- [ ] Event when a `command` is accepted with trigger
+
+- [ ] Use `command`-accepted event to unpause fight_time (if paused)
 
 ## Possible Next
 - [ ] Tooltips for Abilities (/Slots? probably later, start with abilities)
@@ -28,12 +30,18 @@
 ---
 # Done
 ---
+- [x] Wrapper-Type for the different `game_logic::commands` that we can have, with tracking where it's from
+  - I.e., `UserInteraction`, `AIDecision`, etc. (very slightly thinking about Replays, but not really atm)
+
 - [x] Update to bevy 0.14
   - Tried 2024-07-05 (bevy 0.14 just released); `bevy_egui{,_inspector}` not yet upgradeable. Rest looks ok.
     - Use `just cargo-update-breaking` for trying again
+
 - [x] Feat to "pause" a fight, until resumed/a Command is given
   - Pause key `<space>` for the start at least
+
 - [x] Track & show fight stopwatch time
+
 - [x] Fight over tracking: UI should also be disabled (implicitly, maybe also explicitly?)
   - [x] Abilities-/Command-sections are implicitly disabled (through, e.g., checking `CastAblity::is_valid_cast()`)
   - [x] Slots-section needs to be explicitly disabled (at least for now)

@@ -107,9 +107,9 @@ fn main() {
         .configure_sets(
             FixedUpdate,
             (
+                PerUpdateSet::CommandResolution,
                 PerUpdateSet::TimeUpdate,
                 PerUpdateSet::LogicUpdate,
-                PerUpdateSet::CommandResolution,
                 PerUpdateSet::DamageResolution,
                 PerUpdateSet::FightEndChecking,
             )
