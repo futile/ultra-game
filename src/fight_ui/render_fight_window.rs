@@ -470,6 +470,8 @@ fn ui_abilities(
                             egui::Button::new(ability.name.clone()),
                         );
 
+                        // `hovered()`, `show_tooltip_at_pointer()` etc., all don't work when
+                        // disabled. but we wan't tooltips for disabled abilities as well.
                         if ability_button.contains_pointer() {
                             egui::containers::popup::show_tooltip_at_pointer(
                                 ui.ctx(),
@@ -517,7 +519,7 @@ fn monospace_checked_shortcut(ui: &mut Ui, shortcut: Option<&KeyboardShortcut>) 
 fn tooltip_for_ability(ability: Ability) -> impl FnOnce(&mut Ui) {
     move |ui| {
         ui.label(format!(
-            "Required Slot: {}\n",
+            "Required Slot: {}\n", // newline for spacing
             text_for_slot_type(&ability.slot_type)
         ));
 
