@@ -4,7 +4,7 @@ use derive_more::From;
 use super::{fight::FightInterface, AbilityId, AbilitySlot};
 use crate::{abilities::AbilityInterface, game_logic::fight::FightStatus};
 
-#[derive(Debug, Event)]
+#[derive(Debug, Clone, Event)]
 pub struct GameCommand {
     pub source: GameCommandSource,
     pub kind: GameCommandKind,
@@ -20,17 +20,17 @@ impl GameCommand {
     }
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum GameCommandSource {
     UserInteraction,
 }
 
-#[derive(Debug, From)]
+#[derive(Debug, Clone, From)]
 pub enum GameCommandKind {
     CastAbility(CastAbility),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct CastAbility {
     pub caster_e: Entity,
     pub slot_e: Option<Entity>,

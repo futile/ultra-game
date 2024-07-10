@@ -1,6 +1,7 @@
 use bevy::{ecs::system::SystemParam, prelude::*, time::Stopwatch, utils::HashSet};
 
 use super::{
+    commands::{GameCommand, GameCommandSource},
     faction::Faction,
     health::{Health, LivenessChangeEvent},
 };
@@ -138,6 +139,25 @@ fn pause_just_ended_fights(
     }
 }
 
+fn unpause_fight_on_user_command(
+    trigger: Trigger<GameCommand>,
+    mut fight_times: Query<&mut FightTime>,
+) {
+    if trigger.event().source == GameCommandSource::UserInteraction {
+        fight_times
+            .get_mut(trigger.entity())
+            .unwrap()
+            .stop_watch
+            .unpause();
+    }
+}
+
+fn on_add_fight(trigger: Trigger<OnAdd, Fight>, mut commands: Commands) {
+    commands
+        .entity(trigger.entity())
+        .observe(unpause_fight_on_user_command);
+}
+
 pub struct FightPlugin;
 
 impl Plugin for FightPlugin {
@@ -154,6 +174,7 @@ impl Plugin for FightPlugin {
                         .chain()
                         .in_set(PerUpdateSet::FightEndChecking),
                 ),
-            );
+            )
+            .observe(on_add_fight);
     }
 }

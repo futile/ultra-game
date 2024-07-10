@@ -1,13 +1,9 @@
 # Todos
 
 ## Next:
-- [ ] Event when a `command` is accepted with trigger
-
-- [ ] Use `command`-accepted event to unpause fight_time (if paused)
-
-## Possible Next
 - [ ] Tooltips for Abilities (/Slots? probably later, start with abilities)
 
+## Possible Next
 - [ ] 1 or 2 basic tests, also just to try out how well it works/how easy it is
 
 - [ ] Proper Fight-Over Tracking and Handling
@@ -15,6 +11,7 @@
     - [ ] In the Systems: Have an `In<EntityList>` or sth. parameter, and another (generic?) system that gathers
           active Fights and runs the System for each one's Entities.
       - [ ] How to make Events per-Fight? Necessary?
+        - Use `Observer`s on the `Fight` entity, and trigger events on it!
       - This could use bevy's `SubApp`s, but they are pretty much tied to rendering.
       - Subworlds are a feature that is planned in bevy, but not being worked anytime soon-ish it seems: https://github.com/bevyengine/rfcs/pull/16
       - Only `(Fixed-)Update` systems or also event-based systems?
@@ -30,6 +27,9 @@
 ---
 # Done
 ---
+- [x] Event when a `command` is accepted with trigger
+  - [x] Use `command`-accepted event to unpause fight_time (if paused)
+
 - [x] Wrapper-Type for the different `game_logic::commands` that we can have, with tracking where it's from
   - I.e., `UserInteraction`, `AIDecision`, etc. (very slightly thinking about Replays, but not really atm)
 
