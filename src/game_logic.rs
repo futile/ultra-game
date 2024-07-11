@@ -4,6 +4,7 @@ use bevy::prelude::*;
 
 pub mod commands;
 pub mod damage_resolution;
+pub mod effects;
 pub mod faction;
 pub mod fight;
 pub mod health;
@@ -64,6 +65,7 @@ impl Plugin for GameLogicPlugin {
             .add_plugins((
                 fight::FightPlugin,
                 faction::FactionPlugin,
+                effects::EffectsPlugin,
                 commands::CommandsPlugin,
                 damage_resolution::DamageResolutionPlugin,
                 health::HealthInterfacePlugin,
