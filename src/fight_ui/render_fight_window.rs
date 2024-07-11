@@ -451,7 +451,7 @@ fn ui_abilities(
                 let keyboard_shortcut: Option<KeyboardShortcut> = if user_interactable {
                     let key: Option<Key> = match idx {
                         0 => Some(Key::X),
-                        // 1 => Some(Key::Num2),
+                        1 => Some(Key::V),
                         _ => None,
                     };
 

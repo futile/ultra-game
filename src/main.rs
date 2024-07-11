@@ -32,19 +32,6 @@ fn setup(mut commands: Commands) {
             p.spawn(AbilitySlot {
                 tpe: AbilitySlotType::ShieldDefend,
             });
-
-            p.spawn(AbilitySlot {
-                tpe: AbilitySlotType::WeaponAttack,
-            });
-            p.spawn(AbilitySlot {
-                tpe: AbilitySlotType::ShieldDefend,
-            });
-            p.spawn(AbilitySlot {
-                tpe: AbilitySlotType::WeaponAttack,
-            });
-            p.spawn(AbilitySlot {
-                tpe: AbilitySlotType::ShieldDefend,
-            });
         })
         .id();
 
