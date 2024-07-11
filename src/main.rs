@@ -102,6 +102,21 @@ enum PerUpdateSet {
 
 fn main() {
     App::new()
+        // this... somehow warns for weird ambiguities between systems where one is in
+        // FixedUpdate, and the other is in Update.. no idea why. so turning off for now,
+        // but will need some kind of solution for ablity-cast-ordering in CommandResolution.
+        // .edit_schedule(FixedUpdate, |schedule| {
+        //     schedule.set_build_settings(ScheduleBuildSettings {
+        //         ambiguity_detection: LogLevel::Warn,
+        //         ..default()
+        //     });
+        // })
+        // .edit_schedule(Update, |schedule| {
+        //     schedule.set_build_settings(ScheduleBuildSettings {
+        //         ambiguity_detection: LogLevel::Warn,
+        //         ..default()
+        //     });
+        // })
         .add_plugins(DefaultPlugins)
         .add_plugins(WorldInspectorPlugin::new())
         .configure_sets(

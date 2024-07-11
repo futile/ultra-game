@@ -2,6 +2,7 @@ use bevy::{ecs::system::SystemParam, prelude::*, utils::HashMap};
 
 use crate::game_logic::{Ability, AbilityId};
 
+mod needling_hex;
 mod weapon_attack;
 
 #[derive(Debug, Resource, Reflect, Default)]
@@ -38,6 +39,9 @@ impl Plugin for AbilitiesPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<AbilityCatalog>()
             .register_type::<AbilityCatalog>()
-            .add_plugins(weapon_attack::WeaponAttackPlugin);
+            .add_plugins((
+                weapon_attack::WeaponAttackPlugin,
+                needling_hex::NeedlingHexPlugin,
+            ));
     }
 }
