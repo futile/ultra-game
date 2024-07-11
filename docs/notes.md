@@ -1,6 +1,9 @@
 # Todos
 
 ## Next:
+- [ ] Let's build a basic DoT!
+  - Without a Buff/Effect for now
+
 - [ ] Figure out what's next :) More complicated abilities? More units per side? Buffs/effects/hexes/other name? AI :O?
 
 ## Possible Next

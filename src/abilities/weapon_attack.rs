@@ -21,7 +21,7 @@ fn add_to_ability_catalog(mut abilties_catalog: ResMut<AbilityCatalog>) {
         Ability {
             name: "Attack".into(),
             id: THIS_ABILITY_ID,
-            slot_type: AbilitySlotType::WeaponAttack,
+            slot_type: Some(AbilitySlotType::WeaponAttack),
             description: format!("Strike with your weapon, dealing {THIS_ABILITY_DAMAGE} damage.")
                 .into(),
         },

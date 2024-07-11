@@ -530,10 +530,12 @@ fn monospace_checked_shortcut(ui: &mut Ui, shortcut: Option<&KeyboardShortcut>) 
 
 fn tooltip_for_ability(ability: Ability) -> impl FnOnce(&mut Ui) {
     move |ui| {
-        ui.label(format!(
-            "Required Slot: {}\n", // newline for spacing
-            text_for_slot_type(&ability.slot_type)
-        ));
+        if let Some(required_slot_type) = ability.slot_type {
+            ui.label(format!(
+                "Required Slot: {}\n", // newline for spacing
+                text_for_slot_type(&required_slot_type)
+            ));
+        }
 
         ui.label(ability.description.clone());
     }

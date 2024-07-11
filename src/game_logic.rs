@@ -38,13 +38,15 @@ pub enum AbilityId {
 pub struct Ability {
     pub name: Cow<'static, str>,
     pub id: AbilityId,
-    pub slot_type: AbilitySlotType,
+    pub slot_type: Option<AbilitySlotType>,
     pub description: Cow<'static, str>,
 }
 
 impl Ability {
     pub fn can_use_slot(&self, selected_ability_slot: Option<&AbilitySlot>) -> bool {
-        selected_ability_slot.is_some_and(|s| s.tpe == self.slot_type)
+        self.slot_type
+            .zip(selected_ability_slot)
+            .is_some_and(|(this, other)| this == other.tpe)
     }
 }
 
