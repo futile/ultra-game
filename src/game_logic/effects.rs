@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{ecs::system::SystemParam, prelude::*};
 
 #[derive(Debug, Component, Reflect)]
 pub struct HasEffects {
@@ -32,6 +32,54 @@ impl EffectsHolder {
     }
 }
 
+#[derive(SystemParam)]
+pub struct EffectsInterface<'w, 's> {
+    has_effects: Query<'w, 's, &'static HasEffects>,
+    children: Query<'w, 's, &'static Children>,
+    commands: Commands<'w, 's>,
+}
+
+impl<'w, 's> EffectsInterface<'w, 's> {
+    pub fn spawn_effect(&mut self, target: Entity) -> Entity {
+        let holder: Entity = match self.has_effects.get(target) {
+            Ok(he) => he.holder(),
+            Err(_) => {
+                let holder = self.commands.spawn_empty().id();
+                self.commands.entity(target).insert(HasEffects::new(holder));
+                holder
+            }
+        };
+
+        let new_effect = self.commands.spawn_empty().id();
+        self.commands.entity(holder).add_child(new_effect);
+
+        new_effect
+    }
+
+    pub fn get_effects(&self, target: Entity) -> &[Entity] {
+        let Ok(holder) = self.has_effects.get(target).map(|he| he.holder()) else {
+            return &[];
+        };
+
+        match self.children.get(holder) {
+            Ok(children) => children,
+            Err(_) => &[],
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct EffectsPlugin;
+
+impl Plugin for EffectsPlugin {
+    fn build(&self, app: &mut App) {
+        app.register_type::<HasEffects>()
+            .register_type::<EffectsHolder>()
+            .observe(on_add_has_effects)
+            .observe(on_remove_has_effects);
+    }
+}
+
 fn on_add_has_effects(
     trigger: Trigger<OnAdd, HasEffects>,
     has_effects: Query<&HasEffects>,
@@ -57,16 +105,4 @@ fn on_remove_has_effects(
     let holder = has_effects.get(trigger.entity()).unwrap().holder;
 
     commands.entity(holder).despawn_recursive();
-}
-
-#[derive(Debug)]
-pub struct EffectsPlugin;
-
-impl Plugin for EffectsPlugin {
-    fn build(&self, app: &mut App) {
-        app.register_type::<HasEffects>()
-            .register_type::<EffectsHolder>()
-            .observe(on_add_has_effects)
-            .observe(on_remove_has_effects);
-    }
 }
