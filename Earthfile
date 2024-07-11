@@ -29,8 +29,8 @@ nix-dev-shell:
   # TODO: `x86_64-linux` is hardcoded here, but it would be nice to determine it dynamically.
   RUN nix build --out-link /root/flake-devShell-gcroot .#devShells.x86_64-linux.default
   # set up our `/root/sh_env` file to print some info and source our flake env, will be used by ALL `RUN`-commands!
-  RUN echo 'echo Running in flake environment!' > /root/sh_env
-  RUN echo 'pstree -p' >> /root/sh_env
+  # RUN echo 'echo Running in flake environment!' > /root/sh_env
+  # RUN echo 'pstree -p' >> /root/sh_env
   RUN nix print-dev-env >> /root/sh_env
   # earthly's `rust`-lib uses `RUN`-commands, to execute `cargo` etc., and these will now also run in the flake env :)
   DO rust+INIT --keep_fingerprints=true
