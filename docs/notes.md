@@ -2,9 +2,11 @@
 
 ## Next:
 - [ ] Let's build a basic DoT!
-  - Without a Buff/Effect for now
+  - [ ] With* a Buff/Effect for now - need it after all basically
+    - [ ] Maybe need some "spawn or replace effect E", where `E: Component`
+      - But start building out `NeedlingHex` and see what we need
 
-- [ ] Figure out what's next :) More complicated abilities? More units per side? Buffs/effects/hexes/other name? AI :O?
+- [ ] Figure out what's next :) More complicated abilities? More units per side? AI :O?
 
 ## Possible Next
 - [ ] 1 or 2 basic tests, also just to try out how well it works/how easy it is
