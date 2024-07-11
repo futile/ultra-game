@@ -32,6 +32,7 @@ pub enum AbilitySlotType {
 #[derive(Component, Clone, Copy, Debug, PartialEq, Eq, Hash, Reflect)]
 pub enum AbilityId {
     Attack,
+    NeedlingHex,
 }
 
 #[derive(Debug, Clone, Reflect)]
@@ -44,9 +45,11 @@ pub struct Ability {
 
 impl Ability {
     pub fn can_use_slot(&self, selected_ability_slot: Option<&AbilitySlot>) -> bool {
-        self.slot_type
-            .zip(selected_ability_slot)
-            .is_some_and(|(this, other)| this == other.tpe)
+        match (self.slot_type, selected_ability_slot) {
+            (Some(self_tpe), Some(selected_slot)) => selected_slot.tpe == self_tpe,
+            (None, None) => true,
+            (Some(_), None) | (None, Some(_)) => false,
+        }
     }
 }
 

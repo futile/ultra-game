@@ -6,23 +6,23 @@ use crate::{
         commands::{CastAbility, CastAbilityInterface, GameCommand, GameCommandKind},
         damage_resolution::{DamageInstance, DealDamage},
         faction::Faction,
-        Ability, AbilityId, AbilitySlot, AbilitySlotType,
+        Ability, AbilityId, AbilitySlot,
     },
     PerUpdateSet,
 };
 
-const THIS_ABILITY_ID: AbilityId = AbilityId::Attack;
+const THIS_ABILITY_ID: AbilityId = AbilityId::NeedlingHex;
 
 const THIS_ABILITY_DAMAGE: f64 = 51.0;
 
 fn add_to_ability_catalog(mut abilties_catalog: ResMut<AbilityCatalog>) {
     abilties_catalog.0.insert(
-        AbilityId::Attack,
+        THIS_ABILITY_ID,
         Ability {
-            name: "Attack".into(),
+            name: "Needling Hex".into(),
             id: THIS_ABILITY_ID,
-            slot_type: Some(AbilitySlotType::WeaponAttack),
-            description: format!("Strike with your weapon, dealing {THIS_ABILITY_DAMAGE} damage.")
+            slot_type: None,
+            description: format!("Hex your enemy with repeated damage. {THIS_ABILITY_DAMAGE}")
                 .into(),
         },
     );

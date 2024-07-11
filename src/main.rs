@@ -19,6 +19,7 @@ fn setup(mut commands: Commands) {
         .spawn((Name::new("Player Abilities"),))
         .with_children(|p| {
             p.spawn(AbilityId::Attack);
+            p.spawn(AbilityId::NeedlingHex);
         })
         .id();
 

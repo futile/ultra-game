@@ -17,7 +17,7 @@ const THIS_ABILITY_DAMAGE: f64 = 51.0;
 
 fn add_to_ability_catalog(mut abilties_catalog: ResMut<AbilityCatalog>) {
     abilties_catalog.0.insert(
-        AbilityId::Attack,
+        THIS_ABILITY_ID,
         Ability {
             name: "Attack".into(),
             id: THIS_ABILITY_ID,
