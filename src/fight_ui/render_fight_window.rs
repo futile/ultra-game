@@ -473,10 +473,22 @@ fn ui_abilities(
                         // `hovered()`, `show_tooltip_at_pointer()`, etc., all don't work when
                         // disabled. but we wan't tooltips for disabled abilities as well.
                         if ability_button.contains_pointer() {
-                            egui::containers::popup::show_tooltip_at_pointer(
+                            // tooltip at pointer is not ideal, e.g., moves with pointer, but also
+                            // overlaps with my huge-size cursor.
+                            // See also: https://github.com/rust-windowing/winit/issues/3788
+                            // egui::containers::popup::show_tooltip_at_pointer(
+                            //     ui.ctx(),
+                            //     ui.layer_id(),
+                            //     Id::new("AbilityTooltip").with(idx),
+                            //     tooltip_for_ability(ability.clone()),
+                            // );
+
+                            // show the tooltip next to the button, i.e., to the right-side of it.
+                            egui::containers::popup::show_tooltip_at(
                                 ui.ctx(),
                                 ui.layer_id(),
                                 Id::new("AbilityTooltip").with(idx),
+                                ability_button.rect.right_top(),
                                 tooltip_for_ability(ability.clone()),
                             );
                         }
