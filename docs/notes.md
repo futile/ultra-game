@@ -3,7 +3,8 @@
 ## Next:
 - [ ] Let's build a basic DoT!
   - [ ] With* a Buff/Effect for now - need it after all basically
-    - [ ] Maybe need some "spawn or replace effect E", where `E: Component`
+    - [ ] Build the ticking down + damage system
+    - [x] Maybe need some "spawn or replace effect E", where `E: Component` -> use `Commands::add()`, gives `&mut World` access.
       - But start building out `NeedlingHex` and see what we need
 
 - [ ] Figure out what's next :) More complicated abilities? More units per side? AI :O?

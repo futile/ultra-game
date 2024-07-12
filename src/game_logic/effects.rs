@@ -1,4 +1,5 @@
 use bevy::{ecs::system::SystemParam, prelude::*};
+use itertools::Itertools;
 
 #[derive(Debug, Component, Reflect)]
 pub struct HasEffects {
@@ -33,14 +34,44 @@ impl EffectsHolder {
 }
 
 #[derive(SystemParam)]
-pub struct EffectsInterface<'w, 's> {
+pub struct UniqueEffectInterface<'w, 's, E: Component + std::fmt::Debug> {
     has_effects: Query<'w, 's, &'static HasEffects>,
     children: Query<'w, 's, &'static Children>,
     commands: Commands<'w, 's>,
+    effect_query: Query<'w, 's, Entity, With<E>>,
 }
 
-impl<'w, 's> EffectsInterface<'w, 's> {
-    pub fn spawn_effect(&mut self, target: Entity) -> Entity {
+impl<'w, 's, E: Component + std::fmt::Debug> UniqueEffectInterface<'w, 's, E> {
+    pub fn spawn_or_replace_unique_effect(&mut self, target: Entity, effect: E) {
+        let effect_e = self
+            .get_unique_effect(target)
+            .unwrap_or_else(|| self.spawn_effect_entity(target));
+
+        self.commands.entity(effect_e).remove::<E>().insert(effect);
+    }
+
+    /// Removes `true` if `target` had the Effect `E` before, otherwise `false`.
+    pub fn remove_unique_effect(&mut self, target: Entity) -> bool {
+        if let Some(effect_e) = self.get_unique_effect(target) {
+            self.commands.entity(effect_e).remove::<E>();
+            true
+        } else {
+            false
+        }
+    }
+
+    /// Returns the Effect-`Entity` that has the component `E`, if any.
+    ///
+    /// `panic`s if there is more than one Effect-`Entity` with component `E`.
+    pub fn get_unique_effect(&self, target: Entity) -> Option<Entity> {
+        let effect_es = self.get_effects(target);
+        self.effect_query
+            .iter_many(effect_es)
+            .at_most_one()
+            .unwrap()
+    }
+
+    fn spawn_effect_entity(&mut self, target: Entity) -> Entity {
         let holder: Entity = match self.has_effects.get(target) {
             Ok(he) => he.holder(),
             Err(_) => {
@@ -56,7 +87,7 @@ impl<'w, 's> EffectsInterface<'w, 's> {
         new_effect
     }
 
-    pub fn get_effects(&self, target: Entity) -> &[Entity] {
+    fn get_effects(&self, target: Entity) -> &[Entity] {
         let Ok(holder) = self.has_effects.get(target).map(|he| he.holder()) else {
             return &[];
         };

@@ -6,7 +6,7 @@ use super::AbilityCatalog;
 use crate::{
     game_logic::{
         commands::{CastAbility, CastAbilityInterface, GameCommand, GameCommandKind},
-        effects::EffectsInterface,
+        effects::UniqueEffectInterface,
         faction::Faction,
         Ability, AbilityId, AbilitySlot,
     },
@@ -54,7 +54,7 @@ fn cast_ability(
     ability_slots: Query<&AbilitySlot>,
     factions: Query<(Entity, &Faction)>,
     cast_ability_interface: CastAbilityInterface,
-    mut effects_interface: EffectsInterface,
+    mut effects_interface: UniqueEffectInterface<NeedlingHexEffect>,
     mut commands: Commands,
 ) {
     for cmd in game_commands.read() {
@@ -93,8 +93,7 @@ fn cast_ability(
             "Casting ability: {THIS_ABILITY_ID:?} | Fight: {fight_e:?} | Caster: {caster_e:?} | Slot: {slot_e:?} [{slot:?}] | Target: {target_e:?}"
         );
 
-        let effect_e = effects_interface.spawn_effect(target_e);
-        commands.entity(effect_e).insert(NeedlingHexEffect::new());
+        effects_interface.spawn_or_replace_unique_effect(target_e, NeedlingHexEffect::new());
 
         // fire an event for the executed `GameCommand`
         commands.trigger_targets(cmd.clone(), *fight_e);
