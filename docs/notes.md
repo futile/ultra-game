@@ -7,6 +7,7 @@
       - But start building out `NeedlingHex` and see what we need
 
 - [ ] Figure out what's next :) More complicated abilities? More units per side? AI :O?
+  - Cooldowns? Cast-Times? Icons for Slots/Abilities/Effects? :O
 
 ## Possible Next
 - [ ] 1 or 2 basic tests, also just to try out how well it works/how easy it is

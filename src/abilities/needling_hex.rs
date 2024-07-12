@@ -1,13 +1,16 @@
+use std::time::Duration;
+
 use bevy::prelude::*;
 
 use super::AbilityCatalog;
 use crate::{
     game_logic::{
         commands::{CastAbility, CastAbilityInterface, GameCommand, GameCommandKind},
-        damage_resolution::{DamageInstance, DealDamage},
+        effects::EffectsInterface,
         faction::Faction,
         Ability, AbilityId, AbilitySlot,
     },
+    utils::FiniteRepeatingTimer,
     PerUpdateSet,
 };
 
@@ -28,20 +31,32 @@ fn add_to_ability_catalog(mut abilties_catalog: ResMut<AbilityCatalog>) {
     );
 }
 
+#[derive(Debug, Component, Reflect, Deref, DerefMut)]
+struct NeedlingHexEffect(FiniteRepeatingTimer);
+
+impl NeedlingHexEffect {
+    const TICK_INTERVAL: Duration = Duration::from_millis(500);
+    const NUM_TICKS: u32 = 5;
+
+    #[expect(dead_code, reason = "wip")]
+    const DMG_PER_TICK: f64 = 10.0;
+
+    fn new() -> NeedlingHexEffect {
+        NeedlingHexEffect(FiniteRepeatingTimer::new(
+            Self::TICK_INTERVAL,
+            Self::NUM_TICKS,
+        ))
+    }
+}
+
 fn cast_ability(
     mut game_commands: EventReader<GameCommand>,
-    mut deal_damage_events: EventWriter<DealDamage>,
     ability_slots: Query<&AbilitySlot>,
     factions: Query<(Entity, &Faction)>,
-    // ability_catalog: Res<AbilityCatalog>,
     cast_ability_interface: CastAbilityInterface,
+    mut effects_interface: EffectsInterface,
     mut commands: Commands,
 ) {
-    // let this_ability = ability_catalog
-    //     .0
-    //     .get(&THIS_ABILITY_ID)
-    //     .expect("AbilityCatalog does not contain this ability");
-
     for cmd in game_commands.read() {
         #[expect(irrefutable_let_patterns, reason = "only one enum variant for now")]
         let GameCommand {
@@ -78,16 +93,11 @@ fn cast_ability(
             "Casting ability: {THIS_ABILITY_ID:?} | Fight: {fight_e:?} | Caster: {caster_e:?} | Slot: {slot_e:?} [{slot:?}] | Target: {target_e:?}"
         );
 
-        deal_damage_events.send(DealDamage(DamageInstance {
-            source: Some(*caster_e),
-            target: target_e,
-            amount: 51.0,
-        }));
+        let effect_e = effects_interface.spawn_effect(target_e);
+        commands.entity(effect_e).insert(NeedlingHexEffect::new());
 
         // fire an event for the executed `GameCommand`
         commands.trigger_targets(cmd.clone(), *fight_e);
-
-        todo!("needling hex logic")
     }
 }
 
@@ -96,7 +106,8 @@ pub struct NeedlingHexPlugin;
 
 impl Plugin for NeedlingHexPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, add_to_ability_catalog)
+        app.register_type::<NeedlingHexEffect>()
+            .add_systems(Startup, add_to_ability_catalog)
             .add_systems(Update, cast_ability.in_set(PerUpdateSet::CommandResolution));
     }
 }
