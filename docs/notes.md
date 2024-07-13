@@ -1,11 +1,9 @@
 # Todos
 
 ## Next:
-- [ ] Let's build a basic DoT!
-  - [ ] With* a Buff/Effect for now - need it after all basically
-    - [ ] Build the ticking down + damage system
-    - [x] Maybe need some "spawn or replace effect E", where `E: Component` -> use `Commands::add()`, gives `&mut World` access.
-      - But start building out `NeedlingHex` and see what we need
+- [ ] fight-ui display for effects
+  - [ ] With remaining _total_ time (also remaining ticks?)
+  - [ ] With tooltip
 
 - [ ] Figure out what's next :) More complicated abilities? More units per side? AI :O?
   - Cooldowns? Cast-Times? Icons for Slots/Abilities/Effects? :O
@@ -34,6 +32,12 @@
 ---
 # Done
 ---
+- [x] Let's build a basic DoT!
+  - [x] With* a Buff/Effect for now - need it after all basically
+    - [x] Build the ticking down + damage system
+    - [x] Maybe need some "spawn or replace effect E", where `E: Component` -> use `Commands::add()`, gives `&mut World` access.
+      - But start building out `NeedlingHex` and see what we need
+
 - [x] Tooltips for Abilities (/Slots? probably later, start with abilities)
 
 - [x] Event when a `command` is accepted with trigger
