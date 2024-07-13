@@ -21,9 +21,10 @@ impl FiniteRepeatingTimer {
     }
 
     pub fn is_finished(&self) -> bool {
-        self.remaining_ticks() > 0
+        self.remaining_ticks() == 0
     }
 
+    #[must_use]
     pub fn tick_get_fresh_ticks(&mut self, elapsed: Duration) -> u32 {
         if self.is_finished() {
             return 0;
@@ -38,7 +39,7 @@ impl FiniteRepeatingTimer {
 
         // the `checked_sub()` is just an assertion, shouldn't hapen because we use `min()`
         // before
-        self.remaining_ticks.checked_sub(fresh_ticks).unwrap();
+        self.remaining_ticks = self.remaining_ticks.checked_sub(fresh_ticks).unwrap();
 
         fresh_ticks
     }
