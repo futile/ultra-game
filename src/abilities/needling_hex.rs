@@ -6,8 +6,10 @@ use super::AbilityCatalog;
 use crate::{
     game_logic::{
         commands::{CastAbility, CastAbilityInterface, GameCommand, GameCommandKind},
+        damage_resolution::{DamageInstance, DealDamage},
         effects::UniqueEffectInterface,
         faction::Faction,
+        fight::FightInterface,
         Ability, AbilityId, AbilitySlot,
     },
     utils::FiniteRepeatingTimer,
@@ -38,7 +40,6 @@ impl NeedlingHexEffect {
     const TICK_INTERVAL: Duration = Duration::from_millis(500);
     const NUM_TICKS: u32 = 5;
 
-    #[expect(dead_code, reason = "wip")]
     const DMG_PER_TICK: f64 = 10.0;
 
     fn new() -> NeedlingHexEffect {
@@ -100,6 +101,37 @@ fn cast_ability(
     }
 }
 
+fn tick_needling_hex_effects(
+    mut effects: Query<(Entity, &mut NeedlingHexEffect)>,
+    mut effects_interface: UniqueEffectInterface<NeedlingHexEffect>,
+    mut deal_damage_events: EventWriter<DealDamage>,
+    fight_interface: FightInterface,
+    time: Res<Time>,
+) {
+    for (effect_e, mut effect) in &mut effects {
+        let effect_target = effects_interface.get_target_of_effect(effect_e);
+        let fight_e = fight_interface.get_fight_of_entity(effect_target);
+
+        if fight_interface.is_fight_paused(fight_e) {
+            continue;
+        }
+
+        let just_elapsed_ticks = effect.tick_get_fresh_ticks(time.delta());
+
+        if effect.is_finished() {
+            effects_interface.remove_unique_effect(effect_target);
+        }
+
+        for _ in 0..just_elapsed_ticks {
+            deal_damage_events.send(DealDamage(DamageInstance {
+                source: None,
+                target: effect_target,
+                amount: NeedlingHexEffect::DMG_PER_TICK,
+            }));
+        }
+    }
+}
+
 #[derive(Debug)]
 pub struct NeedlingHexPlugin;
 
@@ -107,6 +139,10 @@ impl Plugin for NeedlingHexPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<NeedlingHexEffect>()
             .add_systems(Startup, add_to_ability_catalog)
+            .add_systems(
+                FixedUpdate,
+                tick_needling_hex_effects.in_set(PerUpdateSet::LogicUpdate),
+            )
             .add_systems(Update, cast_ability.in_set(PerUpdateSet::CommandResolution));
     }
 }

@@ -12,6 +12,7 @@ impl HasEffects {
         Self { holder }
     }
 
+    #[inline(always)]
     pub fn holder(&self) -> Entity {
         self.holder
     }
@@ -28,6 +29,7 @@ impl EffectsHolder {
         Self { holding_entity }
     }
 
+    #[inline(always)]
     pub fn holding_entity(&self) -> Entity {
         self.holding_entity
     }
@@ -36,7 +38,9 @@ impl EffectsHolder {
 #[derive(SystemParam)]
 pub struct UniqueEffectInterface<'w, 's, E: Component + std::fmt::Debug> {
     has_effects: Query<'w, 's, &'static HasEffects>,
+    effects_holders: Query<'w, 's, &'static EffectsHolder>,
     children: Query<'w, 's, &'static Children>,
+    parents: Query<'w, 's, &'static Parent>,
     commands: Commands<'w, 's>,
     effect_query: Query<'w, 's, Entity, With<E>>,
 }
@@ -53,7 +57,7 @@ impl<'w, 's, E: Component + std::fmt::Debug> UniqueEffectInterface<'w, 's, E> {
     /// Removes `true` if `target` had the Effect `E` before, otherwise `false`.
     pub fn remove_unique_effect(&mut self, target: Entity) -> bool {
         if let Some(effect_e) = self.get_unique_effect(target) {
-            self.commands.entity(effect_e).remove::<E>();
+            self.commands.entity(effect_e).despawn_recursive();
             true
         } else {
             false
@@ -69,6 +73,13 @@ impl<'w, 's, E: Component + std::fmt::Debug> UniqueEffectInterface<'w, 's, E> {
             .iter_many(effect_es)
             .at_most_one()
             .unwrap()
+    }
+
+    pub fn get_target_of_effect(&self, effect_e: Entity) -> Entity {
+        let holder = self.parents.get(effect_e).unwrap().get();
+        let effects_holder = self.effects_holders.get(holder).unwrap();
+
+        effects_holder.holding_entity()
     }
 
     fn spawn_effect_entity(&mut self, target: Entity) -> Entity {

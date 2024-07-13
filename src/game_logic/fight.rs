@@ -22,11 +22,21 @@ pub struct FightTime {
     pub stop_watch: Stopwatch,
 }
 
-impl Default for FightTime {
-    fn default() -> Self {
+impl FightTime {
+    pub fn new() -> Self {
         let mut stop_watch = Stopwatch::new();
         stop_watch.pause();
         Self { stop_watch }
+    }
+
+    pub fn is_paused(&self) -> bool {
+        self.stop_watch.paused()
+    }
+}
+
+impl Default for FightTime {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -69,6 +79,8 @@ impl FightStatus {
 #[derive(SystemParam)]
 pub struct FightInterface<'w, 's> {
     fights: Query<'w, 's, (&'static Fight, Option<&'static FightResult>)>,
+    fight_times: Query<'w, 's, &'static FightTime>,
+    parents: Query<'w, 's, &'static Parent>,
 }
 
 impl<'w, 's> FightInterface<'w, 's> {
@@ -79,6 +91,15 @@ impl<'w, 's> FightInterface<'w, 's> {
             None => FightStatus::Ongoing,
             Some(_) => FightStatus::Ended,
         }
+    }
+
+    /// `entity` must be a direct child of `Fight`
+    pub fn get_fight_of_entity(&self, entity: Entity) -> Entity {
+        self.parents.get(entity).unwrap().get()
+    }
+
+    pub fn is_fight_paused(&self, fight_e: Entity) -> bool {
+        self.fight_times.get(fight_e).unwrap().is_paused()
     }
 }
 
