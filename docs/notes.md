@@ -1,11 +1,13 @@
 # Todos
 
 ## Next:
+- [ ] Resetting fights/fight selection menu
+
 - [ ] fight-ui display for effects
   - [ ] With remaining _total_ time (also remaining ticks?)
   - [ ] With tooltip
 
-- [ ] Figure out what's next :) More complicated abilities? More units per side? AI :O?
+- [ ] Figure out what's next :) More complicated abilities? More units per side? AI/Enemy behavior :O?
   - Cooldowns? Cast-Times? Icons for Slots/Abilities/Effects? :O
 
 ## Possible Next
@@ -32,6 +34,8 @@
 ---
 # Done
 ---
+- [x] Simple test(s) for `FiniteRepeatingTimer`
+
 - [x] Let's build a basic DoT!
   - [x] With* a Buff/Effect for now - need it after all basically
     - [x] Build the ticking down + damage system

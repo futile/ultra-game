@@ -44,3 +44,80 @@ impl FiniteRepeatingTimer {
         fresh_ticks
     }
 }
+
+#[cfg(test)]
+mod test {
+    use std::time::Duration;
+
+    use super::FiniteRepeatingTimer;
+
+    #[test]
+    fn zero_timer_works() {
+        let mut timer = FiniteRepeatingTimer::new(Duration::ZERO, 0);
+
+        assert!(timer.is_finished());
+        assert_eq!(timer.remaining_ticks(), 0);
+        assert_eq!(timer.tick_get_fresh_ticks(Duration::ZERO), 0);
+        assert_eq!(timer.tick_get_fresh_ticks(Duration::MAX), 0);
+        assert_eq!(timer.tick_get_fresh_ticks(Duration::MAX), 0);
+        assert_eq!(timer.tick_get_fresh_ticks(Duration::MAX), 0);
+    }
+
+    #[test]
+    fn max_timer_works() {
+        let mut timer = FiniteRepeatingTimer::new(Duration::MAX, 2);
+
+        assert!(!timer.is_finished());
+        assert_eq!(timer.remaining_ticks(), 2);
+
+        assert_eq!(timer.tick_get_fresh_ticks(Duration::ZERO), 0);
+
+        assert_eq!(timer.tick_get_fresh_ticks(Duration::MAX), 1);
+        assert_eq!(timer.tick_get_fresh_ticks(Duration::MAX), 1);
+
+        assert_eq!(timer.tick_get_fresh_ticks(Duration::MAX), 0);
+
+        assert!(timer.is_finished());
+        assert_eq!(timer.remaining_ticks(), 0);
+    }
+
+    #[test]
+    fn partial_ticking_works() {
+        let mut timer = FiniteRepeatingTimer::new(Duration::from_secs(10), 2);
+
+        assert!(!timer.is_finished());
+        assert_eq!(timer.remaining_ticks(), 2);
+
+        assert_eq!(timer.tick_get_fresh_ticks(Duration::ZERO), 0);
+
+        assert_eq!(timer.tick_get_fresh_ticks(Duration::from_secs(5)), 0);
+        assert_eq!(timer.tick_get_fresh_ticks(Duration::from_secs(5)), 1);
+
+        assert_eq!(timer.tick_get_fresh_ticks(Duration::from_secs(5)), 0);
+        assert_eq!(timer.tick_get_fresh_ticks(Duration::from_secs(20)), 1);
+
+        assert_eq!(timer.tick_get_fresh_ticks(Duration::MAX), 0);
+
+        assert!(timer.is_finished());
+        assert_eq!(timer.remaining_ticks(), 0);
+    }
+
+    #[test]
+    fn multi_tick_works() {
+        let mut timer = FiniteRepeatingTimer::new(Duration::from_secs(10), 3);
+
+        assert!(!timer.is_finished());
+        assert_eq!(timer.remaining_ticks(), 3);
+
+        assert_eq!(timer.tick_get_fresh_ticks(Duration::ZERO), 0);
+
+        assert_eq!(timer.tick_get_fresh_ticks(Duration::from_secs(20)), 2);
+        assert_eq!(timer.tick_get_fresh_ticks(Duration::from_secs(5)), 0);
+        assert_eq!(timer.tick_get_fresh_ticks(Duration::from_secs(20)), 1);
+
+        assert_eq!(timer.tick_get_fresh_ticks(Duration::MAX), 0);
+
+        assert!(timer.is_finished());
+        assert_eq!(timer.remaining_ticks(), 0);
+    }
+}
