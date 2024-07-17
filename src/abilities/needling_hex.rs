@@ -35,7 +35,7 @@ fn add_to_ability_catalog(mut abilties_catalog: ResMut<AbilityCatalog>) {
 
 #[derive(Debug, Component, Reflect, Deref, DerefMut)]
 #[reflect(GameEffect)]
-struct NeedlingHexEffect(FiniteRepeatingTimer);
+pub struct NeedlingHexEffect(FiniteRepeatingTimer);
 
 impl GameEffect for NeedlingHexEffect {}
 
