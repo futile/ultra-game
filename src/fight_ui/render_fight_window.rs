@@ -1,4 +1,4 @@
-use std::borrow::Cow;
+use std::{borrow::Cow, fmt::Write as _};
 
 use bevy::{ecs::system::SystemState, prelude::*, reflect::ReflectFromPtr};
 use bevy_inspector_egui::{
@@ -18,7 +18,7 @@ use crate::{
         health::Health,
         Ability, AbilitySlot,
     },
-    utils::egui_systems::run_ui_system,
+    utils::{egui_systems::run_ui_system, SplitDuration},
     AbilitySlotType, HasAbilities, HasAbilitySlots,
 };
 
@@ -137,11 +137,29 @@ pub fn render_fight_window(
     }
 
     let pause_toggled = {
-        let elapsed = fight_time.stop_watch().elapsed();
+        let timer_string: String = {
+            let elapsed = fight_time.stop_watch().elapsed();
+            let elapsed_split = SplitDuration::from_duration(&elapsed);
 
-        let minutes = elapsed.as_secs() / 60;
-        let secs = elapsed.as_secs() % 60;
-        let tenths = elapsed.subsec_millis() / 100;
+            let mut s = String::new();
+
+            if elapsed_split.days > 0 {
+                write!(&mut s, "{}d, ", elapsed_split.days).unwrap();
+            }
+
+            if elapsed_split.hours > 0 {
+                write!(&mut s, "{:02}:", elapsed_split.hours).unwrap();
+            }
+
+            write!(
+                &mut s,
+                "{:02}:{:02}.{:1}",
+                elapsed_split.minutes, elapsed_split.seconds, elapsed_split.tenths
+            )
+            .unwrap();
+
+            s
+        };
 
         let play_pause_interactable = fight_result.is_none();
         let mut pause_toggled = false;
@@ -159,11 +177,7 @@ pub fn render_fight_window(
                             i.consume_shortcut(&KeyboardShortcut::new(Modifiers::NONE, Key::Space))
                         });
                         let timer_clicked = ui
-                            .button(
-                                RichText::new(format!("{minutes:02}:{secs:02}.{tenths:1}"))
-                                    .heading()
-                                    .strong(),
-                            )
+                            .button(RichText::new(timer_string).heading().strong())
                             .clicked();
                         pause_toggled = space_pressed || timer_clicked;
                     });
