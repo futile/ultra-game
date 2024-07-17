@@ -7,7 +7,7 @@ use crate::{
     game_logic::{
         commands::{CastAbility, CastAbilityInterface, GameCommand, GameCommandKind},
         damage_resolution::{DamageInstance, DealDamage},
-        effects::{GameEffect, UniqueEffectInterface},
+        effects::{GameEffect, ReflectGameEffect, UniqueEffectInterface},
         faction::Faction,
         fight::FightInterface,
         Ability, AbilityId, AbilitySlot,
@@ -34,6 +34,7 @@ fn add_to_ability_catalog(mut abilties_catalog: ResMut<AbilityCatalog>) {
 }
 
 #[derive(Debug, Component, Reflect, Deref, DerefMut)]
+#[reflect(GameEffect)]
 struct NeedlingHexEffect(FiniteRepeatingTimer);
 
 impl GameEffect for NeedlingHexEffect {}
