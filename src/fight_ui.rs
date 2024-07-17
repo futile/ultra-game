@@ -1,20 +1,25 @@
 use bevy::{ecs::entity::EntityHashSet, prelude::*};
+use render_effects::RenderEffectsPlugin;
 use render_fight_window::{render_fight_windows, FightWindowUiState};
 
 use crate::{game_logic::fight::Fight, PerUpdateSet};
 
+mod render_effects;
 mod render_fight_window;
 
 pub struct FightUiPlugin;
 
 impl Plugin for FightUiPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(
-            Update,
-            (sync_fight_windows_to_fights, render_fight_windows)
-                .chain()
-                .in_set(PerUpdateSet::CommandSubmission),
-        );
+        app
+            //
+            .add_plugins(RenderEffectsPlugin)
+            .add_systems(
+                Update,
+                (sync_fight_windows_to_fights, render_fight_windows)
+                    .chain()
+                    .in_set(PerUpdateSet::CommandSubmission),
+            );
     }
 }
 

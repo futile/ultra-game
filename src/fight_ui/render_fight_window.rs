@@ -1,17 +1,18 @@
 use std::borrow::Cow;
 
-use bevy::{ecs::system::SystemState, prelude::*};
+use bevy::{ecs::system::SystemState, prelude::*, reflect::ReflectFromPtr};
 use bevy_inspector_egui::{
     bevy_egui::EguiContexts,
     egui::{self, Id, Key, KeyboardShortcut, Modifiers, RichText, Ui, Visuals},
 };
 use itertools::Itertools;
 
-use super::FightWindow;
+use super::{render_effects::ReflectRenderGameEffectImmediate, FightWindow};
 use crate::{
     abilities::AbilityInterface,
     game_logic::{
         commands::{self, CastAbilityInterface, GameCommand},
+        effects::{HasEffects, ReflectGameEffect},
         faction::Faction,
         fight::{Fight, FightInterface, FightResult, FightTime},
         health::Health,
@@ -254,6 +255,7 @@ fn ui_fight_column(
     healths: &mut QueryState<&Health>,
     has_ability_slots: &mut QueryState<&HasAbilitySlots>,
     has_abilities: &mut QueryState<&HasAbilities>,
+    has_effects: &mut QueryState<&HasEffects>,
 ) -> (Ui, FightColumnUiState) {
     ui.indent(ui.id().with("entity_overview_section"), |ui: &mut Ui| {
         if let Ok(name) = names.get(world, model_e) {
@@ -298,6 +300,18 @@ fn ui_fight_column(
             Id::new("abilities_section").with(model_e),
             (model_e, fight_e, ui_column_state.clone()),
             ui_abilities,
+        );
+    }
+
+    if has_effects.get(world, model_e).is_ok() {
+        ui.add_space(10.);
+
+        run_ui_system(
+            &mut ui,
+            world,
+            Id::new("effects_section").with(model_e),
+            (model_e,),
+            ui_effects,
         );
     }
 
@@ -504,6 +518,97 @@ fn ui_abilities(
     params.apply(world);
 
     (ui, ui_column_state)
+}
+
+// #[expect(
+//     clippy::type_complexity,
+//     reason = "SystemState<..> big but ok, part of the ui-pattern (for now)"
+// )]
+fn ui_effects(
+    In((mut ui, (model_e,))): In<(Ui, (Entity,))>,
+    world: &mut World,
+    params: &mut SystemState<(Query<&HasEffects>, Query<&Children>, Res<AppTypeRegistry>)>,
+) -> (Ui, ()) {
+    ui.heading("Effects");
+
+    let (effect_entities, app_type_registry) = {
+        let (has_effects, children, world_type_registry) = params.get_mut(world);
+        let holder = has_effects.get(model_e).unwrap().holder();
+        let children = children.get(holder).unwrap().to_vec();
+
+        let app_type_registry = world_type_registry.clone();
+
+        params.apply(world);
+
+        (children, app_type_registry)
+    };
+
+    let type_registry = app_type_registry.read();
+
+    for effect_e in effect_entities {
+        let component_infos = world.inspect_entity(effect_e);
+        for component_info in component_infos {
+            let Some(component_type_id) = component_info.type_id() else {
+                warn_once!(
+                    "Component `{}` does not have a type_id()!",
+                    component_info.name()
+                );
+                continue;
+            };
+
+            if !type_registry.contains(component_type_id) {
+                warn_once!("Component `{}` is not Reflect!", component_info.name());
+                continue;
+            };
+
+            let comp_as_reflect = {
+                let untyped_ptr = world.get_by_id(effect_e, component_info.id()).unwrap();
+                let Some(reflect_from_ptr) =
+                    type_registry.get_type_data::<ReflectFromPtr>(component_type_id)
+                else {
+                    warn_once!(
+                        "Component `{}` is not ReflectFromPtr!",
+                        component_info.name()
+                    );
+                    continue;
+                };
+
+                assert!(type_registry.contains(component_type_id));
+                // SAFETY: We just made sure the component implements `Reflect` (again)
+                unsafe { reflect_from_ptr.as_reflect(untyped_ptr) }
+            };
+
+            let Some(_reflect_game_effect) =
+                type_registry.get_type_data::<ReflectGameEffect>(component_type_id)
+            else {
+                // this is not really a warning/error, as, e.g., the `Parent` component will be
+                // present but doesn't impl `GameEffect`.
+                // warn_once!(
+                //     "Component `{}` is not ReflectGameEffect!",
+                //     component_info.name()
+                // );
+                continue;
+            };
+
+            let Some(reflect_render_game_effect_immediate) =
+                type_registry.get_type_data::<ReflectRenderGameEffectImmediate>(component_type_id)
+            else {
+                warn_once!(
+                    "Component `{}` is ReflectGameEffect but not ReflectRenderGameEffectImmediate!",
+                    component_info.name()
+                );
+                continue;
+            };
+
+            let comp_as_render_game_effect_immediate = reflect_render_game_effect_immediate
+                .get(comp_as_reflect)
+                .unwrap();
+
+            comp_as_render_game_effect_immediate.render_to_ui(&mut ui);
+        }
+    }
+
+    (ui, ())
 }
 
 fn monospace_checked_shortcut(ui: &mut Ui, shortcut: Option<&KeyboardShortcut>) -> bool {

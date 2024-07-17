@@ -1,11 +1,14 @@
 # Todos
 
 ## Next:
-- [ ] Resetting fights/fight selection menu
-
 - [ ] fight-ui display for effects
+  - Probably using `OnAdd` for each effect in the UI to attach UI info/save it to an `EntityHashMap`/`HashMap` or sth.?
   - [ ] With remaining _total_ time (also remaining ticks?)
   - [ ] With tooltip
+  - [ ] How to handle "unknown" (i.e., not modeled for UI) effects?
+    - Default: "Unknown effect `TypeName`"
+
+- [ ] Resetting fights/fight selection menu
 
 - [ ] Figure out what's next :) More complicated abilities? More units per side? AI/Enemy behavior :O?
   - Cooldowns? Cast-Times? Icons for Slots/Abilities/Effects? :O

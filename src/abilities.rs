@@ -2,8 +2,8 @@ use bevy::{ecs::system::SystemParam, prelude::*, utils::HashMap};
 
 use crate::game_logic::{Ability, AbilityId};
 
-mod needling_hex;
-mod weapon_attack;
+pub mod needling_hex;
+pub mod weapon_attack;
 
 #[derive(Debug, Resource, Reflect, Default)]
 #[reflect(Resource)]
