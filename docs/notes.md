@@ -3,10 +3,11 @@
 ## Next:
 - [ ] fight-ui display for effects
   - Probably using `OnAdd` for each effect in the UI to attach UI info/save it to an `EntityHashMap`/`HashMap` or sth.?
-  - [ ] With remaining _total_ time (also remaining ticks?)
+  - [x] With remaining _total_ time (also remaining ticks?)
   - [ ] With tooltip
   - [ ] How to handle "unknown" (i.e., not modeled for UI) effects?
-    - Default: "Unknown effect `TypeName`"
+    - Idea: "Unknown effect `TypeName`"
+    - Currently: `warn_once!()` in console; probably also want a warning-tooltip
 
 - [ ] Resetting fights/fight selection menu
 
