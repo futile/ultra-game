@@ -35,8 +35,11 @@ impl EffectsHolder {
     }
 }
 
+/// Marker trait for components that represent effects
+pub trait GameEffect: Component + Reflect + std::fmt::Debug {}
+
 #[derive(SystemParam)]
-pub struct UniqueEffectInterface<'w, 's, E: Component + std::fmt::Debug> {
+pub struct UniqueEffectInterface<'w, 's, E: GameEffect> {
     has_effects: Query<'w, 's, &'static HasEffects>,
     effects_holders: Query<'w, 's, &'static EffectsHolder>,
     children: Query<'w, 's, &'static Children>,
@@ -45,7 +48,7 @@ pub struct UniqueEffectInterface<'w, 's, E: Component + std::fmt::Debug> {
     effect_query: Query<'w, 's, Entity, With<E>>,
 }
 
-impl<'w, 's, E: Component + std::fmt::Debug> UniqueEffectInterface<'w, 's, E> {
+impl<'w, 's, E: GameEffect> UniqueEffectInterface<'w, 's, E> {
     pub fn spawn_or_replace_unique_effect(&mut self, target: Entity, effect: E) {
         let effect_e = self
             .get_unique_effect(target)
