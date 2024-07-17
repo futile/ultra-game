@@ -24,6 +24,10 @@ impl FiniteRepeatingTimer {
         self.remaining_ticks() == 0
     }
 
+    pub fn remaining_time(&self) -> Duration {
+        (self.remaining_ticks.saturating_sub(1)) * self.timer.duration() + self.timer.remaining()
+    }
+
     #[must_use]
     pub fn tick_get_fresh_ticks(&mut self, elapsed: Duration) -> u32 {
         if self.is_finished() {
