@@ -91,6 +91,7 @@ pub fn render_fight_window(
     fights: &mut QueryState<(&Fight, &mut FightTime, Option<&FightResult>)>,
     factions: &mut QueryState<(Entity, &Faction)>,
     children: &mut QueryState<&Children>,
+    fight_interface: &mut SystemState<FightInterface>,
 ) -> (Ui, ()) {
     let fight_window = fight_windows.get_mut(world, fight_window_e).unwrap();
 
@@ -135,7 +136,7 @@ pub fn render_fight_window(
     }
 
     let pause_toggled = {
-        let elapsed = fight_time.stop_watch.elapsed();
+        let elapsed = fight_time.stop_watch().elapsed();
 
         let minutes = elapsed.as_secs() / 60;
         let secs = elapsed.as_secs() % 60;
@@ -204,15 +205,10 @@ pub fn render_fight_window(
         .ui_state = ui_state;
 
     if pause_toggled {
-        let (_fight, mut fight_time, _fight_result) = fights
-            .get_mut(world, fight_e)
-            .expect("FightWindow.model doesn't have a Fight");
+        let mut fight_interface = fight_interface.get_mut(world);
+        let is_paused = fight_interface.is_fight_paused(fight_e);
 
-        if fight_time.stop_watch.paused() {
-            fight_time.stop_watch.unpause();
-        } else {
-            fight_time.stop_watch.pause();
-        }
+        fight_interface.set_fight_paused(fight_e, !is_paused);
     }
 
     (ui, ())

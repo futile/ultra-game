@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use bevy::{ecs::system::SystemParam, prelude::*, time::Stopwatch, utils::HashSet};
 
 use super::{
@@ -19,7 +21,7 @@ pub enum FightEndCondition {
 // Starts paused.
 #[derive(Debug, Component, Reflect)]
 pub struct FightTime {
-    pub stop_watch: Stopwatch,
+    stop_watch: Stopwatch,
 }
 
 impl FightTime {
@@ -31,6 +33,10 @@ impl FightTime {
 
     pub fn is_paused(&self) -> bool {
         self.stop_watch.paused()
+    }
+
+    pub fn stop_watch(&self) -> &Stopwatch {
+        &self.stop_watch
     }
 }
 
@@ -59,7 +65,7 @@ impl FightBundle {
     }
 }
 
-#[derive(Debug, Component, Reflect)]
+#[derive(Debug, Clone, Component, Reflect)]
 pub enum FightResult {
     FactionVictory { which: Faction },
 }
@@ -79,15 +85,19 @@ impl FightStatus {
 #[derive(SystemParam)]
 pub struct FightInterface<'w, 's> {
     fights: Query<'w, 's, (&'static Fight, Option<&'static FightResult>)>,
-    fight_times: Query<'w, 's, &'static FightTime>,
+    fight_times: Query<'w, 's, &'static mut FightTime>,
     parents: Query<'w, 's, &'static Parent>,
 }
 
 impl<'w, 's> FightInterface<'w, 's> {
-    pub fn get_fight_status(&self, fight_e: Entity) -> FightStatus {
+    pub fn get_fight_result(&self, fight_e: Entity) -> Option<FightResult> {
         let (_, fight_result) = self.fights.get(fight_e).unwrap();
 
-        match fight_result {
+        fight_result.cloned()
+    }
+
+    pub fn get_fight_status(&self, fight_e: Entity) -> FightStatus {
+        match self.get_fight_result(fight_e) {
             None => FightStatus::Ongoing,
             Some(_) => FightStatus::Ended,
         }
@@ -100,6 +110,21 @@ impl<'w, 's> FightInterface<'w, 's> {
 
     pub fn is_fight_paused(&self, fight_e: Entity) -> bool {
         self.fight_times.get(fight_e).unwrap().is_paused()
+    }
+
+    pub fn set_fight_paused(&mut self, fight_e: Entity, should_pause: bool) {
+        let is_fight_ended = self.get_fight_status(fight_e).is_ended();
+        let mut fight_time = self.fight_times.get_mut(fight_e).unwrap();
+
+        if should_pause {
+            fight_time.stop_watch.pause()
+        } else if !is_fight_ended {
+            fight_time.stop_watch.unpause()
+        }
+    }
+
+    pub fn get_elapsed_fight_time(&self, fight_e: Entity) -> Duration {
+        self.fight_times.get(fight_e).unwrap().stop_watch.elapsed()
     }
 }
 
