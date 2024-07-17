@@ -1,3 +1,5 @@
+#![feature(duration_constructors)]
+
 use abilities::AbilitiesPlugin;
 use bevy::prelude::*;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
