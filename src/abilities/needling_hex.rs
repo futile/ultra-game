@@ -40,10 +40,10 @@ pub struct NeedlingHexEffect(FiniteRepeatingTimer);
 impl GameEffect for NeedlingHexEffect {}
 
 impl NeedlingHexEffect {
-    const TICK_INTERVAL: Duration = Duration::from_millis(500);
-    const NUM_TICKS: u32 = 5;
+    pub const TICK_INTERVAL: Duration = Duration::from_millis(500);
+    pub const NUM_TICKS: u32 = 5;
 
-    const DMG_PER_TICK: f64 = 10.0;
+    pub const DMG_PER_TICK: f64 = 10.0;
 
     fn new() -> NeedlingHexEffect {
         NeedlingHexEffect(FiniteRepeatingTimer::new(

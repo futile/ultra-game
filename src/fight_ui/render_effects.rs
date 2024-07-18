@@ -1,7 +1,7 @@
-use std::{fmt::Write as _, time::Duration};
+use std::{fmt::Write as _, sync::LazyLock, time::Duration};
 
 use bevy::prelude::*;
-use bevy_inspector_egui::egui::Ui;
+use bevy_inspector_egui::egui::{self, Id, Ui};
 
 use crate::{abilities::needling_hex::NeedlingHexEffect, utils::SplitDuration};
 
@@ -12,11 +12,34 @@ pub trait RenderGameEffectImmediate {
 
 impl RenderGameEffectImmediate for NeedlingHexEffect {
     fn render_to_ui(&self, ui: &mut Ui) {
-        ui.label(format!(
+        static DMG_DESCRIPTION: LazyLock<String> = LazyLock::new(|| {
+            format!(
+                "Deals {dmg_per_tick} damage every {tick_interval}s, a total of {num_ticks} times.",
+                dmg_per_tick = NeedlingHexEffect::DMG_PER_TICK,
+                tick_interval = NeedlingHexEffect::TICK_INTERVAL.as_secs_f64(),
+                num_ticks = NeedlingHexEffect::NUM_TICKS,
+            )
+        });
+
+        let label = ui.label(format!(
             "{remaining_time} Needling Hex ({remaining_ticks})",
             remaining_time = format_remaining_effect_time(&self.remaining_time()),
             remaining_ticks = self.remaining_ticks()
         ));
+
+        if label.contains_pointer() {
+            egui::containers::popup::show_tooltip_at(
+                ui.ctx(),
+                ui.layer_id(),
+                Id::new("EffectTooltip").with(self as *const _),
+                label.rect.right_top(),
+                |ui| {
+                    ui.label("A maddening hex that causes you to repeatedly take damage.");
+                    ui.label("");
+                    ui.label(&*DMG_DESCRIPTION);
+                },
+            );
+        }
     }
 }
 
