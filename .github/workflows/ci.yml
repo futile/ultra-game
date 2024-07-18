@@ -15,7 +15,7 @@ jobs:
     steps:
       - uses: earthly/actions-setup@v1
         with:
-          version: v0.8.11
+          version: "latest"
       - uses: actions/checkout@v4
       - name: Login to Docker Hub
         uses: docker/login-action@v3
