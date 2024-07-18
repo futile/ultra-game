@@ -73,6 +73,7 @@ pub fn render_fight_windows(
     for fight_window_e in fight_windows.into_iter() {
         egui::Window::new("Fight")
             .id(Id::new(fight_window_e))
+            .default_size((500.0, 500.0))
             .show(&ui_ctx, |ui: &mut Ui| {
                 run_ui_system(
                     ui,
@@ -534,10 +535,6 @@ fn ui_abilities(
     (ui, ui_column_state)
 }
 
-// #[expect(
-//     clippy::type_complexity,
-//     reason = "SystemState<..> big but ok, part of the ui-pattern (for now)"
-// )]
 fn ui_effects(
     In((mut ui, (model_e,))): In<(Ui, (Entity,))>,
     world: &mut World,
@@ -611,6 +608,27 @@ fn ui_effects(
                     "Component `{}` is ReflectGameEffect but not ReflectRenderGameEffectImmediate!",
                     component_info.name()
                 );
+
+                let short_name = component_info
+                    .name()
+                    .rsplit_once(':')
+                    .map(|(_prefix, shortname)| shortname)
+                    .unwrap_or(component_info.name());
+
+                let label = ui.label(format!("[UNKNOWN] {short_name}"));
+
+                if label.contains_pointer() {
+                    egui::containers::popup::show_tooltip_at(
+                        ui.ctx(),
+                        ui.layer_id(),
+                        Id::new("UnknownEffectTooltip").with(comp_as_reflect as *const _),
+                        label.rect.right_top(),
+                        |ui| {
+                            ui.label(component_info.name());
+                        },
+                    );
+                }
+
                 continue;
             };
 

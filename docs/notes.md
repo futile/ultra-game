@@ -1,18 +1,10 @@
 # Todos
 
 ## Next:
-- [ ] fight-ui display for effects
-  - Probably using `OnAdd` for each effect in the UI to attach UI info/save it to an `EntityHashMap`/`HashMap` or sth.?
-  - [x] With remaining _total_ time (also remaining ticks?)
-  - [ ] With tooltip
-  - [ ] How to handle "unknown" (i.e., not modeled for UI) effects?
-    - Idea: "Unknown effect `TypeName`"
-    - Currently: `warn_once!()` in console; probably also want a warning-tooltip
-
-- [ ] Resetting fights/fight selection menu
-
 - [ ] Figure out what's next :) More complicated abilities? More units per side? AI/Enemy behavior :O?
   - Cooldowns? Cast-Times? Icons for Slots/Abilities/Effects? :O
+
+- [ ] Resetting fights/fight selection menu
 
 ## Possible Next
 - [ ] 1 or 2 basic tests, also just to try out how well it works/how easy it is
@@ -38,6 +30,15 @@
 ---
 # Done
 ---
+- [x] fight-ui display for effects
+  - Probably using `OnAdd` for each effect in the UI to attach UI info/save it to an `EntityHashMap`/`HashMap` or sth.?
+    - For now just immediate re-render; probably a target for reactivity later on (but don't care yet :) )
+  - [x] With remaining _total_ time (also remaining ticks?)
+  - [x] With tooltip
+  - [x] How to handle "unknown" (i.e., not modeled for UI) effects?
+    - Idea: "Unknown effect `TypeName`"
+    - Currently: `warn_once!()` in console; probably also want a warning-tooltip <- added tooltip
+
 - [x] Simple test(s) for `FiniteRepeatingTimer`
 
 - [x] Let's build a basic DoT!
