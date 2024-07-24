@@ -5,12 +5,12 @@ use bevy::prelude::*;
 use super::AbilityCatalog;
 use crate::{
     game_logic::{
+        ability::{Ability, AbilityId, AbilitySlot},
         commands::{CastAbility, CastAbilityInterface, GameCommand, GameCommandKind},
         damage_resolution::{DamageInstance, DealDamage},
         effects::{GameEffect, ReflectGameEffect, UniqueEffectInterface},
         faction::Faction,
         fight::FightInterface,
-        Ability, AbilityId, AbilitySlot,
     },
     utils::FiniteRepeatingTimer,
     PerUpdateSet,

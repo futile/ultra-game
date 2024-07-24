@@ -1,6 +1,8 @@
 # Todos
 
 ## Next:
+- [ ] Cast-Times for abilities
+
 - [ ] Figure out what's next :) More complicated abilities? More units per side? AI/Enemy behavior :O?
   - Cooldowns? Cast-Times? Icons for Slots/Abilities/Effects? :O
 

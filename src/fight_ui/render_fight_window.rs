@@ -11,12 +11,12 @@ use super::{render_effects::ReflectRenderGameEffectImmediate, FightWindow};
 use crate::{
     abilities::AbilityInterface,
     game_logic::{
+        ability::{Ability, AbilitySlot},
         commands::{self, CastAbilityInterface, GameCommand},
         effects::{HasEffects, ReflectGameEffect},
         faction::Faction,
         fight::{Fight, FightInterface, FightResult, FightTime},
         health::Health,
-        Ability, AbilitySlot,
     },
     utils::{egui_systems::run_ui_system, SplitDuration},
     AbilitySlotType, HasAbilities, HasAbilitySlots,

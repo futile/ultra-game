@@ -1,7 +1,10 @@
 use bevy::{ecs::system::SystemParam, prelude::*};
 use derive_more::From;
 
-use super::{fight::FightInterface, AbilityId, AbilitySlot};
+use super::{
+    ability::{AbilityId, AbilitySlot},
+    fight::FightInterface,
+};
 use crate::{abilities::AbilityInterface, game_logic::fight::FightStatus};
 
 #[derive(Debug, Clone, Event)]
