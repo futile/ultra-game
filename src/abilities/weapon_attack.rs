@@ -4,7 +4,7 @@ use super::AbilityCatalog;
 use crate::{
     game_logic::{
         ability::{Ability, AbilityId, AbilitySlot, AbilitySlotType},
-        commands::{CastAbility, CastAbilityInterface, GameCommand, GameCommandKind},
+        commands::{CastAbilityInterface, GameCommand, GameCommandKind, UseAbility},
         damage_resolution::{DamageInstance, DealDamage},
         faction::Faction,
     },
@@ -22,6 +22,7 @@ fn add_to_ability_catalog(mut abilties_catalog: ResMut<AbilityCatalog>) {
             name: "Attack".into(),
             id: THIS_ABILITY_ID,
             slot_type: Some(AbilitySlotType::WeaponAttack),
+            cast_time: None,
             description: format!("Strike with your weapon, dealing {THIS_ABILITY_DAMAGE} damage.")
                 .into(),
         },
@@ -47,8 +48,8 @@ fn cast_ability(
         let GameCommand {
             source: _,
             kind:
-                GameCommandKind::CastAbility(
-                    cast @ CastAbility {
+                GameCommandKind::UseAbility(
+                    cast @ UseAbility {
                         caster_e,
                         slot_e,
                         ability_e: _,

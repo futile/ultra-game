@@ -30,11 +30,11 @@ pub enum GameCommandSource {
 
 #[derive(Debug, Clone, From)]
 pub enum GameCommandKind {
-    CastAbility(CastAbility),
+    UseAbility(UseAbility),
 }
 
 #[derive(Debug, Clone)]
-pub struct CastAbility {
+pub struct UseAbility {
     pub caster_e: Entity,
     pub slot_e: Option<Entity>,
     pub ability_e: Entity,
@@ -50,12 +50,12 @@ pub struct CastAbilityInterface<'w, 's> {
 }
 
 impl<'w, 's> CastAbilityInterface<'w, 's> {
-    pub fn is_matching_cast(&self, cast: &CastAbility, id: &AbilityId) -> bool {
+    pub fn is_matching_cast(&self, cast: &UseAbility, id: &AbilityId) -> bool {
         let ability_id = self.ability_ids.get(cast.ability_e).unwrap();
         ability_id == id
     }
 
-    pub fn is_valid_cast(&self, cast: &CastAbility) -> bool {
+    pub fn is_valid_cast(&self, cast: &UseAbility) -> bool {
         match self.fight_interface.get_fight_status(cast.fight_e) {
             FightStatus::Ongoing => (),
             FightStatus::Ended => return false,

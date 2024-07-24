@@ -465,7 +465,7 @@ fn ui_abilities(
                 .enumerate()
             {
                 let ability = ability_interface.get_ability_from_entity(*ability_id_e);
-                let possible_cast = commands::CastAbility {
+                let possible_cast = commands::UseAbility {
                     caster_e: model_e,
                     slot_e: selected_slot_e,
                     ability_e: *ability_id_e,

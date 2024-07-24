@@ -6,7 +6,7 @@ use super::AbilityCatalog;
 use crate::{
     game_logic::{
         ability::{Ability, AbilityId, AbilitySlot},
-        commands::{CastAbility, CastAbilityInterface, GameCommand, GameCommandKind},
+        commands::{CastAbilityInterface, GameCommand, GameCommandKind, UseAbility},
         damage_resolution::{DamageInstance, DealDamage},
         effects::{GameEffect, ReflectGameEffect, UniqueEffectInterface},
         faction::Faction,
@@ -27,6 +27,7 @@ fn add_to_ability_catalog(mut abilties_catalog: ResMut<AbilityCatalog>) {
             name: "Needling Hex".into(),
             id: THIS_ABILITY_ID,
             slot_type: None,
+            cast_time: None,
             description: format!("Hex your enemy with repeated damage. {THIS_ABILITY_DAMAGE}")
                 .into(),
         },
@@ -66,8 +67,8 @@ fn cast_ability(
         let GameCommand {
             source: _,
             kind:
-                GameCommandKind::CastAbility(
-                    cast @ CastAbility {
+                GameCommandKind::UseAbility(
+                    cast @ UseAbility {
                         caster_e,
                         slot_e,
                         ability_e: _,

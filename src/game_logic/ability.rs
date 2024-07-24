@@ -1,4 +1,4 @@
-use std::borrow::Cow;
+use std::{borrow::Cow, time::Duration};
 
 use bevy::prelude::*;
 
@@ -34,6 +34,7 @@ pub struct Ability {
     pub name: Cow<'static, str>,
     pub id: AbilityId,
     pub slot_type: Option<AbilitySlotType>,
+    pub cast_time: Option<Duration>,
     pub description: Cow<'static, str>,
 }
 
