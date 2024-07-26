@@ -2,6 +2,7 @@ use bevy::{ecs::system::SystemParam, prelude::*, utils::HashMap};
 
 use crate::game_logic::ability::{Ability, AbilityId};
 
+pub mod charged_strike;
 pub mod needling_hex;
 pub mod weapon_attack;
 

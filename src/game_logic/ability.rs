@@ -27,6 +27,7 @@ pub enum AbilitySlotType {
 pub enum AbilityId {
     Attack,
     NeedlingHex,
+    ChargedStrike,
 }
 
 #[derive(Debug, Clone, Reflect)]

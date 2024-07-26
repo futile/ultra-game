@@ -18,8 +18,6 @@ use crate::{
 
 const THIS_ABILITY_ID: AbilityId = AbilityId::NeedlingHex;
 
-const THIS_ABILITY_DAMAGE: f64 = 51.0;
-
 fn add_to_ability_catalog(mut abilties_catalog: ResMut<AbilityCatalog>) {
     abilties_catalog.0.insert(
         THIS_ABILITY_ID,
@@ -28,8 +26,7 @@ fn add_to_ability_catalog(mut abilties_catalog: ResMut<AbilityCatalog>) {
             id: THIS_ABILITY_ID,
             slot_type: None,
             cast_time: None,
-            description: format!("Hex your enemy with repeated damage. {THIS_ABILITY_DAMAGE}")
-                .into(),
+            description: format!("Hex your enemy with repeated damage.").into(),
         },
     );
 }
