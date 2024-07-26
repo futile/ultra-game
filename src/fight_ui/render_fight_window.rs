@@ -477,6 +477,7 @@ fn ui_abilities(
                     let key: Option<Key> = match idx {
                         0 => Some(Key::X),
                         1 => Some(Key::V),
+                        2 => Some(Key::L),
                         _ => None,
                     };
 

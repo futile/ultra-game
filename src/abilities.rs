@@ -43,6 +43,7 @@ impl Plugin for AbilitiesPlugin {
             .add_plugins((
                 weapon_attack::WeaponAttackPlugin,
                 needling_hex::NeedlingHexPlugin,
+                charged_strike::ChargedStrikePlugin,
             ));
     }
 }

@@ -25,6 +25,7 @@ fn setup(mut commands: Commands) {
         .with_children(|p| {
             p.spawn(AbilityId::Attack);
             p.spawn(AbilityId::NeedlingHex);
+            p.spawn(AbilityId::ChargedStrike);
         })
         .id();
 

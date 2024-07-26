@@ -19,9 +19,9 @@ fn add_to_ability_catalog(mut abilties_catalog: ResMut<AbilityCatalog>) {
 }
 
 #[derive(Debug)]
-pub struct NeedlingHexPlugin;
+pub struct ChargedStrikePlugin;
 
-impl Plugin for NeedlingHexPlugin {
+impl Plugin for ChargedStrikePlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, add_to_ability_catalog);
         // .add_systems(
