@@ -25,7 +25,7 @@ fn add_to_ability_catalog(mut abilties_catalog: ResMut<AbilityCatalog>) {
             name: "Needling Hex".into(),
             id: THIS_ABILITY_ID,
             slot_type: None,
-            cast_time: None,
+            #[expect(clippy::useless_format, reason = "Uniformity")]
             description: format!("Hex your enemy with repeated damage.").into(),
         },
     );

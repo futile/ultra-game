@@ -12,8 +12,7 @@ fn add_to_ability_catalog(mut abilties_catalog: ResMut<AbilityCatalog>) {
             name: "Charged Strike".into(),
             id: THIS_ABILITY_ID,
             slot_type: Some(AbilitySlotType::WeaponAttack),
-            cast_time: None,
-            #[expect(clippy::useless_format, reason = "Just like this better for now")]
+            #[expect(clippy::useless_format, reason = "Uniformity")]
             description: format!("Charge an extra strong strike!").into(),
         },
     );
