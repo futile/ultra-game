@@ -7,6 +7,7 @@ pub mod effects;
 pub mod faction;
 pub mod fight;
 pub mod health;
+pub mod ongoing_cast;
 
 pub struct GameLogicPlugin;
 
@@ -15,6 +16,7 @@ impl Plugin for GameLogicPlugin {
         // from https://github.com/jakobhellermann/bevy-inspector-egui/discussions/130
         app.add_plugins((
             ability::AbilityPlugin,
+            ongoing_cast::OngoingCastPlugin,
             fight::FightPlugin,
             faction::FactionPlugin,
             effects::EffectsPlugin,
