@@ -3,11 +3,16 @@ use std::{borrow::Cow, fmt::Write as _};
 use bevy::{ecs::system::SystemState, prelude::*, reflect::ReflectFromPtr};
 use bevy_inspector_egui::{
     bevy_egui::EguiContexts,
-    egui::{self, Id, Key, KeyboardShortcut, Modifiers, RichText, Ui, Visuals},
+    egui::{
+        self, Id, Key, KeyboardShortcut, Modifiers, ProgressBar, RichText, Ui, Visuals, Widget,
+    },
 };
 use itertools::Itertools;
 
-use super::{render_effects::ReflectRenderGameEffectImmediate, FightWindow};
+use super::{
+    render_effects::{format_remaining_time, ReflectRenderGameEffectImmediate},
+    FightWindow,
+};
 use crate::{
     abilities::AbilityInterface,
     game_logic::{
@@ -17,6 +22,7 @@ use crate::{
         faction::Faction,
         fight::{Fight, FightInterface, FightResult, FightTime},
         health::Health,
+        ongoing_cast::OngoingCastInterface,
     },
     utils::{egui_systems::run_ui_system, SplitDuration},
     AbilitySlotType, HasAbilities, HasAbilitySlots,
@@ -348,6 +354,8 @@ fn ui_ability_slots(
         Query<&Children>,
         Query<&AbilitySlot>,
         FightInterface,
+        AbilityInterface,
+        OngoingCastInterface,
     )>,
 ) -> (Ui, AbilitySlotsSectionUiState) {
     // TODO: add colors (again) at some point (if it fits..)
@@ -356,7 +364,14 @@ fn ui_ability_slots(
     // AbilitySlotType::ShieldDefend => Color::PINK,
 
     {
-        let (slots, children, ability_slots, fight_interface) = params.get_mut(world);
+        let (
+            slots,
+            children,
+            ability_slots,
+            fight_interface,
+            ability_interface,
+            ongoing_cast_interface,
+        ) = params.get_mut(world);
 
         let user_interactable = slots_section_state.user_interactable
             && !fight_interface.get_fight_status(fight_e).is_ended();
@@ -413,6 +428,25 @@ fn ui_ability_slots(
                         label_response.mark_changed();
                     }
                 });
+
+                if let Some(ongoing_cast) = ongoing_cast_interface.get_ongoing_cast(slot_e) {
+                    let progress = 1.0 - ongoing_cast.cast_timer.fraction_remaining();
+                    let remaining = ongoing_cast.cast_timer.remaining();
+                    let ability = ability_interface.get_ability_from_entity(ongoing_cast.ability_e);
+
+                    ui.indent(Id::new("progress_bar_for_slot").with(slot_e), |ui| {
+                        let progress_text = format!(
+                            "{} - {}",
+                            ability.name.clone(),
+                            format_remaining_time(&remaining),
+                        );
+
+                        ProgressBar::new(progress)
+                            .animate(false) // animates a spinner, didn't like it super much.
+                            .text(progress_text)
+                            .ui(ui);
+                    });
+                }
             }
         });
     }

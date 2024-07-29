@@ -18,12 +18,22 @@ pub struct HasOngoingCast {
 
 #[derive(SystemParam)]
 pub struct OngoingCastInterface<'w, 's> {
+    has_ongoing_casts: Query<'w, 's, &'static HasOngoingCast>,
+    ongoing_casts: Query<'w, 's, &'static OngoingCast>,
     commands: Commands<'w, 's>,
 }
 
 impl<'w, 's> OngoingCastInterface<'w, 's> {
     pub fn start_new_cast(&mut self, cast: OngoingCast) {
         self.commands.spawn(cast);
+    }
+
+    /// Retrieves the [`OngoingCast`] for an entity that has a [`HasOngoingCast`].
+    pub fn get_ongoing_cast(&self, entity: Entity) -> Option<&OngoingCast> {
+        self.has_ongoing_casts
+            .get(entity)
+            .ok()
+            .and_then(|hoc| self.ongoing_casts.get(hoc.ongoing_cast_e).ok())
     }
 }
 
@@ -60,7 +70,13 @@ fn on_add_ongoing_cast(
     let ongoing_cast = ongoing_casts.get(trigger.entity()).unwrap();
 
     for e in [ongoing_cast.slot_e, ongoing_cast.ability_e] {
-        assert!(!has_ongoing_casts.contains(e));
+        // TODO: if this is true, then we are "overriding" an ongoing cast.
+        // maybe fire an event or sth.
+        if let Ok(previous_ongoing_cast) = has_ongoing_casts.get(e) {
+            commands
+                .entity(previous_ongoing_cast.ongoing_cast_e)
+                .despawn_recursive();
+        }
 
         commands.entity(e).insert(HasOngoingCast {
             ongoing_cast_e: trigger.entity(),
@@ -77,12 +93,10 @@ fn on_remove_ongoing_cast(
     let ongoing_cast = ongoing_casts.get(trigger.entity()).unwrap();
 
     for e in [ongoing_cast.slot_e, ongoing_cast.ability_e] {
-        assert_eq!(
-            has_ongoing_casts.get(e).unwrap().ongoing_cast_e,
-            trigger.entity()
-        );
-
-        commands.entity(e).remove::<HasOngoingCast>();
+        // if another OngoingCast has overriden the one we are despawning, these will not be equal.
+        if has_ongoing_casts.get(e).unwrap().ongoing_cast_e == trigger.entity() {
+            commands.entity(e).remove::<HasOngoingCast>();
+        }
     }
 }
 
