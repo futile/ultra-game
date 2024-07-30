@@ -16,7 +16,13 @@ run-x11-on-wayland:
 
 # Build with detailed timing information (doesn't require a full rebuild)
 build-with-timings:
-    cargo rustc -- -Ztime-passes
+    cargo rustc -- -Z time-passes
+
+# Build and output rustc's self-profiling information (doesn't require a full rebuld).
+# Allows flamegraph & chrome dev-tools visualization
+# See https://github.com/rust-lang/measureme, use `nix shell unstable#measureme` for the binaries.
+build-with-rustc-profiling:
+    cargo rustc -- -Z self-profile
 
 # Update all cargo-dependencies, including breaking changes
 cargo-update-breaking:
