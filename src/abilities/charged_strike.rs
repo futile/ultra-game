@@ -7,8 +7,11 @@ use crate::{
     game_logic::{
         ability::{Ability, AbilityId, AbilitySlot, AbilitySlotType},
         commands::{CastAbilityInterface, GameCommand, GameCommandKind, UseAbility},
+        damage_resolution::{DamageInstance, DealDamage},
         faction::Faction,
-        ongoing_cast::{OngoingCast, OngoingCastInterface},
+        ongoing_cast::{
+            OngoingCast, OngoingCastAborted, OngoingCastFinishedSuccessfully, OngoingCastInterface,
+        },
     },
     PerUpdateSet,
 };
@@ -74,12 +77,33 @@ fn cast_ability(
             "Casting ability: {THIS_ABILITY_ID:?} | Fight: {fight_e:?} | Caster: {caster_e:?} | Slot: {slot_e:?} [{slot:?}] | Target: {target_e:?}"
         );
 
-        ongoing_cast_interface.start_new_cast(OngoingCast {
+        let ongoing_cast_e = ongoing_cast_interface.start_new_cast(OngoingCast {
             slot_e: slot_e.unwrap(),
             fight_e: *fight_e,
             ability_e: *ability_e,
             cast_timer: Timer::new(CAST_TIME, TimerMode::Once),
         });
+
+        let caster_e = *caster_e;
+        commands
+            .entity(ongoing_cast_e)
+            .observe(
+                move |_trigger: Trigger<OngoingCastFinishedSuccessfully>,
+                      mut deal_damage_events: EventWriter<DealDamage>| {
+                    deal_damage_events.send(DealDamage(DamageInstance {
+                        source: Some(caster_e),
+                        target: target_e,
+                        amount: 51.0,
+                    }));
+                },
+            )
+            .observe(
+                // for debugging atm.
+                move |trigger: Trigger<OngoingCastAborted>, mut commands: Commands| {
+                    println!("Charged Strike aborted!");
+                    commands.entity(trigger.entity()).log_components();
+                },
+            );
 
         // fire an event for the executed `GameCommand`
         commands.trigger_targets(cmd.clone(), *fight_e);
@@ -93,9 +117,5 @@ impl Plugin for ChargedStrikePlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, add_to_ability_catalog)
             .add_systems(Update, cast_ability.in_set(PerUpdateSet::CommandResolution));
-        // .add_systems(
-        //     FixedUpdate,
-        //     tick_needling_hex_effects.in_set(PerUpdateSet::LogicUpdate),
-        // )
     }
 }

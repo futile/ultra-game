@@ -3,6 +3,8 @@ use bevy::{ecs::system::SystemParam, prelude::*};
 use super::fight::FightInterface;
 use crate::PerUpdateSet;
 
+// TODO: Maybe add `target_e` here? some other way to find out *what* is happening?
+// Probably as I need during development.
 #[derive(Debug, Component, Reflect)]
 pub struct OngoingCast {
     pub fight_e: Entity,
@@ -16,6 +18,12 @@ pub struct HasOngoingCast {
     ongoing_cast_e: Entity,
 }
 
+#[derive(Debug, Reflect, Event)]
+pub struct OngoingCastFinishedSuccessfully;
+
+#[derive(Debug, Reflect, Event)]
+pub struct OngoingCastAborted;
+
 #[derive(SystemParam)]
 pub struct OngoingCastInterface<'w, 's> {
     has_ongoing_casts: Query<'w, 's, &'static HasOngoingCast>,
@@ -24,8 +32,8 @@ pub struct OngoingCastInterface<'w, 's> {
 }
 
 impl<'w, 's> OngoingCastInterface<'w, 's> {
-    pub fn start_new_cast(&mut self, cast: OngoingCast) {
-        self.commands.spawn(cast);
+    pub fn start_new_cast(&mut self, cast: OngoingCast) -> Entity {
+        self.commands.spawn(cast).id()
     }
 
     /// Retrieves the [`OngoingCast`] for an entity that has a [`HasOngoingCast`].
@@ -53,10 +61,8 @@ fn tick_ongoing_casts(
         ongoing_cast.cast_timer.tick(time.delta());
 
         if ongoing_cast.cast_timer.just_finished() {
+            commands.trigger_targets(OngoingCastFinishedSuccessfully, e);
             commands.entity(e).despawn_recursive();
-
-            // TODO: Create (and fire) event for this successfully finished cast
-            // (maybe before despawning, might matter, because the cast will/should still exist)
         }
     }
 }
@@ -69,15 +75,19 @@ fn on_add_ongoing_cast(
 ) {
     let ongoing_cast = ongoing_casts.get(trigger.entity()).unwrap();
 
-    for e in [ongoing_cast.slot_e, ongoing_cast.ability_e] {
-        // TODO: if this is true, then we are "overriding" an ongoing cast.
-        // maybe fire an event or sth.
-        if let Ok(previous_ongoing_cast) = has_ongoing_casts.get(e) {
-            commands
-                .entity(previous_ongoing_cast.ongoing_cast_e)
-                .despawn_recursive();
-        }
+    // if this is true, then we are "overriding" an ongoing cast.
+    if let Ok(previous_ongoing_cast) = has_ongoing_casts.get(ongoing_cast.slot_e) {
+        // maybe fire an event or sth. -- need to make sure the `ongoing_cast_e` isn't despawned
+        // while the event is still being handled..
+        // TODO: test if this works as expected (:
+        commands.trigger_targets(OngoingCastAborted, previous_ongoing_cast.ongoing_cast_e);
 
+        commands
+            .entity(previous_ongoing_cast.ongoing_cast_e)
+            .despawn_recursive();
+    }
+
+    for e in [ongoing_cast.slot_e, ongoing_cast.ability_e] {
         commands.entity(e).insert(HasOngoingCast {
             ongoing_cast_e: trigger.entity(),
         });
