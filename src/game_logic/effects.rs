@@ -7,6 +7,20 @@ pub struct HasEffects {
     holder: Entity,
 }
 
+#[cfg(fake_changed)]
+#[derive(Debug)]
+pub struct Unused {
+    i: i32,
+}
+
+#[cfg(fake_changed)]
+impl Unused {
+    pub fn new(i: i32) -> Unused {
+        eprintln!("some codegen!");
+        dbg!(Unused { i })
+    }
+}
+
 impl HasEffects {
     pub fn new(holder: Entity) -> Self {
         Self { holder }

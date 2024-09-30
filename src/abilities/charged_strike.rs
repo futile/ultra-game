@@ -16,6 +16,20 @@ use crate::{
     PerUpdateSet,
 };
 
+#[cfg(fake_changed)]
+#[derive(Debug)]
+pub struct Unused {
+    i: i32,
+}
+
+#[cfg(fake_changed)]
+impl Unused {
+    pub fn new(i: i32) -> Unused {
+        eprintln!("some codegen!");
+        dbg!(Unused { i })
+    }
+}
+
 const THIS_ABILITY_ID: AbilityId = AbilityId::ChargedStrike;
 
 const CAST_TIME: Duration = Duration::from_secs(2);

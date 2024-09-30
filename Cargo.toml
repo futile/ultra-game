@@ -23,3 +23,7 @@ bevy = { version = "0.14.0", features = ["wayland", "dynamic_linking"] }
 bevy-inspector-egui = "0.25.0"
 derive_more = "0.99.18"
 itertools = "0.13.0"
+
+# for trying out derive macro caching yadda yadda
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(fake_changed)'] }

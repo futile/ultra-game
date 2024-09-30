@@ -3,6 +3,20 @@ use bevy::{ecs::system::SystemParam, prelude::*};
 use super::fight::FightInterface;
 use crate::PerUpdateSet;
 
+#[cfg(fake_changed)]
+#[derive(Debug)]
+pub struct Unused {
+    i: i32,
+}
+
+#[cfg(fake_changed)]
+impl Unused {
+    pub fn new(i: i32) -> Unused {
+        eprintln!("some codegen!");
+        dbg!(Unused { i })
+    }
+}
+
 // TODO: Maybe add `target_e` here? some other way to find out *what* is happening?
 // Probably as I need during development.
 #[derive(Debug, Component, Reflect)]
