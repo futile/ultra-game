@@ -2,9 +2,13 @@
 
 ## Next:
 - [ ] Cast-Times for abilities
+  - [x] Basic Cast-Times with events for `success`/`aborted`
+  - [x] Casting another cast-time ability on the same slot should override an ongoing cast + `aborted`-event
+  - [ ] Casting something (without a cast-time) should interrupt an ongoing cast
+    - Probably by having an `interruptible` flag/enum on `OngoingCast`, then let that system handle interruptions (probably refactoring out the "abort ongoing cast"-logic from the other place where it's already done).
 
 - [ ] Figure out what's next :) More complicated abilities? More units per side? AI/Enemy behavior :O?
-  - Cooldowns? Cast-Times? Icons for Slots/Abilities/Effects? :O
+  - Cooldowns? Icons for Slots/Abilities/Effects? :O
 
 - [ ] Resetting fights/fight selection menu
 

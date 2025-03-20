@@ -23,7 +23,7 @@ impl RenderGameEffectImmediate for NeedlingHexEffect {
 
         let label = ui.label(format!(
             "{remaining_time} Needling Hex ({remaining_ticks})",
-            remaining_time = format_remaining_effect_time(&self.remaining_time()),
+            remaining_time = format_remaining_time(&self.remaining_time()),
             remaining_ticks = self.remaining_ticks()
         ));
 
@@ -43,7 +43,7 @@ impl RenderGameEffectImmediate for NeedlingHexEffect {
     }
 }
 
-fn format_remaining_effect_time(remaining: &Duration) -> String {
+pub fn format_remaining_time(remaining: &Duration) -> String {
     let SplitDuration {
         days,
         hours,
