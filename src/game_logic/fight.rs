@@ -32,7 +32,7 @@ impl FightTime {
     }
 
     pub fn is_paused(&self) -> bool {
-        self.stop_watch.paused()
+        self.stop_watch.is_paused()
     }
 
     pub fn stop_watch(&self) -> &Stopwatch {
@@ -230,6 +230,6 @@ impl Plugin for FightPlugin {
                         .in_set(PerUpdateSet::FightEndChecking),
                 ),
             )
-            .observe(on_add_fight);
+            .add_observer(on_add_fight);
     }
 }

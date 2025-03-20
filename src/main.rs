@@ -18,7 +18,7 @@ pub mod game_logic;
 pub mod utils;
 
 fn setup(mut commands: Commands) {
-    commands.spawn(Camera2dBundle::default());
+    commands.spawn(Camera2d::default());
 
     let player_abilities = commands
         .spawn((Name::new("Player Abilities"),))
@@ -61,7 +61,7 @@ fn setup(mut commands: Commands) {
 
     commands
         .spawn((FightBundle::new(), Name::new("The Fight")))
-        .push_children(&[player_character, enemy]);
+        .add_children(&[player_character, enemy]);
 }
 
 // from https://github.com/bevyengine/bevy/pull/12859

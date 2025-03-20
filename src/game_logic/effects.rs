@@ -121,8 +121,8 @@ impl Plugin for EffectsPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<HasEffects>()
             .register_type::<EffectsHolder>()
-            .observe(on_add_has_effects)
-            .observe(on_remove_has_effects);
+            .add_observer(on_add_has_effects)
+            .add_observer(on_remove_has_effects);
     }
 }
 

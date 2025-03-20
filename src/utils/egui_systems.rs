@@ -13,7 +13,7 @@ use bevy::{
     prelude::*,
     utils::{AHasher, HashMap},
 };
-use bevy_inspector_egui::egui::Ui;
+use bevy_inspector_egui::egui::{Ui, UiBuilder};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SysId(pub u64);
@@ -29,7 +29,7 @@ impl SysId {
 #[derive(Resource)]
 struct IdMappedSystems<I, O, S>
 where
-    I: Send + 'static,
+    I: Send + SystemInput + 'static,
     O: Send + 'static,
     S: Send + 'static + Sync,
 {
@@ -39,7 +39,7 @@ where
 
 impl<I, O, S> Default for IdMappedSystems<I, O, S>
 where
-    I: Send + 'static,
+    I: Send + SystemInput + 'static,
     O: Send + 'static,
     S: Send + 'static + Sync,
 {
@@ -56,14 +56,14 @@ where
     H: Hash,
     I: Send + 'static,
     O: Send + 'static,
-    S: IntoSystem<I, O, Marker> + Send + 'static + Sync,
+    S: IntoSystem<In<I>, O, Marker> + Send + 'static + Sync,
 {
     // the system id
     let sys_id = SysId::new(id);
 
     // get resource storing the id-mapped systems
     let mut id_mapped_systems =
-        world.get_resource_or_insert_with::<IdMappedSystems<I, O, S>>(IdMappedSystems::default);
+        world.get_resource_or_insert_with::<IdMappedSystems<In<I>, O, S>>(IdMappedSystems::default);
 
     // take the initialized system
     let mut system = match id_mapped_systems
@@ -87,7 +87,7 @@ where
 
     // re-acquire mutable access to id-mapped systems
     let mut id_mapped_systems =
-        world.get_resource_or_insert_with::<IdMappedSystems<I, O, S>>(IdMappedSystems::default);
+        world.get_resource_or_insert_with::<IdMappedSystems<In<I>, O, S>>(IdMappedSystems::default);
 
     // put the system back
     // - we ignore overwrites
@@ -116,10 +116,15 @@ where
     H: Hash,
     I: Send + 'static,
     O: Send + 'static,
-    S: IntoSystem<(Ui, I), (Ui, O), Marker> + Send + 'static + Sync,
+    S: IntoSystem<In<(Ui, I)>, (Ui, O), Marker> + Send + 'static + Sync,
 {
     // create an owned child `egui::Ui` to pass to the function
-    let child_ui = ui.child_ui(ui.available_rect_before_wrap(), *ui.layout(), None);
+    let child_ui = ui.new_child(
+        UiBuilder::new()
+            .max_rect(ui.available_rect_before_wrap())
+            .layout(*ui.layout())
+            .ui_stack_info(Default::default()),
+    );
 
     // `ui_stack_info: None` seems to work.
     // alternatively, use this:
