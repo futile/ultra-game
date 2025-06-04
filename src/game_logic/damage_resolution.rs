@@ -18,8 +18,6 @@ fn damage_resolution_system(
     mut health_interface: HealthInterface,
 ) {
     for deal_damage_event in deal_damage_events.read() {
-        println!("{deal_damage_event:?}");
-
         let damage = &deal_damage_event.0;
 
         let res = health_interface.lose_hp(damage.target, damage.amount);
