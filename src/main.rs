@@ -1,3 +1,4 @@
+#![feature(duration_constructors_lite)]
 #![feature(duration_constructors)]
 
 use abilities::AbilitiesPlugin;
