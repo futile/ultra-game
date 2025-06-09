@@ -44,7 +44,7 @@ pub struct UniqueEffectInterface<'w, 's, E: GameEffect + Component> {
     has_effects: Query<'w, 's, &'static HasEffects>,
     effects_holders: Query<'w, 's, &'static EffectsHolder>,
     children: Query<'w, 's, &'static Children>,
-    parents: Query<'w, 's, &'static Parent>,
+    parents: Query<'w, 's, &'static ChildOf>,
     commands: Commands<'w, 's>,
     effect_query: Query<'w, 's, Entity, With<E>>,
 }
@@ -61,7 +61,7 @@ impl<'w, 's, E: GameEffect + Component> UniqueEffectInterface<'w, 's, E> {
     /// Removes `true` if `target` had the Effect `E` before, otherwise `false`.
     pub fn remove_unique_effect(&mut self, target: Entity) -> bool {
         if let Some(effect_e) = self.get_unique_effect(target) {
-            self.commands.entity(effect_e).despawn_recursive();
+            self.commands.entity(effect_e).despawn();
             true
         } else {
             false
@@ -80,7 +80,7 @@ impl<'w, 's, E: GameEffect + Component> UniqueEffectInterface<'w, 's, E> {
     }
 
     pub fn get_target_of_effect(&self, effect_e: Entity) -> Entity {
-        let holder = self.parents.get(effect_e).unwrap().get();
+        let holder = self.parents.get(effect_e).unwrap().parent();
         let effects_holder = self.effects_holders.get(holder).unwrap();
 
         effects_holder.holding_entity()
@@ -132,7 +132,7 @@ fn on_add_has_effects(
     effects_holder: Query<Entity, With<EffectsHolder>>,
     mut commands: Commands,
 ) {
-    let holding_entity = trigger.entity();
+    let holding_entity = trigger.target();
     let holder = has_effects.get(holding_entity).unwrap().holder;
 
     // assert that the holder doesn't have `EffectsHolder` yet
@@ -148,7 +148,7 @@ fn on_remove_has_effects(
     has_effects: Query<&HasEffects>,
     mut commands: Commands,
 ) {
-    let holder = has_effects.get(trigger.entity()).unwrap().holder;
+    let holder = has_effects.get(trigger.target()).unwrap().holder;
 
-    commands.entity(holder).despawn_recursive();
+    commands.entity(holder).despawn();
 }

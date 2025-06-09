@@ -54,7 +54,7 @@ impl<'w, 's> HealthInterface<'w, 's> {
 
             if target_health.is_dead() {
                 self.liveness_events
-                    .send(LivenessChangeEvent::EntityDied { which: target });
+                    .write(LivenessChangeEvent::EntityDied { which: target });
             }
 
             Ok(())
@@ -64,7 +64,7 @@ impl<'w, 's> HealthInterface<'w, 's> {
     }
 
     pub fn healths(&self) -> Query<'_, 's, &'static Health> {
-        self.healths.to_readonly()
+        self.healths.as_readonly()
     }
 }
 

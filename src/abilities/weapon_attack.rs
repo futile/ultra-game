@@ -78,7 +78,7 @@ fn cast_ability(
             "Casting ability: {THIS_ABILITY_ID:?} | Fight: {fight_e:?} | Caster: {caster_e:?} | Slot: {slot_e:?} [{slot:?}] | Target: {target_e:?}"
         );
 
-        deal_damage_events.send(DealDamage(DamageInstance {
+        deal_damage_events.write(DealDamage(DamageInstance {
             source: Some(*caster_e),
             target: target_e,
             amount: 51.0,

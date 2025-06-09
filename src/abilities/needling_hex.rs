@@ -124,7 +124,7 @@ fn tick_needling_hex_effects(
         }
 
         for _ in 0..just_elapsed_ticks {
-            deal_damage_events.send(DealDamage(DamageInstance {
+            deal_damage_events.write(DealDamage(DamageInstance {
                 source: None,
                 target: effect_target,
                 amount: NeedlingHexEffect::DMG_PER_TICK,

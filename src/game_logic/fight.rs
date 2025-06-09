@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use bevy::{ecs::system::SystemParam, prelude::*, time::Stopwatch, utils::HashSet};
+use bevy::{ecs::system::SystemParam, platform::collections::HashSet, prelude::*, time::Stopwatch};
 
 use super::{
     commands::{GameCommand, GameCommandSource},
@@ -86,7 +86,7 @@ impl FightStatus {
 pub struct FightInterface<'w, 's> {
     fights: Query<'w, 's, (&'static Fight, Option<&'static FightResult>)>,
     fight_times: Query<'w, 's, &'static mut FightTime>,
-    parents: Query<'w, 's, &'static Parent>,
+    parents: Query<'w, 's, &'static ChildOf>,
 }
 
 impl<'w, 's> FightInterface<'w, 's> {
@@ -105,7 +105,7 @@ impl<'w, 's> FightInterface<'w, 's> {
 
     /// `entity` must be a direct child of `Fight`
     pub fn get_fight_of_entity(&self, entity: Entity) -> Entity {
-        self.parents.get(entity).unwrap().get()
+        self.parents.get(entity).unwrap().parent()
     }
 
     pub fn is_fight_paused(&self, fight_e: Entity) -> bool {
@@ -132,7 +132,7 @@ fn single_faction_survives_check(
     mut commands: Commands,
     mut liveness_events: EventReader<LivenessChangeEvent>,
     fight_end_conditions: Query<&FightEndCondition, (With<Fight>, Without<FightResult>)>,
-    parents: Query<&Parent>,
+    parents: Query<&ChildOf>,
     childrens: Query<&Children>,
     health_factions: Query<(&Health, &Faction)>,
 ) {
@@ -143,7 +143,7 @@ fn single_faction_survives_check(
             LivenessChangeEvent::EntityDied { which } => *which,
         };
 
-        let fight_e = parents.get(died_entity).unwrap().get();
+        let fight_e = parents.get(died_entity).unwrap().parent();
 
         if fights_to_check.contains(&fight_e) {
             continue;
@@ -200,7 +200,7 @@ fn unpause_fight_on_user_command(
 ) {
     if trigger.event().source == GameCommandSource::UserInteraction {
         fight_times
-            .get_mut(trigger.entity())
+            .get_mut(trigger.target())
             .unwrap()
             .stop_watch
             .unpause();
@@ -209,7 +209,7 @@ fn unpause_fight_on_user_command(
 
 fn on_add_fight(trigger: Trigger<OnAdd, Fight>, mut commands: Commands) {
     commands
-        .entity(trigger.entity())
+        .entity(trigger.target())
         .observe(unpause_fight_on_user_command);
 }
 

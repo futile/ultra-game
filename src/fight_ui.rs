@@ -1,4 +1,5 @@
 use bevy::{ecs::entity::EntityHashSet, prelude::*};
+use bevy_inspector_egui::bevy_egui::EguiContextPass;
 use render_effects::RenderEffectsPlugin;
 use render_fight_window::{render_fight_windows, FightWindowUiState};
 
@@ -15,7 +16,7 @@ impl Plugin for FightUiPlugin {
             //
             .add_plugins(RenderEffectsPlugin)
             .add_systems(
-                Update,
+                EguiContextPass,
                 (sync_fight_windows_to_fights, render_fight_windows)
                     .chain()
                     .in_set(PerUpdateSet::CommandSubmission),
@@ -56,7 +57,7 @@ fn sync_fight_windows_to_fights(
             let should_despawn = removed_fight_entities.remove(&fight_window.model);
 
             if should_despawn {
-                commands.entity(window_e).despawn_recursive();
+                commands.entity(window_e).despawn();
             }
         }
     }

@@ -62,7 +62,7 @@ fn tick_ongoing_casts(
 
         if ongoing_cast.cast_timer.just_finished() {
             commands.trigger_targets(OngoingCastFinishedSuccessfully, e);
-            commands.entity(e).despawn_recursive();
+            commands.entity(e).despawn();
         }
     }
 }
@@ -73,7 +73,7 @@ fn on_add_ongoing_cast(
     has_ongoing_casts: Query<&HasOngoingCast>,
     mut commands: Commands,
 ) {
-    let ongoing_cast = ongoing_casts.get(trigger.entity()).unwrap();
+    let ongoing_cast = ongoing_casts.get(trigger.target()).unwrap();
 
     // if this is true, then we are "overriding" an ongoing cast.
     if let Ok(previous_ongoing_cast) = has_ongoing_casts.get(ongoing_cast.slot_e) {
@@ -84,12 +84,12 @@ fn on_add_ongoing_cast(
 
         commands
             .entity(previous_ongoing_cast.ongoing_cast_e)
-            .despawn_recursive();
+            .despawn();
     }
 
     for e in [ongoing_cast.slot_e, ongoing_cast.ability_e] {
         commands.entity(e).insert(HasOngoingCast {
-            ongoing_cast_e: trigger.entity(),
+            ongoing_cast_e: trigger.target(),
         });
     }
 }
@@ -100,11 +100,11 @@ fn on_remove_ongoing_cast(
     has_ongoing_casts: Query<&HasOngoingCast>,
     mut commands: Commands,
 ) {
-    let ongoing_cast = ongoing_casts.get(trigger.entity()).unwrap();
+    let ongoing_cast = ongoing_casts.get(trigger.target()).unwrap();
 
     for e in [ongoing_cast.slot_e, ongoing_cast.ability_e] {
         // if another OngoingCast has overriden the one we are despawning, these will not be equal.
-        if has_ongoing_casts.get(e).unwrap().ongoing_cast_e == trigger.entity() {
+        if has_ongoing_casts.get(e).unwrap().ongoing_cast_e == trigger.target() {
             commands.entity(e).remove::<HasOngoingCast>();
         }
     }

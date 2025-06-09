@@ -19,7 +19,8 @@ opt-level = 3
 opt-level = 3
 
 [dependencies]
-bevy = { version = "0.15.3", features = ["wayland", "dynamic_linking"] }
-bevy-inspector-egui = "0.30.0"
+ahash = "0.8.12"
+bevy = { version = "0.16.1", features = ["wayland", "dynamic_linking"] }
+bevy-inspector-egui = "0.31.0"
 derive_more = { version = "2.0.1", features = ["full"] } # TODO: can probably slim down the feature set. but didn't bother for now.
 itertools = "0.14.0"

@@ -381,7 +381,7 @@ fn ui_ability_slots(
         let slots_holder = slots.get(model_e).unwrap().holder;
 
         ui.indent(ui.id().with("ability_slots"), |ui: &mut Ui| {
-            for (idx, &slot_e) in children
+            for (idx, slot_e) in children
                 .get(slots_holder)
                 .expect("HasAbilitySlots.holder without Children")
                 .iter()
@@ -498,11 +498,11 @@ fn ui_abilities(
                 .iter()
                 .enumerate()
             {
-                let ability = ability_interface.get_ability_from_entity(*ability_id_e);
+                let ability = ability_interface.get_ability_from_entity(ability_id_e);
                 let possible_cast = commands::UseAbility {
                     caster_e: model_e,
                     slot_e: selected_slot_e,
-                    ability_e: *ability_id_e,
+                    ability_e: ability_id_e,
                     fight_e,
                 };
                 let ability_usable = cast_ability_interface.is_valid_cast(&possible_cast);
@@ -554,7 +554,7 @@ fn ui_abilities(
                         }
 
                         if ability_usable && (shortcut_pressed || ability_button.clicked()) {
-                            game_commands.send(GameCommand::new_from_user(possible_cast.into()));
+                            game_commands.write(GameCommand::new_from_user(possible_cast.into()));
 
                             // clear the selected slot, because it was used.
                             ui_column_state.abilities_section_state.selected_slot = None;
@@ -580,7 +580,13 @@ fn ui_effects(
     let (effect_entities, app_type_registry) = {
         let (has_effects, children, world_type_registry) = params.get_mut(world);
         let holder = has_effects.get(model_e).unwrap().holder();
-        let children = children.get(holder).unwrap().to_vec();
+        let Ok(children) = children.get(holder) else {
+            // TODO: after casting NeedlingHex once, and waiting for it to finish, this keeps being
+            // spammed - fix this :)
+            warn!("couldn't get children of effects holder, skipping rendering.");
+            return (ui, ());
+        };
+        let children = children.to_vec();
 
         let app_type_registry = world_type_registry.clone();
 
@@ -592,7 +598,7 @@ fn ui_effects(
     let type_registry = app_type_registry.read();
 
     for effect_e in effect_entities {
-        let component_infos = world.inspect_entity(effect_e);
+        let component_infos = world.inspect_entity(effect_e).unwrap();
         for component_info in component_infos {
             let Some(component_type_id) = component_info.type_id() else {
                 warn_once!(

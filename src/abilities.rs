@@ -1,4 +1,4 @@
-use bevy::{ecs::system::SystemParam, prelude::*, utils::HashMap};
+use bevy::{ecs::system::SystemParam, platform::collections::HashMap, prelude::*};
 
 use crate::game_logic::ability::{Ability, AbilityId};
 

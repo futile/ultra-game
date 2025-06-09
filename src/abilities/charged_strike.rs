@@ -90,7 +90,7 @@ fn cast_ability(
             .observe(
                 move |_trigger: Trigger<OngoingCastFinishedSuccessfully>,
                       mut deal_damage_events: EventWriter<DealDamage>| {
-                    deal_damage_events.send(DealDamage(DamageInstance {
+                    deal_damage_events.write(DealDamage(DamageInstance {
                         source: Some(caster_e),
                         target: target_e,
                         amount: 51.0,
@@ -101,7 +101,7 @@ fn cast_ability(
                 // for debugging atm.
                 move |trigger: Trigger<OngoingCastAborted>, mut commands: Commands| {
                     println!("Charged Strike aborted!");
-                    commands.entity(trigger.entity()).log_components();
+                    commands.entity(trigger.target()).log_components();
                 },
             );
 

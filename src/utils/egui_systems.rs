@@ -8,11 +8,8 @@ use std::{
     marker::PhantomData,
 };
 
-use bevy::{
-    ecs::system::BoxedSystem,
-    prelude::*,
-    utils::{AHasher, HashMap},
-};
+use ahash::AHasher;
+use bevy::{ecs::system::BoxedSystem, platform::collections::HashMap, prelude::*};
 use bevy_inspector_egui::egui::{Ui, UiBuilder};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
