@@ -580,13 +580,11 @@ fn ui_effects(
     let (effect_entities, app_type_registry) = {
         let (has_effects, children, world_type_registry) = params.get_mut(world);
         let holder = has_effects.get(model_e).unwrap().holder();
-        let Ok(children) = children.get(holder) else {
-            // TODO: after casting NeedlingHex once, and waiting for it to finish, this keeps being
-            // spammed - fix this :)
-            warn!("couldn't get children of effects holder, skipping rendering.");
-            return (ui, ());
-        };
-        let children = children.to_vec();
+        let children = children
+            .get(holder)
+            .ok()
+            .map(|cs| cs.to_vec())
+            .unwrap_or_default();
 
         let app_type_registry = world_type_registry.clone();
 

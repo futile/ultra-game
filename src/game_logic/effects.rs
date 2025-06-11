@@ -58,7 +58,7 @@ impl<'w, 's, E: GameEffect + Component> UniqueEffectInterface<'w, 's, E> {
         self.commands.entity(effect_e).remove::<E>().insert(effect);
     }
 
-    /// Removes `true` if `target` had the Effect `E` before, otherwise `false`.
+    /// Returns `true` if `target` had the Effect `E` before, otherwise `false`.
     pub fn remove_unique_effect(&mut self, target: Entity) -> bool {
         if let Some(effect_e) = self.get_unique_effect(target) {
             self.commands.entity(effect_e).despawn();
