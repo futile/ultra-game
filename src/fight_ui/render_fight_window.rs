@@ -1,6 +1,6 @@
 use std::{borrow::Cow, fmt::Write as _};
 
-use bevy::{ecs::system::SystemState, prelude::*, reflect::ReflectFromPtr};
+use bevy::{ecs::system::SystemState, prelude::*};
 use bevy_inspector_egui::{
     bevy_egui::EguiContexts,
     egui::{
@@ -606,26 +606,12 @@ fn ui_effects(
                 continue;
             };
 
-            if !type_registry.contains(component_type_id) {
-                warn_once!("Component `{}` is not Reflect!", component_info.name());
-                continue;
-            };
-
-            let comp_as_reflect = {
-                let untyped_ptr = world.get_by_id(effect_e, component_info.id()).unwrap();
-                let Some(reflect_from_ptr) =
-                    type_registry.get_type_data::<ReflectFromPtr>(component_type_id)
-                else {
-                    warn_once!(
-                        "Component `{}` is not ReflectFromPtr!",
-                        component_info.name()
-                    );
+            let comp_as_reflect = match world.get_reflect(effect_e, component_type_id) {
+                Ok(reflect) => reflect,
+                Err(e) => {
+                    warn_once!("Could not get effect entity as Reflect: {e}");
                     continue;
-                };
-
-                assert!(type_registry.contains(component_type_id));
-                // SAFETY: We just made sure the component implements `Reflect` (again)
-                unsafe { reflect_from_ptr.as_reflect(untyped_ptr) }
+                }
             };
 
             let Some(_reflect_game_effect) =
