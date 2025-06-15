@@ -1,5 +1,7 @@
 use bevy::prelude::*;
 
+use crate::utils::holds_held::{Held, Holds};
+
 #[derive(Debug, Component, Reflect)]
 pub struct AbilitySlot {
     pub tpe: AbilitySlotType,
@@ -11,16 +13,12 @@ pub enum AbilitySlotType {
     ShieldDefend,
 }
 
-#[derive(Debug, Component, Reflect)]
-pub struct HasAbilitySlots {
-    pub holder: Entity,
-}
-
 pub struct AbilitySlotsPlugin;
 
 impl Plugin for AbilitySlotsPlugin {
     fn build(&self, app: &mut App) {
-        app.register_type::<HasAbilitySlots>()
+        app.register_type::<Holds<AbilitySlot>>()
+            .register_type::<Held<AbilitySlot>>()
             .register_type::<AbilitySlot>();
     }
 }

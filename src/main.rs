@@ -7,12 +7,14 @@ use bevy_inspector_egui::{bevy_egui::EguiPlugin, quick::WorldInspectorPlugin};
 use fight_ui::FightUiPlugin;
 use game_logic::{
     ability::{AbilityId, HasAbilities},
-    ability_slots::{AbilitySlot, AbilitySlotType, HasAbilitySlots},
+    ability_slots::{AbilitySlot, AbilitySlotType},
     faction::Faction,
     fight::FightBundle,
     health::Health,
     GameLogicPlugin,
 };
+
+use crate::utils::holds_held::Held;
 
 pub mod abilities;
 pub mod fight_ui;
@@ -31,23 +33,8 @@ fn setup(mut commands: Commands) {
         })
         .id();
 
-    let player_ability_slots = commands
-        .spawn((Name::new("Player Ability Slots"),))
-        .with_children(|p| {
-            p.spawn(AbilitySlot {
-                tpe: AbilitySlotType::WeaponAttack,
-            });
-            p.spawn(AbilitySlot {
-                tpe: AbilitySlotType::ShieldDefend,
-            });
-        })
-        .id();
-
     let player_character = commands
         .spawn((
-            HasAbilitySlots {
-                holder: player_ability_slots,
-            },
             HasAbilities {
                 holder: player_abilities,
             },
@@ -55,6 +42,14 @@ fn setup(mut commands: Commands) {
             Faction::Player,
             Name::new("Player Character"),
         ))
+        .with_related_entities::<Held<AbilitySlot>>(|commands| {
+            commands.spawn(AbilitySlot {
+                tpe: AbilitySlotType::WeaponAttack,
+            });
+            commands.spawn(AbilitySlot {
+                tpe: AbilitySlotType::ShieldDefend,
+            });
+        })
         .id();
 
     let enemy = commands

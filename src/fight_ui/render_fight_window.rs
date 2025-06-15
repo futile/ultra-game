@@ -17,7 +17,7 @@ use crate::{
     abilities::AbilityInterface,
     game_logic::{
         ability::Ability,
-        ability_slots::{AbilitySlot, AbilitySlotType, HasAbilitySlots},
+        ability_slots::{AbilitySlot, AbilitySlotType},
         commands::{self, CastAbilityInterface, GameCommand},
         effects::{HasEffects, ReflectGameEffect},
         faction::Faction,
@@ -25,7 +25,7 @@ use crate::{
         health::Health,
         ongoing_cast::OngoingCastInterface,
     },
-    utils::{egui_systems::run_ui_system, SplitDuration},
+    utils::{egui_systems::run_ui_system, holds_held::Holds, SplitDuration},
     HasAbilities,
 };
 
@@ -275,7 +275,7 @@ fn ui_fight_column(
     world: &mut World,
     names: &mut QueryState<&Name>,
     healths: &mut QueryState<&Health>,
-    has_ability_slots: &mut QueryState<&HasAbilitySlots>,
+    holds_ability_slots: &mut QueryState<&Holds<AbilitySlot>>,
     has_abilities: &mut QueryState<&HasAbilities>,
     has_effects: &mut QueryState<&HasEffects>,
 ) -> (Ui, FightColumnUiState) {
@@ -297,7 +297,7 @@ fn ui_fight_column(
         }
     });
 
-    if has_ability_slots.get(world, model_e).is_ok() {
+    if holds_ability_slots.get(world, model_e).is_ok() {
         ui.add_space(10.);
 
         ui_column_state.abilities_section_state = run_ui_system(
@@ -351,8 +351,7 @@ fn ui_ability_slots(
     )>,
     world: &mut World,
     params: &mut SystemState<(
-        Query<&HasAbilitySlots>,
-        Query<&Children>,
+        Query<&Holds<AbilitySlot>>,
         Query<&AbilitySlot>,
         FightInterface,
         AbilityInterface,
@@ -365,29 +364,16 @@ fn ui_ability_slots(
     // AbilitySlotType::ShieldDefend => Color::PINK,
 
     {
-        let (
-            slots,
-            children,
-            ability_slots,
-            fight_interface,
-            ability_interface,
-            ongoing_cast_interface,
-        ) = params.get_mut(world);
+        let (slots, ability_slots, fight_interface, ability_interface, ongoing_cast_interface) =
+            params.get_mut(world);
 
         let user_interactable = slots_section_state.user_interactable
             && !fight_interface.get_fight_status(fight_e).is_ended();
 
         ui.heading("Ability Slots");
 
-        let slots_holder = slots.get(model_e).unwrap().holder;
-
         ui.indent(ui.id().with("ability_slots"), |ui: &mut Ui| {
-            for (idx, slot_e) in children
-                .get(slots_holder)
-                .expect("HasAbilitySlots.holder without Children")
-                .iter()
-                .enumerate()
-            {
+            for (idx, slot_e) in slots.get(model_e).unwrap().iter().enumerate() {
                 let slot = ability_slots
                     .get(slot_e)
                     .expect("ability slot without AbilitySlot");
