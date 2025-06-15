@@ -3,7 +3,8 @@ use bevy::prelude::*;
 use super::AbilityCatalog;
 use crate::{
     game_logic::{
-        ability::{Ability, AbilityId, AbilitySlot, AbilitySlotType},
+        ability::{Ability, AbilityId},
+        ability_slots::{AbilitySlot, AbilitySlotType},
         commands::{CastAbilityInterface, GameCommand, GameCommandKind, UseAbility},
         damage_resolution::{DamageInstance, DealDamage},
         faction::Faction,

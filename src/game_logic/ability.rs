@@ -2,25 +2,11 @@ use std::borrow::Cow;
 
 use bevy::prelude::*;
 
-#[derive(Debug, Component, Reflect)]
-pub struct HasAbilitySlots {
-    pub holder: Entity,
-}
+use crate::game_logic::ability_slots::{AbilitySlot, AbilitySlotType};
 
 #[derive(Debug, Component, Reflect)]
 pub struct HasAbilities {
     pub holder: Entity,
-}
-
-#[derive(Debug, Component, Reflect)]
-pub struct AbilitySlot {
-    pub tpe: AbilitySlotType,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Reflect)]
-pub enum AbilitySlotType {
-    WeaponAttack,
-    ShieldDefend,
 }
 
 #[derive(Component, Clone, Copy, Debug, PartialEq, Eq, Hash, Reflect)]
@@ -51,7 +37,6 @@ pub struct AbilityPlugin;
 impl Plugin for AbilityPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<HasAbilities>()
-            .register_type::<AbilityId>()
-            .register_type::<HasAbilitySlots>();
+            .register_type::<AbilityId>();
     }
 }

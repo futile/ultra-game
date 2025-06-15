@@ -6,7 +6,8 @@ use bevy::prelude::*;
 use bevy_inspector_egui::{bevy_egui::EguiPlugin, quick::WorldInspectorPlugin};
 use fight_ui::FightUiPlugin;
 use game_logic::{
-    ability::{AbilityId, AbilitySlot, AbilitySlotType, HasAbilities, HasAbilitySlots},
+    ability::{AbilityId, HasAbilities},
+    ability_slots::{AbilitySlot, AbilitySlotType, HasAbilitySlots},
     faction::Faction,
     fight::FightBundle,
     health::Health,

@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 
 pub mod ability;
+pub mod ability_slots;
 pub mod commands;
 pub mod damage_resolution;
 pub mod effects;
@@ -16,6 +17,7 @@ impl Plugin for GameLogicPlugin {
         // from https://github.com/jakobhellermann/bevy-inspector-egui/discussions/130
         app.add_plugins((
             ability::AbilityPlugin,
+            ability_slots::AbilitySlotsPlugin,
             ongoing_cast::OngoingCastPlugin,
             fight::FightPlugin,
             faction::FactionPlugin,

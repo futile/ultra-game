@@ -5,7 +5,8 @@ use bevy::prelude::*;
 use super::AbilityCatalog;
 use crate::{
     game_logic::{
-        ability::{Ability, AbilityId, AbilitySlot},
+        ability::{Ability, AbilityId},
+        ability_slots::AbilitySlot,
         commands::{CastAbilityInterface, GameCommand, GameCommandKind, UseAbility},
         damage_resolution::{DamageInstance, DealDamage},
         effects::{GameEffect, ReflectGameEffect, UniqueEffectInterface},

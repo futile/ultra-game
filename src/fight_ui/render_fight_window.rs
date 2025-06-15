@@ -16,7 +16,8 @@ use super::{
 use crate::{
     abilities::AbilityInterface,
     game_logic::{
-        ability::{Ability, AbilitySlot},
+        ability::Ability,
+        ability_slots::{AbilitySlot, AbilitySlotType, HasAbilitySlots},
         commands::{self, CastAbilityInterface, GameCommand},
         effects::{HasEffects, ReflectGameEffect},
         faction::Faction,
@@ -25,7 +26,7 @@ use crate::{
         ongoing_cast::OngoingCastInterface,
     },
     utils::{egui_systems::run_ui_system, SplitDuration},
-    AbilitySlotType, HasAbilities, HasAbilitySlots,
+    HasAbilities,
 };
 
 #[derive(Debug, Clone, Component, Reflect)]

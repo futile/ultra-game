@@ -1,11 +1,14 @@
 use bevy::{ecs::system::SystemParam, prelude::*};
 use derive_more::From;
 
-use super::{
-    ability::{AbilityId, AbilitySlot},
-    fight::FightInterface,
+use crate::{
+    abilities::AbilityInterface,
+    game_logic::{
+        ability::AbilityId,
+        ability_slots::AbilitySlot,
+        fight::{FightInterface, FightStatus},
+    },
 };
-use crate::{abilities::AbilityInterface, game_logic::fight::FightStatus};
 
 #[derive(Debug, Clone, Event)]
 pub struct GameCommand {
