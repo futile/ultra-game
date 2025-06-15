@@ -1,6 +1,8 @@
 pub mod egui_systems;
 
 mod finite_repeating_timer;
+pub mod holds_held;
+
 use std::time::Duration;
 
 pub use finite_repeating_timer::FiniteRepeatingTimer;
