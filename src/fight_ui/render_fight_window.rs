@@ -16,7 +16,7 @@ use super::{
 use crate::{
     abilities::AbilityInterface,
     game_logic::{
-        ability::Ability,
+        ability::{Ability, AbilityId},
         ability_slots::{AbilitySlot, AbilitySlotType},
         commands::{self, CastAbilityInterface, GameCommand},
         effects::{HasEffects, ReflectGameEffect},
@@ -26,7 +26,6 @@ use crate::{
         ongoing_cast::OngoingCastInterface,
     },
     utils::{egui_systems::run_ui_system, holds_held::Holds, SplitDuration},
-    HasAbilities,
 };
 
 #[derive(Debug, Clone, Component, Reflect)]
@@ -276,7 +275,7 @@ fn ui_fight_column(
     names: &mut QueryState<&Name>,
     healths: &mut QueryState<&Health>,
     holds_ability_slots: &mut QueryState<&Holds<AbilitySlot>>,
-    has_abilities: &mut QueryState<&HasAbilities>,
+    holds_ability_ids: &mut QueryState<&Holds<AbilityId>>,
     has_effects: &mut QueryState<&HasEffects>,
 ) -> (Ui, FightColumnUiState) {
     ui.indent(ui.id().with("entity_overview_section"), |ui: &mut Ui| {
@@ -313,7 +312,7 @@ fn ui_fight_column(
         );
     }
 
-    if has_abilities.get(world, model_e).is_ok() {
+    if holds_ability_ids.get(world, model_e).is_ok() {
         ui.add_space(10.);
 
         ui_column_state = run_ui_system(
@@ -454,8 +453,7 @@ fn ui_abilities(
     )>,
     world: &mut World,
     params: &mut SystemState<(
-        Query<&HasAbilities>,
-        Query<&Children>,
+        Query<&Holds<AbilityId>>,
         AbilityInterface,
         CastAbilityInterface,
         EventWriter<GameCommand>,
@@ -464,8 +462,7 @@ fn ui_abilities(
     {
         #[rustfmt::skip]
         let (
-            has_abilities,
-            children,
+            holds_ability_ids,
             ability_interface,
             cast_ability_interface,
             mut game_commands,
@@ -476,15 +473,8 @@ fn ui_abilities(
 
         ui.heading("Abilities");
 
-        let abilities = has_abilities.get(model_e).unwrap();
-
         ui.indent(ui.id().with("abilities"), |ui: &mut Ui| {
-            for (idx, ability_id_e) in children
-                .get(abilities.holder)
-                .expect("HasAbilities.holder without Children")
-                .iter()
-                .enumerate()
-            {
+            for (idx, ability_id_e) in holds_ability_ids.get(model_e).unwrap().iter().enumerate() {
                 let ability = ability_interface.get_ability_from_entity(ability_id_e);
                 let possible_cast = commands::UseAbility {
                     caster_e: model_e,

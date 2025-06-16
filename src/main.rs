@@ -6,7 +6,7 @@ use bevy::prelude::*;
 use bevy_inspector_egui::{bevy_egui::EguiPlugin, quick::WorldInspectorPlugin};
 use fight_ui::FightUiPlugin;
 use game_logic::{
-    ability::{AbilityId, HasAbilities},
+    ability::AbilityId,
     ability_slots::{AbilitySlot, AbilitySlotType},
     faction::Faction,
     fight::FightBundle,
@@ -24,20 +24,8 @@ pub mod utils;
 fn setup(mut commands: Commands) {
     commands.spawn(Camera2d::default());
 
-    let player_abilities = commands
-        .spawn((Name::new("Player Abilities"),))
-        .with_children(|p| {
-            p.spawn(AbilityId::Attack);
-            p.spawn(AbilityId::NeedlingHex);
-            p.spawn(AbilityId::ChargedStrike);
-        })
-        .id();
-
     let player_character = commands
         .spawn((
-            HasAbilities {
-                holder: player_abilities,
-            },
             Health::new(100.0),
             Faction::Player,
             Name::new("Player Character"),
@@ -49,6 +37,11 @@ fn setup(mut commands: Commands) {
             commands.spawn(AbilitySlot {
                 tpe: AbilitySlotType::ShieldDefend,
             });
+        })
+        .with_related_entities::<Held<AbilityId>>(|commands| {
+            commands.spawn(AbilityId::Attack);
+            commands.spawn(AbilityId::NeedlingHex);
+            commands.spawn(AbilityId::ChargedStrike);
         })
         .id();
 
