@@ -27,7 +27,7 @@ impl<'w, 's> AbilityInterface<'w, 's> {
             .ability_catalog
             .0
             .get(ability_id)
-            .unwrap_or_else(|| panic!("AbilityId `{:?}` not in catalog", ability_id));
+            .unwrap_or_else(|| panic!("AbilityId `{ability_id:?}` not in catalog"));
 
         ability
     }

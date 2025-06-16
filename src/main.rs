@@ -22,7 +22,7 @@ pub mod game_logic;
 pub mod utils;
 
 fn setup(mut commands: Commands) {
-    commands.spawn(Camera2d::default());
+    commands.spawn(Camera2d);
 
     let player_character = commands
         .spawn((
