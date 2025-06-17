@@ -372,7 +372,7 @@ fn ui_ability_slots(
         ui.heading("Ability Slots");
 
         ui.indent(ui.id().with("ability_slots"), |ui: &mut Ui| {
-            for (idx, slot_e) in slots.get(model_e).unwrap().iter().enumerate() {
+            for (idx, slot_e) in slots.relationship_sources(model_e).enumerate() {
                 let slot = ability_slots
                     .get(slot_e)
                     .expect("ability slot without AbilitySlot");
@@ -474,7 +474,7 @@ fn ui_abilities(
         ui.heading("Abilities");
 
         ui.indent(ui.id().with("abilities"), |ui: &mut Ui| {
-            for (idx, ability_id_e) in holds_ability_ids.get(model_e).unwrap().iter().enumerate() {
+            for (idx, ability_id_e) in holds_ability_ids.relationship_sources(model_e).enumerate() {
                 let ability = ability_interface.get_ability_from_entity(ability_id_e);
                 let possible_cast = commands::UseAbility {
                     caster_e: model_e,
