@@ -41,8 +41,7 @@ impl FiniteRepeatingTimer {
             .times_finished_this_tick()
             .min(self.remaining_ticks);
 
-        // the `checked_sub()` is just an assertion, shouldn't hapen because we use `min()`
-        // before
+        // the `checked_sub()` is just an assertion, shouldn't happen because we use `min()` before
         self.remaining_ticks = self.remaining_ticks.checked_sub(fresh_ticks).unwrap();
 
         fresh_ticks
