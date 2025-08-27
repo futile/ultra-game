@@ -6,13 +6,13 @@ use super::AbilityCatalog;
 use crate::{
     game_logic::{
         ability::{Ability, AbilityId},
+        ability_casting::{AbilityCastingInterface, UseAbilityRequest},
         ability_slots::{AbilitySlot, AbilitySlotType},
-        commands::{CastAbilityInterface, GameCommand, GameCommandKind, UseAbility},
+        commands::{GameCommand, GameCommandKind},
         damage_resolution::{DamageInstance, DealDamage},
         effects::{GameEffect, ReflectGameEffect, UniqueEffectInterface},
         faction::Faction,
         fight::FightInterface,
-        slot_casting::SlotCastingInterface,
     },
     utils::FiniteRepeatingTimer,
     PerUpdateSet,
@@ -57,9 +57,8 @@ fn cast_ability(
     mut game_commands: EventReader<GameCommand>,
     ability_slots: Query<&AbilitySlot>,
     factions: Query<(Entity, &Faction)>,
-    cast_ability_interface: CastAbilityInterface,
+    mut ability_casting_interface: AbilityCastingInterface,
     mut effects_interface: UniqueEffectInterface<NeedlingHexEffect>,
-    mut slot_casting_interface: SlotCastingInterface,
     mut commands: Commands,
 ) {
     for cmd in game_commands.read() {
@@ -68,7 +67,7 @@ fn cast_ability(
             source: _,
             kind:
                 GameCommandKind::UseAbility(
-                    cast @ UseAbility {
+                    cast @ UseAbilityRequest {
                         caster_e,
                         slot_e,
                         ability_e: _,
@@ -80,11 +79,11 @@ fn cast_ability(
             continue;
         };
 
-        if !cast_ability_interface.is_matching_cast(cast, &THIS_ABILITY_ID) {
+        if !ability_casting_interface.is_matching_cast(cast, &THIS_ABILITY_ID) {
             continue;
         }
 
-        if !cast_ability_interface.is_valid_cast(cast) {
+        if !ability_casting_interface.is_valid_cast(cast) {
             warn!("invalid `CastAbility`: {cast:#?}");
             continue;
         }
@@ -99,7 +98,7 @@ fn cast_ability(
         );
 
         // Use the slot, which will interrupt any ongoing cast
-        slot_casting_interface.use_slot(*slot_e);
+        ability_casting_interface.use_slot(*slot_e);
 
         effects_interface.spawn_or_replace_unique_effect(target_e, NeedlingHexEffect::new());
 

@@ -4,11 +4,11 @@ use super::AbilityCatalog;
 use crate::{
     game_logic::{
         ability::{Ability, AbilityId},
+        ability_casting::{AbilityCastingInterface, UseAbilityRequest},
         ability_slots::{AbilitySlot, AbilitySlotType},
-        commands::{CastAbilityInterface, GameCommand, GameCommandKind, UseAbility},
+        commands::{GameCommand, GameCommandKind},
         damage_resolution::{DamageInstance, DealDamage},
         faction::Faction,
-        slot_casting::SlotCastingInterface,
     },
     PerUpdateSet,
 };
@@ -36,8 +36,7 @@ fn cast_ability(
     ability_slots: Query<&AbilitySlot>,
     factions: Query<(Entity, &Faction)>,
     // ability_catalog: Res<AbilityCatalog>,
-    cast_ability_interface: CastAbilityInterface,
-    mut slot_casting_interface: SlotCastingInterface,
+    mut ability_casting_interface: AbilityCastingInterface,
     mut commands: Commands,
 ) {
     // let this_ability = ability_catalog
@@ -51,7 +50,7 @@ fn cast_ability(
             source: _,
             kind:
                 GameCommandKind::UseAbility(
-                    cast @ UseAbility {
+                    cast @ UseAbilityRequest {
                         caster_e,
                         slot_e,
                         ability_e: _,
@@ -63,11 +62,11 @@ fn cast_ability(
             continue;
         };
 
-        if !cast_ability_interface.is_matching_cast(cast, &THIS_ABILITY_ID) {
+        if !ability_casting_interface.is_matching_cast(cast, &THIS_ABILITY_ID) {
             continue;
         }
 
-        if !cast_ability_interface.is_valid_cast(cast) {
+        if !ability_casting_interface.is_valid_cast(cast) {
             warn!("invalid `CastAbility`: {cast:#?}");
             continue;
         }
@@ -82,7 +81,7 @@ fn cast_ability(
         );
 
         // Use the slot, which will interrupt any ongoing cast
-        slot_casting_interface.use_slot(*slot_e);
+        ability_casting_interface.use_slot(*slot_e);
 
         deal_damage_events.write(DealDamage(DamageInstance {
             source: Some(*caster_e),

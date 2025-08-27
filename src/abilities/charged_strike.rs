@@ -6,14 +6,14 @@ use super::AbilityCatalog;
 use crate::{
     game_logic::{
         ability::{Ability, AbilityId},
+        ability_casting::{AbilityCastingInterface, UseAbilityRequest},
         ability_slots::{AbilitySlot, AbilitySlotType},
-        commands::{CastAbilityInterface, GameCommand, GameCommandKind, UseAbility},
+        commands::{GameCommand, GameCommandKind},
         damage_resolution::{DamageInstance, DealDamage},
         faction::Faction,
         ongoing_cast::{
             OngoingCast, OngoingCastAborted, OngoingCastFinishedSuccessfully,
         },
-        slot_casting::SlotCastingInterface,
     },
     PerUpdateSet,
 };
@@ -39,8 +39,7 @@ fn cast_ability(
     mut game_commands: EventReader<GameCommand>,
     ability_slots: Query<&AbilitySlot>,
     factions: Query<(Entity, &Faction)>,
-    cast_ability_interface: CastAbilityInterface,
-    mut slot_casting_interface: SlotCastingInterface,
+    mut ability_casting_interface: AbilityCastingInterface,
     mut commands: Commands,
 ) {
     for cmd in game_commands.read() {
@@ -49,7 +48,7 @@ fn cast_ability(
             source: _,
             kind:
                 GameCommandKind::UseAbility(
-                    cast @ UseAbility {
+                    cast @ UseAbilityRequest {
                         caster_e,
                         slot_e,
                         ability_e,
@@ -61,11 +60,11 @@ fn cast_ability(
             continue;
         };
 
-        if !cast_ability_interface.is_matching_cast(cast, &THIS_ABILITY_ID) {
+        if !ability_casting_interface.is_matching_cast(cast, &THIS_ABILITY_ID) {
             continue;
         }
 
-        if !cast_ability_interface.is_valid_cast(cast) {
+        if !ability_casting_interface.is_valid_cast(cast) {
             warn!("invalid `CastAbility`: {cast:#?}");
             continue;
         }
@@ -79,7 +78,7 @@ fn cast_ability(
             "Casting ability: {THIS_ABILITY_ID:?} | Fight: {fight_e:?} | Caster: {caster_e:?} | Slot: {slot_e:?} [{slot:?}] | Target: {target_e:?}"
         );
 
-        let ongoing_cast_e = slot_casting_interface.start_cast(OngoingCast {
+        let ongoing_cast_e = ability_casting_interface.start_cast(OngoingCast {
             slot_e: *slot_e,
             fight_e: *fight_e,
             ability_e: *ability_e,

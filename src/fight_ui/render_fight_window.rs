@@ -18,7 +18,8 @@ use crate::{
     game_logic::{
         ability::{Ability, AbilityId},
         ability_slots::{AbilitySlot, AbilitySlotType},
-        commands::{self, CastAbilityInterface, GameCommand},
+        ability_casting::{AbilityCastingInterface, UseAbilityRequest},
+        commands::GameCommand,
         effects::{HasEffects, ReflectGameEffect},
         faction::Faction,
         fight::{Fight, FightInterface, FightResult, FightTime},
@@ -455,7 +456,7 @@ fn ui_abilities(
     params: &mut SystemState<(
         Query<&Holds<AbilityId>>,
         AbilityInterface,
-        CastAbilityInterface,
+        AbilityCastingInterface,
         EventWriter<GameCommand>,
     )>,
 ) -> (Ui, FightColumnUiState) {
@@ -464,7 +465,7 @@ fn ui_abilities(
         let (
             holds_ability_ids,
             ability_interface,
-            cast_ability_interface,
+            ability_casting_interface,
             mut game_commands,
         ) = params.get_mut(world);
 
@@ -478,13 +479,13 @@ fn ui_abilities(
                 let ability = ability_interface.get_ability_from_entity(ability_id_e);
                 
                 let (slot_e, ability_usable) = if let Some(slot_e) = selected_slot_e {
-                    let possible_cast = commands::UseAbility {
+                    let possible_cast = UseAbilityRequest {
                         caster_e: model_e,
                         slot_e,
                         ability_e: ability_id_e,
                         fight_e,
                     };
-                    let ability_usable = cast_ability_interface.is_valid_cast(&possible_cast);
+                    let ability_usable = ability_casting_interface.is_valid_cast(&possible_cast);
                     (slot_e, ability_usable)
                 } else {
                     // No slot selected, ability cannot be used
@@ -539,7 +540,7 @@ fn ui_abilities(
                         }
 
                         if ability_usable && (shortcut_pressed || ability_button.clicked()) {
-                            let cast_command = commands::UseAbility {
+                            let cast_command = UseAbilityRequest {
                                 caster_e: model_e,
                                 slot_e,
                                 ability_e: ability_id_e,

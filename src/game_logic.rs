@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 
 pub mod ability;
+pub mod ability_casting;
 pub mod ability_slots;
 pub mod commands;
 pub mod damage_resolution;
@@ -9,7 +10,6 @@ pub mod faction;
 pub mod fight;
 pub mod health;
 pub mod ongoing_cast;
-pub mod slot_casting;
 
 pub struct GameLogicPlugin;
 
