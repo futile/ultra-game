@@ -680,5 +680,6 @@ fn text_for_slot_type(slot_type: &AbilitySlotType) -> Cow<'static, str> {
     match slot_type {
         AbilitySlotType::WeaponAttack => Cow::from("Weapon Attack"),
         AbilitySlotType::ShieldDefend => Cow::from("Shield Defend"),
+        AbilitySlotType::Magic => Cow::from("Magic"),
     }
 }

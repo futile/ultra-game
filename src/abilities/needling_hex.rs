@@ -6,7 +6,7 @@ use super::AbilityCatalog;
 use crate::{
     game_logic::{
         ability::{Ability, AbilityId},
-        ability_slots::AbilitySlot,
+        ability_slots::{AbilitySlot, AbilitySlotType},
         commands::{CastAbilityInterface, GameCommand, GameCommandKind, UseAbility},
         damage_resolution::{DamageInstance, DealDamage},
         effects::{GameEffect, ReflectGameEffect, UniqueEffectInterface},
@@ -25,7 +25,7 @@ fn add_to_ability_catalog(mut abilties_catalog: ResMut<AbilityCatalog>) {
         Ability {
             name: "Needling Hex".into(),
             id: THIS_ABILITY_ID,
-            slot_type: None,
+            slot_type: Some(AbilitySlotType::Magic),
             #[expect(clippy::useless_format, reason = "Uniformity")]
             description: format!("Hex your enemy with repeated damage.").into(),
         },
