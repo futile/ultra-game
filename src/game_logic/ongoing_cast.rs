@@ -43,6 +43,14 @@ impl<'w, 's> OngoingCastInterface<'w, 's> {
             .ok()
             .and_then(|hoc| self.ongoing_casts.get(hoc.ongoing_cast_e).ok())
     }
+
+    /// Cancels any ongoing cast on the specified entity (typically a slot)
+    pub fn cancel_ongoing_cast(&mut self, entity: Entity) {
+        if let Ok(has_ongoing_cast) = self.has_ongoing_casts.get(entity) {
+            // Despawn the ongoing cast entity, which will trigger the removal observer
+            self.commands.entity(has_ongoing_cast.ongoing_cast_e).despawn();
+        }
+    }
 }
 
 fn tick_ongoing_casts(

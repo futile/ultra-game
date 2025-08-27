@@ -9,6 +9,7 @@ pub mod faction;
 pub mod fight;
 pub mod health;
 pub mod ongoing_cast;
+pub mod slot_casting;
 
 pub struct GameLogicPlugin;
 
