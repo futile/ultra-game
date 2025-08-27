@@ -87,11 +87,10 @@ fn on_add_ongoing_cast(
             .despawn();
     }
 
-    for e in [ongoing_cast.slot_e, ongoing_cast.ability_e] {
-        commands.entity(e).insert(HasOngoingCast {
-            ongoing_cast_e: trigger.target(),
-        });
-    }
+    // Only track HasOngoingCast on the slot entity, not the ability entity
+    commands.entity(ongoing_cast.slot_e).insert(HasOngoingCast {
+        ongoing_cast_e: trigger.target(),
+    });
 }
 
 fn on_remove_ongoing_cast(
@@ -102,11 +101,11 @@ fn on_remove_ongoing_cast(
 ) {
     let ongoing_cast = ongoing_casts.get(trigger.target()).unwrap();
 
-    for e in [ongoing_cast.slot_e, ongoing_cast.ability_e] {
-        // if another OngoingCast has overriden the one we are despawning, these will not be equal.
-        if has_ongoing_casts.get(e).unwrap().ongoing_cast_e == trigger.target() {
-            commands.entity(e).remove::<HasOngoingCast>();
-        }
+    // Only remove HasOngoingCast from the slot entity, not the ability entity
+    let slot_e = ongoing_cast.slot_e;
+    // if another OngoingCast has overriden the one we are despawning, these will not be equal.
+    if has_ongoing_casts.get(slot_e).unwrap().ongoing_cast_e == trigger.target() {
+        commands.entity(slot_e).remove::<HasOngoingCast>();
     }
 }
 
