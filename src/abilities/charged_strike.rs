@@ -69,7 +69,7 @@ fn cast_ability(
             continue;
         }
 
-        let slot: Option<&AbilitySlot> = slot_e.map(|slot_e| ability_slots.get(slot_e).unwrap());
+        let slot = ability_slots.get(*slot_e).unwrap();
         let (_, faction) = factions.get(*caster_e).unwrap();
 
         let (target_e, _target_faction) = faction.find_single_enemy(&factions);
@@ -79,7 +79,7 @@ fn cast_ability(
         );
 
         let ongoing_cast_e = ongoing_cast_interface.start_new_cast(OngoingCast {
-            slot_e: slot_e.unwrap(),
+            slot_e: *slot_e,
             fight_e: *fight_e,
             ability_e: *ability_e,
             cast_timer: Timer::new(CAST_TIME, TimerMode::Once),

@@ -70,7 +70,7 @@ fn cast_ability(
             continue;
         }
 
-        let slot: Option<&AbilitySlot> = slot_e.map(|slot_e| ability_slots.get(slot_e).unwrap());
+        let slot = ability_slots.get(*slot_e).unwrap();
         let (_, faction) = factions.get(*caster_e).unwrap();
 
         let (target_e, _target_faction) = faction.find_single_enemy(&factions);

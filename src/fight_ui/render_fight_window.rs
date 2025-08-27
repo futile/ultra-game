@@ -476,13 +476,21 @@ fn ui_abilities(
         ui.indent(ui.id().with("abilities"), |ui: &mut Ui| {
             for (idx, ability_id_e) in holds_ability_ids.relationship_sources(model_e).enumerate() {
                 let ability = ability_interface.get_ability_from_entity(ability_id_e);
-                let possible_cast = commands::UseAbility {
-                    caster_e: model_e,
-                    slot_e: selected_slot_e,
-                    ability_e: ability_id_e,
-                    fight_e,
+                
+                let (slot_e, ability_usable) = if let Some(slot_e) = selected_slot_e {
+                    let possible_cast = commands::UseAbility {
+                        caster_e: model_e,
+                        slot_e,
+                        ability_e: ability_id_e,
+                        fight_e,
+                    };
+                    let ability_usable = cast_ability_interface.is_valid_cast(&possible_cast);
+                    (slot_e, ability_usable)
+                } else {
+                    // No slot selected, ability cannot be used
+                    // Use a dummy entity ID for slot_e since we won't actually cast
+                    (Entity::PLACEHOLDER, false)
                 };
-                let ability_usable = cast_ability_interface.is_valid_cast(&possible_cast);
 
                 let keyboard_shortcut: Option<KeyboardShortcut> = if user_interactable {
                     let key: Option<Key> = match idx {
@@ -531,7 +539,13 @@ fn ui_abilities(
                         }
 
                         if ability_usable && (shortcut_pressed || ability_button.clicked()) {
-                            game_commands.write(GameCommand::new_from_user(possible_cast.into()));
+                            let cast_command = commands::UseAbility {
+                                caster_e: model_e,
+                                slot_e,
+                                ability_e: ability_id_e,
+                                fight_e,
+                            };
+                            game_commands.write(GameCommand::new_from_user(cast_command.into()));
 
                             // clear the selected slot, because it was used.
                             ui_column_state.abilities_section_state.selected_slot = None;

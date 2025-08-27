@@ -39,7 +39,7 @@ pub enum GameCommandKind {
 #[derive(Debug, Clone)]
 pub struct UseAbility {
     pub caster_e: Entity,
-    pub slot_e: Option<Entity>,
+    pub slot_e: Entity,
     pub ability_e: Entity,
     pub fight_e: Entity,
 }
@@ -67,9 +67,7 @@ impl<'w, 's> CastAbilityInterface<'w, 's> {
         let ability = self
             .ability_interface
             .get_ability_from_entity(cast.ability_e);
-        let slot: Option<&AbilitySlot> = cast
-            .slot_e
-            .map(|slot_e| self.ability_slots.get(slot_e).unwrap());
+        let slot = self.ability_slots.get(cast.slot_e).unwrap();
 
         let can_use_slot = ability.can_use_slot(slot);
 

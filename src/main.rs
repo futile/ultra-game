@@ -37,6 +37,9 @@ fn setup(mut commands: Commands) {
             commands.spawn(AbilitySlot {
                 tpe: AbilitySlotType::ShieldDefend,
             });
+            commands.spawn(AbilitySlot {
+                tpe: AbilitySlotType::Magic,
+            });
         })
         .with_related_entities::<Held<AbilityId>>(|commands| {
             commands.spawn(AbilityId::Attack);
