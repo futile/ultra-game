@@ -11,8 +11,9 @@ use crate::{
         damage_resolution::{DamageInstance, DealDamage},
         faction::Faction,
         ongoing_cast::{
-            OngoingCast, OngoingCastAborted, OngoingCastFinishedSuccessfully, OngoingCastInterface,
+            OngoingCast, OngoingCastAborted, OngoingCastFinishedSuccessfully,
         },
+        slot_casting::SlotCastingInterface,
     },
     PerUpdateSet,
 };
@@ -39,7 +40,7 @@ fn cast_ability(
     ability_slots: Query<&AbilitySlot>,
     factions: Query<(Entity, &Faction)>,
     cast_ability_interface: CastAbilityInterface,
-    mut ongoing_cast_interface: OngoingCastInterface,
+    mut slot_casting_interface: SlotCastingInterface,
     mut commands: Commands,
 ) {
     for cmd in game_commands.read() {
@@ -78,7 +79,7 @@ fn cast_ability(
             "Casting ability: {THIS_ABILITY_ID:?} | Fight: {fight_e:?} | Caster: {caster_e:?} | Slot: {slot_e:?} [{slot:?}] | Target: {target_e:?}"
         );
 
-        let ongoing_cast_e = ongoing_cast_interface.start_new_cast(OngoingCast {
+        let ongoing_cast_e = slot_casting_interface.start_cast(OngoingCast {
             slot_e: *slot_e,
             fight_e: *fight_e,
             ability_e: *ability_e,
