@@ -8,6 +8,7 @@ use crate::{
         commands::{CastAbilityInterface, GameCommand, GameCommandKind, UseAbility},
         damage_resolution::{DamageInstance, DealDamage},
         faction::Faction,
+        slot_casting::SlotCastingInterface,
     },
     PerUpdateSet,
 };
@@ -36,6 +37,7 @@ fn cast_ability(
     factions: Query<(Entity, &Faction)>,
     // ability_catalog: Res<AbilityCatalog>,
     cast_ability_interface: CastAbilityInterface,
+    mut slot_casting_interface: SlotCastingInterface,
     mut commands: Commands,
 ) {
     // let this_ability = ability_catalog
@@ -78,6 +80,9 @@ fn cast_ability(
         println!(
             "Casting ability: {THIS_ABILITY_ID:?} | Fight: {fight_e:?} | Caster: {caster_e:?} | Slot: {slot_e:?} [{slot:?}] | Target: {target_e:?}"
         );
+
+        // Use the slot, which will interrupt any ongoing cast
+        slot_casting_interface.use_slot(*slot_e);
 
         deal_damage_events.write(DealDamage(DamageInstance {
             source: Some(*caster_e),

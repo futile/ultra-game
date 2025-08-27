@@ -12,6 +12,7 @@ use crate::{
         effects::{GameEffect, ReflectGameEffect, UniqueEffectInterface},
         faction::Faction,
         fight::FightInterface,
+        slot_casting::SlotCastingInterface,
     },
     utils::FiniteRepeatingTimer,
     PerUpdateSet,
@@ -58,6 +59,7 @@ fn cast_ability(
     factions: Query<(Entity, &Faction)>,
     cast_ability_interface: CastAbilityInterface,
     mut effects_interface: UniqueEffectInterface<NeedlingHexEffect>,
+    mut slot_casting_interface: SlotCastingInterface,
     mut commands: Commands,
 ) {
     for cmd in game_commands.read() {
@@ -95,6 +97,9 @@ fn cast_ability(
         println!(
             "Casting ability: {THIS_ABILITY_ID:?} | Fight: {fight_e:?} | Caster: {caster_e:?} | Slot: {slot_e:?} [{slot:?}] | Target: {target_e:?}"
         );
+
+        // Use the slot, which will interrupt any ongoing cast
+        slot_casting_interface.use_slot(*slot_e);
 
         effects_interface.spawn_or_replace_unique_effect(target_e, NeedlingHexEffect::new());
 
