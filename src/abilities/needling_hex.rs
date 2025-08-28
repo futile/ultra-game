@@ -97,7 +97,7 @@ fn cast_ability(
             "Casting ability: {THIS_ABILITY_ID:?} | Fight: {fight_e:?} | Caster: {caster_e:?} | Slot: {slot_e:?} [{slot:?}] | Target: {target_e:?}"
         );
 
-        // Use the slot, which will interrupt any ongoing cast
+        // use the slot (so, e.g., ongoing casts can be interrupted)
         ability_casting_interface.use_slot(*slot_e);
 
         effects_interface.spawn_or_replace_unique_effect(target_e, NeedlingHexEffect::new());

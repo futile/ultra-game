@@ -44,11 +44,13 @@ impl<'w, 's> OngoingCastInterface<'w, 's> {
             .and_then(|hoc| self.ongoing_casts.get(hoc.ongoing_cast_e).ok())
     }
 
-    /// Cancels any ongoing cast on the specified entity (typically a slot)
+    /// Cancels any ongoing cast on the specified entity (currently Slot entities)
     pub fn cancel_ongoing_cast(&mut self, entity: Entity) {
         if let Ok(has_ongoing_cast) = self.has_ongoing_casts.get(entity) {
             // Despawn the ongoing cast entity, which will trigger the removal observer
-            self.commands.entity(has_ongoing_cast.ongoing_cast_e).despawn();
+            self.commands
+                .entity(has_ongoing_cast.ongoing_cast_e)
+                .despawn();
         }
     }
 }
@@ -95,7 +97,7 @@ fn on_add_ongoing_cast(
             .despawn();
     }
 
-    // Only track HasOngoingCast on the slot entity, not the ability entity
+    // track [`HasOngoingCast`] on the slot entity
     commands.entity(ongoing_cast.slot_e).insert(HasOngoingCast {
         ongoing_cast_e: trigger.target(),
     });
@@ -109,8 +111,9 @@ fn on_remove_ongoing_cast(
 ) {
     let ongoing_cast = ongoing_casts.get(trigger.target()).unwrap();
 
-    // Only remove HasOngoingCast from the slot entity, not the ability entity
+    // remove HasOngoingCast from the slot entity
     let slot_e = ongoing_cast.slot_e;
+
     // if another OngoingCast has overriden the one we are despawning, these will not be equal.
     if has_ongoing_casts.get(slot_e).unwrap().ongoing_cast_e == trigger.target() {
         commands.entity(slot_e).remove::<HasOngoingCast>();
