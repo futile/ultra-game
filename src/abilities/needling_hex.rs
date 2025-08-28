@@ -6,8 +6,9 @@ use super::AbilityCatalog;
 use crate::{
     game_logic::{
         ability::{Ability, AbilityId},
-        ability_slots::AbilitySlot,
-        commands::{CastAbilityInterface, GameCommand, GameCommandKind, UseAbility},
+        ability_casting::{AbilityCastingInterface, UseAbility},
+        ability_slots::{AbilitySlot, AbilitySlotType},
+        commands::{GameCommand, GameCommandKind},
         damage_resolution::{DamageInstance, DealDamage},
         effects::{GameEffect, ReflectGameEffect, UniqueEffectInterface},
         faction::Faction,
@@ -25,7 +26,7 @@ fn add_to_ability_catalog(mut abilties_catalog: ResMut<AbilityCatalog>) {
         Ability {
             name: "Needling Hex".into(),
             id: THIS_ABILITY_ID,
-            slot_type: None,
+            slot_type: Some(AbilitySlotType::Magic),
             #[expect(clippy::useless_format, reason = "Uniformity")]
             description: format!("Hex your enemy with repeated damage.").into(),
         },
@@ -56,7 +57,7 @@ fn cast_ability(
     mut game_commands: EventReader<GameCommand>,
     ability_slots: Query<&AbilitySlot>,
     factions: Query<(Entity, &Faction)>,
-    cast_ability_interface: CastAbilityInterface,
+    mut ability_casting_interface: AbilityCastingInterface,
     mut effects_interface: UniqueEffectInterface<NeedlingHexEffect>,
     mut commands: Commands,
 ) {
@@ -78,16 +79,16 @@ fn cast_ability(
             continue;
         };
 
-        if !cast_ability_interface.is_matching_cast(cast, &THIS_ABILITY_ID) {
+        if !ability_casting_interface.is_matching_cast(cast, &THIS_ABILITY_ID) {
             continue;
         }
 
-        if !cast_ability_interface.is_valid_cast(cast) {
+        if !ability_casting_interface.is_valid_cast(cast) {
             warn!("invalid `CastAbility`: {cast:#?}");
             continue;
         }
 
-        let slot: Option<&AbilitySlot> = slot_e.map(|slot_e| ability_slots.get(slot_e).unwrap());
+        let slot = ability_slots.get(*slot_e).unwrap();
         let (_, faction) = factions.get(*caster_e).unwrap();
 
         let (target_e, _target_faction) = faction.find_single_enemy(&factions);
@@ -95,6 +96,9 @@ fn cast_ability(
         println!(
             "Casting ability: {THIS_ABILITY_ID:?} | Fight: {fight_e:?} | Caster: {caster_e:?} | Slot: {slot_e:?} [{slot:?}] | Target: {target_e:?}"
         );
+
+        // use the slot (so, e.g., ongoing casts can be interrupted)
+        ability_casting_interface.use_slot(*slot_e);
 
         effects_interface.spawn_or_replace_unique_effect(target_e, NeedlingHexEffect::new());
 

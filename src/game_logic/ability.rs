@@ -23,8 +23,8 @@ pub struct Ability {
 }
 
 impl Ability {
-    pub fn can_use_slot(&self, selected_ability_slot: Option<&AbilitySlot>) -> bool {
-        let selected_slot_type = selected_ability_slot.map(|s| s.tpe);
+    pub fn can_use_slot(&self, selected_ability_slot: &AbilitySlot) -> bool {
+        let selected_slot_type = Some(selected_ability_slot.tpe);
 
         self.slot_type == selected_slot_type
     }

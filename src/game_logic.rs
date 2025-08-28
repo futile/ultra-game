@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 
 pub mod ability;
+pub mod ability_casting;
 pub mod ability_slots;
 pub mod commands;
 pub mod damage_resolution;

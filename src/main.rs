@@ -1,4 +1,3 @@
-#![feature(duration_constructors_lite)]
 #![feature(duration_constructors)]
 
 use abilities::AbilitiesPlugin;
@@ -36,6 +35,9 @@ fn setup(mut commands: Commands) {
             });
             commands.spawn(AbilitySlot {
                 tpe: AbilitySlotType::ShieldDefend,
+            });
+            commands.spawn(AbilitySlot {
+                tpe: AbilitySlotType::Magic,
             });
         })
         .with_related_entities::<Held<AbilityId>>(|commands| {

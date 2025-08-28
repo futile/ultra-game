@@ -11,6 +11,7 @@ pub struct AbilitySlot {
 pub enum AbilitySlotType {
     WeaponAttack,
     ShieldDefend,
+    Magic,
 }
 
 pub struct AbilitySlotsPlugin;

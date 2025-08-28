@@ -17,8 +17,9 @@ use crate::{
     abilities::AbilityInterface,
     game_logic::{
         ability::{Ability, AbilityId},
+        ability_casting::{AbilityCastingInterface, UseAbility},
         ability_slots::{AbilitySlot, AbilitySlotType},
-        commands::{self, CastAbilityInterface, GameCommand},
+        commands::GameCommand,
         effects::{HasEffects, ReflectGameEffect},
         faction::Faction,
         fight::{Fight, FightInterface, FightResult, FightTime},
@@ -455,7 +456,7 @@ fn ui_abilities(
     params: &mut SystemState<(
         Query<&Holds<AbilityId>>,
         AbilityInterface,
-        CastAbilityInterface,
+        AbilityCastingInterface,
         EventWriter<GameCommand>,
     )>,
 ) -> (Ui, FightColumnUiState) {
@@ -464,7 +465,7 @@ fn ui_abilities(
         let (
             holds_ability_ids,
             ability_interface,
-            cast_ability_interface,
+            ability_casting_interface,
             mut game_commands,
         ) = params.get_mut(world);
 
@@ -476,13 +477,15 @@ fn ui_abilities(
         ui.indent(ui.id().with("abilities"), |ui: &mut Ui| {
             for (idx, ability_id_e) in holds_ability_ids.relationship_sources(model_e).enumerate() {
                 let ability = ability_interface.get_ability_from_entity(ability_id_e);
-                let possible_cast = commands::UseAbility {
-                    caster_e: model_e,
-                    slot_e: selected_slot_e,
-                    ability_e: ability_id_e,
-                    fight_e,
-                };
-                let ability_usable = cast_ability_interface.is_valid_cast(&possible_cast);
+
+                let valid_cast = selected_slot_e
+                    .map(|selected_slot_e| UseAbility {
+                        caster_e: model_e,
+                        slot_e: selected_slot_e,
+                        ability_e: ability_id_e,
+                        fight_e,
+                    })
+                    .filter(|possible_cast| ability_casting_interface.is_valid_cast(possible_cast));
 
                 let keyboard_shortcut: Option<KeyboardShortcut> = if user_interactable {
                     let key: Option<Key> = match idx {
@@ -497,7 +500,7 @@ fn ui_abilities(
                     None
                 };
 
-                ui.add_enabled_ui(ability_usable, |ui: &mut Ui| {
+                ui.add_enabled_ui(valid_cast.is_some(), |ui: &mut Ui| {
                     ui.horizontal(|ui: &mut Ui| {
                         let shortcut_pressed =
                             monospace_checked_shortcut(ui, keyboard_shortcut.as_ref());
@@ -530,11 +533,13 @@ fn ui_abilities(
                             );
                         }
 
-                        if ability_usable && (shortcut_pressed || ability_button.clicked()) {
-                            game_commands.write(GameCommand::new_from_user(possible_cast.into()));
+                        if let Some(valid_cast) = valid_cast {
+                            if shortcut_pressed || ability_button.clicked() {
+                                game_commands.write(GameCommand::new_from_user(valid_cast.into()));
 
-                            // clear the selected slot, because it was used.
-                            ui_column_state.abilities_section_state.selected_slot = None;
+                                // clear the selected slot, because it was used.
+                                ui_column_state.abilities_section_state.selected_slot = None;
+                            }
                         }
                     });
                 });
@@ -680,5 +685,6 @@ fn text_for_slot_type(slot_type: &AbilitySlotType) -> Cow<'static, str> {
     match slot_type {
         AbilitySlotType::WeaponAttack => Cow::from("Weapon Attack"),
         AbilitySlotType::ShieldDefend => Cow::from("Shield Defend"),
+        AbilitySlotType::Magic => Cow::from("Magic"),
     }
 }

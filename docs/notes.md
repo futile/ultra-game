@@ -2,14 +2,6 @@
 
 ## Next:
 
-- [ ] Cast-Times for abilities
-  - [x] Basic Cast-Times with events for `success`/`aborted`
-  - [x] Casting another cast-time ability on the same slot should override an ongoing cast + `aborted`-event
-  - [ ] Casting something (without a cast-time) should interrupt an ongoing cast
-    - Probably by having an `interruptible` flag/enum on `OngoingCast`, then let that system handle interruptions (probably refactoring out the "abort ongoing cast"-logic from the other place where it's already done).
-
-- [ ] Port other `HasT`-components to `Holds/Held<T>`
-
 - [ ] Figure out what's next :) More complicated abilities? More units per side? AI/Enemy behavior :O?
   - Cooldowns? Icons for Slots/Abilities/Effects? :O
 
@@ -42,6 +34,15 @@
 # Done
 
 ---
+
+- [x] Cast-Times for abilities
+  - [x] Basic Cast-Times with events for `success`/`aborted`
+  - [x] Casting another cast-time ability on the same slot should override an ongoing cast + `aborted`-event
+  - [x] Casting something (without a cast-time) should interrupt an ongoing cast
+    - Probably by having an `interruptible` flag/enum on `OngoingCast`, then let that system handle interruptions (probably refactoring out the "abort ongoing cast"-logic from the other place where it's already done).
+
+- [x] Port other `HasT`-components to `Holds/Held<T>`
+  - No, don't wanna for now - OngoingCast is somewhat more specific, and GameEffects don't have a common Component
 
 - [x] fight-ui display for effects
   - Probably using `OnAdd` for each effect in the UI to attach UI info/save it to an `EntityHashMap`/`HashMap` or sth.?
