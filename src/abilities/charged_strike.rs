@@ -6,14 +6,12 @@ use super::AbilityCatalog;
 use crate::{
     game_logic::{
         ability::{Ability, AbilityId},
-        ability_casting::{AbilityCastingInterface, UseAbilityRequest},
+        ability_casting::{AbilityCastingInterface, UseAbility},
         ability_slots::{AbilitySlot, AbilitySlotType},
         commands::{GameCommand, GameCommandKind},
         damage_resolution::{DamageInstance, DealDamage},
         faction::Faction,
-        ongoing_cast::{
-            OngoingCast, OngoingCastAborted, OngoingCastFinishedSuccessfully,
-        },
+        ongoing_cast::{OngoingCast, OngoingCastAborted, OngoingCastFinishedSuccessfully},
     },
     PerUpdateSet,
 };
@@ -48,7 +46,7 @@ fn cast_ability(
             source: _,
             kind:
                 GameCommandKind::UseAbility(
-                    cast @ UseAbilityRequest {
+                    cast @ UseAbility {
                         caster_e,
                         slot_e,
                         ability_e,

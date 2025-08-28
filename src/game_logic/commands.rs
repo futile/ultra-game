@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use derive_more::From;
 
-use crate::game_logic::ability_casting::UseAbilityRequest;
+use crate::game_logic::ability_casting::UseAbility;
 
 #[derive(Debug, Clone, Event)]
 pub struct GameCommand {
@@ -26,9 +26,8 @@ pub enum GameCommandSource {
 
 #[derive(Debug, Clone, From)]
 pub enum GameCommandKind {
-    UseAbility(UseAbilityRequest),
+    UseAbility(UseAbility),
 }
-
 
 pub struct CommandsPlugin;
 

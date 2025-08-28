@@ -17,8 +17,8 @@ use crate::{
     abilities::AbilityInterface,
     game_logic::{
         ability::{Ability, AbilityId},
+        ability_casting::{AbilityCastingInterface, UseAbility},
         ability_slots::{AbilitySlot, AbilitySlotType},
-        ability_casting::{AbilityCastingInterface, UseAbilityRequest},
         commands::GameCommand,
         effects::{HasEffects, ReflectGameEffect},
         faction::Faction,
@@ -477,9 +477,9 @@ fn ui_abilities(
         ui.indent(ui.id().with("abilities"), |ui: &mut Ui| {
             for (idx, ability_id_e) in holds_ability_ids.relationship_sources(model_e).enumerate() {
                 let ability = ability_interface.get_ability_from_entity(ability_id_e);
-                
+
                 let (slot_e, ability_usable) = if let Some(slot_e) = selected_slot_e {
-                    let possible_cast = UseAbilityRequest {
+                    let possible_cast = UseAbility {
                         caster_e: model_e,
                         slot_e,
                         ability_e: ability_id_e,
@@ -540,7 +540,7 @@ fn ui_abilities(
                         }
 
                         if ability_usable && (shortcut_pressed || ability_button.clicked()) {
-                            let cast_command = UseAbilityRequest {
+                            let cast_command = UseAbility {
                                 caster_e: model_e,
                                 slot_e,
                                 ability_e: ability_id_e,
