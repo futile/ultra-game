@@ -13,8 +13,16 @@
     flake-utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = { self, nixpkgs, rust-overlay, flake-utils, ... }:
-    flake-utils.lib.eachDefaultSystem (system:
+  outputs =
+    {
+      self,
+      nixpkgs,
+      rust-overlay,
+      flake-utils,
+      ...
+    }:
+    flake-utils.lib.eachDefaultSystem (
+      system:
       let
         overlays = [ (import rust-overlay) ];
         pkgs = import nixpkgs {
@@ -22,7 +30,7 @@
         };
 
         # use rust-version + components from the rust-toolchain.toml file
-        rust-toolchain = pkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml;
+        # rust-toolchain = pkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml;
       in
       {
         devShells.default = pkgs.mkShell rec {
@@ -34,7 +42,7 @@
             mold-wrapped
             clang_16
 
-            rust-toolchain
+            # rust-toolchain
 
             # From https://github.com/dpc/htmx-sorta/blob/9e101583ec9391127b5bfcbe421e3ede2d627856/flake.nix#L83-L85
             # This is required to prevent a mangled bash shell in nix develop
@@ -67,7 +75,7 @@
 
           # Some environment to make rust-analyzer work correctly (Still the path prefix issue)
           # See https://github.com/oxalica/rust-overlay/issues/129
-          RUST_SRC_PATH = "${rust-toolchain}/lib/rustlib/src/rust/library";
+          # RUST_SRC_PATH = "${rust-toolchain}/lib/rustlib/src/rust/library";
         };
       }
     );
