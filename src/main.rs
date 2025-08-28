@@ -5,12 +5,12 @@ use bevy::prelude::*;
 use bevy_inspector_egui::{bevy_egui::EguiPlugin, quick::WorldInspectorPlugin};
 use fight_ui::FightUiPlugin;
 use game_logic::{
+    GameLogicPlugin,
     ability::AbilityId,
     ability_slots::{AbilitySlot, AbilitySlotType},
     faction::Faction,
     fight::FightBundle,
     health::Health,
-    GameLogicPlugin,
 };
 
 use crate::utils::holds_held::Held;

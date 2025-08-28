@@ -4,6 +4,7 @@ use bevy::prelude::*;
 
 use super::AbilityCatalog;
 use crate::{
+    PerUpdateSet,
     game_logic::{
         ability::{Ability, AbilityId},
         ability_casting::{AbilityCastingInterface, UseAbility},
@@ -13,7 +14,6 @@ use crate::{
         faction::Faction,
         ongoing_cast::{OngoingCast, OngoingCastAborted, OngoingCastFinishedSuccessfully},
     },
-    PerUpdateSet,
 };
 
 const THIS_ABILITY_ID: AbilityId = AbilityId::ChargedStrike;

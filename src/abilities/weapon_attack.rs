@@ -2,6 +2,7 @@ use bevy::prelude::*;
 
 use super::AbilityCatalog;
 use crate::{
+    PerUpdateSet,
     game_logic::{
         ability::{Ability, AbilityId},
         ability_casting::{AbilityCastingInterface, UseAbility},
@@ -10,7 +11,6 @@ use crate::{
         damage_resolution::{DamageInstance, DealDamage},
         faction::Faction,
     },
-    PerUpdateSet,
 };
 
 const THIS_ABILITY_ID: AbilityId = AbilityId::Attack;

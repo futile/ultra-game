@@ -1,9 +1,9 @@
 use bevy::{ecs::entity::EntityHashSet, prelude::*};
 use bevy_inspector_egui::bevy_egui::EguiContextPass;
 use render_effects::RenderEffectsPlugin;
-use render_fight_window::{render_fight_windows, FightWindowUiState};
+use render_fight_window::{FightWindowUiState, render_fight_windows};
 
-use crate::{game_logic::fight::Fight, PerUpdateSet};
+use crate::{PerUpdateSet, game_logic::fight::Fight};
 
 mod render_effects;
 mod render_fight_window;

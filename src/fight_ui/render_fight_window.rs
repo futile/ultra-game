@@ -10,8 +10,8 @@ use bevy_inspector_egui::{
 use itertools::Itertools;
 
 use super::{
-    render_effects::{format_remaining_time, ReflectRenderGameEffectImmediate},
     FightWindow,
+    render_effects::{ReflectRenderGameEffectImmediate, format_remaining_time},
 };
 use crate::{
     abilities::AbilityInterface,
@@ -26,7 +26,7 @@ use crate::{
         health::Health,
         ongoing_cast::OngoingCastInterface,
     },
-    utils::{egui_systems::run_ui_system, holds_held::Holds, SplitDuration},
+    utils::{SplitDuration, egui_systems::run_ui_system, holds_held::Holds},
 };
 
 #[derive(Debug, Clone, Component, Reflect)]
@@ -533,13 +533,13 @@ fn ui_abilities(
                             );
                         }
 
-                        if let Some(valid_cast) = valid_cast {
-                            if shortcut_pressed || ability_button.clicked() {
-                                game_commands.write(GameCommand::new_from_user(valid_cast.into()));
+                        if let Some(valid_cast) = valid_cast
+                            && (shortcut_pressed || ability_button.clicked())
+                        {
+                            game_commands.write(GameCommand::new_from_user(valid_cast.into()));
 
-                                // clear the selected slot, because it was used.
-                                ui_column_state.abilities_section_state.selected_slot = None;
-                            }
+                            // clear the selected slot, because it was used.
+                            ui_column_state.abilities_section_state.selected_slot = None;
                         }
                     });
                 });

@@ -29,6 +29,7 @@ impl<'w, 's> AbilityInterface<'w, 's> {
             .get(ability_id)
             .unwrap_or_else(|| panic!("AbilityId `{ability_id:?}` not in catalog"));
 
+        #[allow(clippy::let_and_return, reason = "readability")]
         ability
     }
 }

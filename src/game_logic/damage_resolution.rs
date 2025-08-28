@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use super::health::HealthInterface;
-use crate::{game_logic::health::AlreadyDeadError, PerUpdateSet};
+use crate::{PerUpdateSet, game_logic::health::AlreadyDeadError};
 
 #[derive(Debug, Clone, Component, Reflect, PartialEq)]
 pub struct DamageInstance {

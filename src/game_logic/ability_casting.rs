@@ -74,4 +74,3 @@ impl<'w, 's> AbilityCastingInterface<'w, 's> {
         self.ongoing_cast_interface.cancel_ongoing_cast(slot_e);
     }
 }
-
