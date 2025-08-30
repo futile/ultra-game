@@ -48,6 +48,11 @@ impl<'w, 's> AbilityCastingInterface<'w, 's> {
         ability.can_use_slot(slot)
     }
 
+    // TODO: probably merge `use_slot()` and `start_cast()` into an fn like `use_ability()`,
+    // which takes an `(&)UseAbility` and resolves the casting logic. Or this might be exactly
+    // backwards, because ability impls (those triggered by `UseAbility`) call this, and we don't
+    // want to loop.
+
     /// Uses a slot for an instant ability, interrupting any ongoing cast on it
     pub fn use_slot(&mut self, slot_e: Entity) {
         self.ongoing_cast_interface.cancel_ongoing_cast(slot_e);
