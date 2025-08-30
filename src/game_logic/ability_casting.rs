@@ -48,15 +48,6 @@ impl<'w, 's> AbilityCastingInterface<'w, 's> {
         ability.can_use_slot(slot)
     }
 
-    /// Checks if an ability with the given slot type can be cast on the specified slot
-    pub fn can_cast_on_slot(&self, slot_e: Entity, ability_slot_type: AbilitySlotType) -> bool {
-        let Ok(slot) = self.ability_slots.get(slot_e) else {
-            return false;
-        };
-
-        slot.tpe == ability_slot_type
-    }
-
     /// Uses a slot for an instant ability, interrupting any ongoing cast on it
     pub fn use_slot(&mut self, slot_e: Entity) {
         self.ongoing_cast_interface.cancel_ongoing_cast(slot_e);
