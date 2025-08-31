@@ -55,7 +55,7 @@ impl<'w, 's> AbilityCastingInterface<'w, 's> {
 
     /// Uses a slot for an instant ability, interrupting any ongoing cast on it
     pub fn use_slot(&mut self, slot_e: Entity) {
-        self.ongoing_cast_interface.cancel_ongoing_cast(slot_e);
+        self.interrupt_cast_on_slot(slot_e);
     }
 
     /// Starts a cast on a slot, automatically interrupting any existing cast on the same slot
@@ -66,7 +66,7 @@ impl<'w, 's> AbilityCastingInterface<'w, 's> {
     }
 
     /// Interrupts any ongoing cast on the specified slot (low-level method)
-    pub fn interrupt_cast_on_slot(&mut self, slot_e: Entity) {
+    fn interrupt_cast_on_slot(&mut self, slot_e: Entity) {
         self.ongoing_cast_interface.cancel_ongoing_cast(slot_e);
     }
 }
