@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use bevy::prelude::*;
 
 use super::AbilityCatalog;
@@ -8,14 +10,16 @@ use crate::{
         ability_casting::{AbilityCastingInterface, UseAbility},
         ability_slots::{AbilitySlot, AbilitySlotType},
         commands::{GameCommand, GameCommandKind},
+        cooldown::Cooldown,
         damage_resolution::{DamageInstance, DealDamage},
         faction::Faction,
     },
 };
 
 const THIS_ABILITY_ID: AbilityId = AbilityId::Attack;
-
 const THIS_ABILITY_DAMAGE: f64 = 51.0;
+const THIS_ABILITY_ABILITY_COOLDOWN: Duration = Duration::from_secs(5);
+const THIS_ABILITY_SLOT_COOLDOWN: Duration = Duration::from_secs(1);
 
 fn add_to_ability_catalog(mut abilties_catalog: ResMut<AbilityCatalog>) {
     abilties_catalog.0.insert(
@@ -53,7 +57,7 @@ fn cast_ability(
                     cast @ UseAbility {
                         caster_e,
                         slot_e,
-                        ability_e: _,
+                        ability_e,
                         fight_e,
                     },
                 ),
@@ -83,6 +87,17 @@ fn cast_ability(
         // use the slot (so, e.g., ongoing casts can be interrupted)
         ability_casting_interface.use_slot(*slot_e);
 
+        // start cooldown on the ability
+        commands
+            .entity(*ability_e)
+            .insert(Cooldown::new(THIS_ABILITY_ABILITY_COOLDOWN));
+
+        // start cooldown on the slot
+        commands
+            .entity(*slot_e)
+            .insert(Cooldown::new(THIS_ABILITY_SLOT_COOLDOWN));
+
+        // trigger/send damage event
         deal_damage_events.write(DealDamage(DamageInstance {
             source: Some(*caster_e),
             target: target_e,
