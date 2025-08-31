@@ -1,5 +1,7 @@
 #![feature(duration_constructors)]
 
+use std::time::Duration;
+
 use abilities::AbilitiesPlugin;
 use bevy::prelude::*;
 use bevy_inspector_egui::{bevy_egui::EguiPlugin, quick::WorldInspectorPlugin};
@@ -13,7 +15,7 @@ use game_logic::{
     health::Health,
 };
 
-use crate::utils::holds_held::Held;
+use crate::{game_logic::cooldown::Cooldown, utils::holds_held::Held};
 
 pub mod abilities;
 pub mod fight_ui;
@@ -41,7 +43,8 @@ fn setup(mut commands: Commands) {
             });
         })
         .with_related_entities::<Held<AbilityId>>(|commands| {
-            commands.spawn(AbilityId::Attack);
+            // TODO: integrate Cooldown with casting & AbilityCatalog
+            commands.spawn((AbilityId::Attack, Cooldown::new(Duration::from_secs(5))));
             commands.spawn(AbilityId::NeedlingHex);
             commands.spawn(AbilityId::ChargedStrike);
         })

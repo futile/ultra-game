@@ -6,12 +6,13 @@ use super::{
     fight::{FightInterface, FightStatus},
     ongoing_cast::{OngoingCast, OngoingCastInterface},
 };
-use crate::abilities::AbilityInterface;
+use crate::{abilities::AbilityInterface, game_logic::cooldown::Cooldown};
 
 #[derive(SystemParam)]
 pub struct AbilityCastingInterface<'w, 's> {
     ability_ids: Query<'w, 's, &'static AbilityId>,
     ability_slots: Query<'w, 's, &'static AbilitySlot>,
+    has_cooldown: Query<'w, 's, Has<Cooldown>>,
     ability_interface: AbilityInterface<'w, 's>,
     fight_interface: FightInterface<'w, 's>,
     ongoing_cast_interface: OngoingCastInterface<'w, 's>,
@@ -43,6 +44,15 @@ impl<'w, 's> AbilityCastingInterface<'w, 's> {
         let ability = self
             .ability_interface
             .get_ability_from_entity(cast.ability_e);
+
+        if self
+            .has_cooldown
+            .iter_many([cast.ability_e, cast.slot_e])
+            .any(|has_cd| has_cd)
+        {
+            return false;
+        }
+
         let slot = self.ability_slots.get(cast.slot_e).unwrap();
 
         ability.can_use_slot(slot)
