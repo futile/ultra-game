@@ -4,6 +4,7 @@ pub mod ability;
 pub mod ability_casting;
 pub mod ability_slots;
 pub mod commands;
+pub mod cooldown;
 pub mod damage_resolution;
 pub mod effects;
 pub mod faction;
@@ -24,6 +25,7 @@ impl Plugin for GameLogicPlugin {
             faction::FactionPlugin,
             effects::EffectsPlugin,
             commands::CommandsPlugin,
+            cooldown::CooldownPlugin,
             damage_resolution::DamageResolutionPlugin,
             health::HealthInterfacePlugin,
         ));
