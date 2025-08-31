@@ -32,6 +32,7 @@ The architecture follows Bevy's Entity-Component-System (ECS) pattern with a mod
   - `fight.rs`: Combat encounter management
   - `damage_resolution.rs`: Damage calculation and application
   - `ongoing_cast.rs`: Cast timing and interruption system
+  - `cooldown.rs`: Cooldown interface and management
 - `abilities/`: Specific ability implementations (WeaponAttack, NeedlingHex, ChargedStrike)
 - `fight_ui/`: UI rendering and interaction systems
 - `utils/`: Shared utilities including timing and relationship systems
@@ -48,17 +49,20 @@ The architecture follows Bevy's Entity-Component-System (ECS) pattern with a mod
 ### Ability Casting & Interruption Mechanics
 
 **Slot-Based Casting:**
+
 - All abilities require a slot to cast (no slot=None abilities)
 - Slot types: `WeaponAttack`, `ShieldDefend`, `Magic`
 - All slots work identically for interruption purposes
 
 **Interruption Rules:**
+
 - **Any ability usage interrupts ongoing casts on the same slot**
 - Instant abilities (WeaponAttack, NeedlingHex): Call `ability_casting_interface.use_slot(slot_e)` before execution
 - Cast abilities (ChargedStrike): Call `ability_casting_interface.start_cast()` - interruption handled automatically
 - Interruption occurs via observers in `ongoing_cast.rs` when new casts are created
 
 **AbilityCastingInterface Usage:**
+
 - **Validation**: `is_valid_cast()`, `is_matching_cast()`, `can_cast_on_slot()`
 - **Execution**: `use_slot(slot_e)` for instant abilities, `start_cast(OngoingCast)` for cast abilities
 - **Manual**: `interrupt_cast_on_slot(slot_e)` for special cases
