@@ -20,14 +20,14 @@ impl Plugin for GameLogicPlugin {
         app.add_plugins((
             ability::AbilityPlugin,
             ability_slots::AbilitySlotsPlugin,
-            ongoing_cast::OngoingCastPlugin,
-            fight::FightPlugin,
-            faction::FactionPlugin,
-            effects::EffectsPlugin,
             commands::CommandsPlugin,
             cooldown::CooldownPlugin,
             damage_resolution::DamageResolutionPlugin,
+            effects::EffectsPlugin,
+            faction::FactionPlugin,
+            fight::FightPlugin,
             health::HealthInterfacePlugin,
+            ongoing_cast::OngoingCastPlugin,
         ));
     }
 }
