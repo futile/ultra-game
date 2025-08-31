@@ -24,3 +24,6 @@ bevy = { version = "0.16.1", features = ["wayland", "dynamic_linking"] }
 bevy-inspector-egui = "0.31.0"
 derive_more = { version = "2.0.1", features = ["full"] } # TODO: can probably slim down the feature set. but didn't bother for now.
 itertools = "0.14.0"
+
+# fix https://github.com/futile/ultra-game/security/dependabot/6
+tracing-subscriber = "0.3.20"
