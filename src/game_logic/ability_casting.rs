@@ -2,7 +2,7 @@ use bevy::{ecs::system::SystemParam, prelude::*};
 
 use super::{
     ability::AbilityId,
-    ability_slots::{AbilitySlot, AbilitySlotType},
+    ability_slots::AbilitySlot,
     fight::{FightInterface, FightStatus},
     ongoing_cast::{OngoingCast, OngoingCastInterface},
 };
