@@ -4,7 +4,8 @@ use bevy::{ecs::system::SystemState, prelude::*};
 use bevy_inspector_egui::{
     bevy_egui::EguiContexts,
     egui::{
-        self, Id, Key, KeyboardShortcut, Modifiers, ProgressBar, RichText, Ui, Visuals, Widget,
+        self, Color32, Id, Key, KeyboardShortcut, Modifiers, ProgressBar, RichText, Ui, Visuals,
+        Widget,
     },
 };
 use itertools::Itertools;
@@ -20,6 +21,7 @@ use crate::{
         ability_casting::{AbilityCastingInterface, UseAbility},
         ability_slots::{AbilitySlot, AbilitySlotType},
         commands::GameCommand,
+        cooldown::Cooldown,
         effects::{HasEffects, ReflectGameEffect},
         faction::Faction,
         fight::{Fight, FightInterface, FightResult, FightTime},
@@ -455,6 +457,7 @@ fn ui_abilities(
     world: &mut World,
     params: &mut SystemState<(
         Query<&Holds<AbilityId>>,
+        Query<&Cooldown>,
         AbilityInterface,
         AbilityCastingInterface,
         EventWriter<GameCommand>,
@@ -464,6 +467,7 @@ fn ui_abilities(
         #[rustfmt::skip]
         let (
             holds_ability_ids,
+            cooldowns,
             ability_interface,
             ability_casting_interface,
             mut game_commands,
@@ -504,6 +508,17 @@ fn ui_abilities(
                     ui.horizontal(|ui: &mut Ui| {
                         let shortcut_pressed =
                             monospace_checked_shortcut(ui, keyboard_shortcut.as_ref());
+
+                        if let Ok(active_cooldown) = cooldowns.get(ability_id_e)
+                            && !active_cooldown.remaining_cooldown().is_zero()
+                        {
+                            let cooldown_str =
+                                format_remaining_time(&active_cooldown.remaining_cooldown());
+
+                            // explicit black, because this label will be disabled, but we want the
+                            // cooldown str to not be greyed out.
+                            ui.colored_label(Color32::BLACK, cooldown_str);
+                        }
 
                         let ability_button = ui.add_enabled(
                             user_interactable,
