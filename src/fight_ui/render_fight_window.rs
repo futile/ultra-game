@@ -355,6 +355,7 @@ fn ui_ability_slots(
     params: &mut SystemState<(
         Query<&Holds<AbilitySlot>>,
         Query<&AbilitySlot>,
+        Query<&Cooldown>,
         FightInterface,
         AbilityInterface,
         OngoingCastInterface,
@@ -366,8 +367,14 @@ fn ui_ability_slots(
     // AbilitySlotType::ShieldDefend => Color::PINK,
 
     {
-        let (slots, ability_slots, fight_interface, ability_interface, ongoing_cast_interface) =
-            params.get_mut(world);
+        let (
+            slots,
+            ability_slots,
+            cooldowns,
+            fight_interface,
+            ability_interface,
+            ongoing_cast_interface,
+        ) = params.get_mut(world);
 
         let user_interactable = slots_section_state.user_interactable
             && !fight_interface.get_fight_status(fight_e).is_ended();
@@ -402,6 +409,19 @@ fn ui_ability_slots(
                     let shortcut_pressed =
                         monospace_checked_shortcut(ui, keyboard_shortcut.as_ref());
 
+                    if let Ok(active_cooldown) = cooldowns.get(slot_e)
+                        && !active_cooldown.remaining_cooldown().is_zero()
+                    {
+                        let cooldown_str =
+                            format_remaining_time(&active_cooldown.remaining_cooldown());
+
+                        ui.label(cooldown_str);
+                    }
+
+                    // We could take into account `active_cooldown` in addition to
+                    // user_interactable. But that would prevent pre-selecting a slot to cast
+                    // something as soon as it's ready, so we don't do that (for now at least).
+                    // "It's not a bug, it's a feature"-moment :)
                     let mut label_response = ui
                         .add_enabled_ui(user_interactable, |ui: &mut Ui| {
                             ui.selectable_label(slot_is_selected, text_for_slot_type(&slot.tpe))
