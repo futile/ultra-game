@@ -1,4 +1,5 @@
 use bevy::{ecs::system::SystemParam, prelude::*};
+use derive_more::{Display, Error};
 
 use super::{
     ability::AbilityId,
@@ -13,9 +14,9 @@ pub struct AbilityCastingInterface<'w, 's> {
     ability_ids: Query<'w, 's, &'static AbilityId>,
     ability_slots: Query<'w, 's, &'static AbilitySlot>,
     has_cooldown: Query<'w, 's, Has<Cooldown>>,
-    ability_interface: AbilityInterface<'w, 's>,
-    fight_interface: FightInterface<'w, 's>,
-    ongoing_cast_interface: OngoingCastInterface<'w, 's>,
+    pub ability_interface: AbilityInterface<'w, 's>,
+    pub fight_interface: FightInterface<'w, 's>,
+    pub ongoing_cast_interface: OngoingCastInterface<'w, 's>,
 }
 
 /// Represents the usage of an ability
@@ -27,6 +28,13 @@ pub struct UseAbility {
     pub fight_e: Entity,
 }
 
+#[derive(Debug, Display, Error)]
+pub enum InvalidCastReason {
+    FightEnded,
+    AbilityOrSlotOnCooldown,
+    CantUseSlot,
+}
+
 impl<'w, 's> AbilityCastingInterface<'w, 's> {
     /// Checks if the cast request matches the given ability ID
     pub fn is_matching_cast(&self, cast: &UseAbility, id: &AbilityId) -> bool {
@@ -35,10 +43,12 @@ impl<'w, 's> AbilityCastingInterface<'w, 's> {
     }
 
     /// Validates if the cast request is valid (fight ongoing, slot compatibility)
-    pub fn is_valid_cast(&self, cast: &UseAbility) -> bool {
+    pub fn is_valid_cast(&self, cast: &UseAbility) -> Result<(), InvalidCastReason> {
         match self.fight_interface.get_fight_status(cast.fight_e) {
             FightStatus::Ongoing => (),
-            FightStatus::Ended => return false,
+            FightStatus::Ended => {
+                return Err(InvalidCastReason::FightEnded);
+            }
         };
 
         let ability = self
@@ -50,12 +60,16 @@ impl<'w, 's> AbilityCastingInterface<'w, 's> {
             .iter_many([cast.ability_e, cast.slot_e])
             .any(|has_cd| has_cd)
         {
-            return false;
+            return Err(InvalidCastReason::AbilityOrSlotOnCooldown);
         }
 
         let slot = self.ability_slots.get(cast.slot_e).unwrap();
 
-        ability.can_use_slot(slot)
+        if !ability.can_use_slot(slot) {
+            return Err(InvalidCastReason::CantUseSlot);
+        }
+
+        Ok(())
     }
 
     // TODO: probably merge `use_slot()` and `start_cast()` into an fn like `use_ability()`,

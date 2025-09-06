@@ -509,7 +509,11 @@ fn ui_abilities(
                         ability_e: ability_id_e,
                         fight_e,
                     })
-                    .filter(|possible_cast| ability_casting_interface.is_valid_cast(possible_cast));
+                    .filter(|possible_cast| {
+                        ability_casting_interface
+                            .is_valid_cast(possible_cast)
+                            .is_ok()
+                    });
 
                 let keyboard_shortcut: Option<KeyboardShortcut> = if user_interactable {
                     let key: Option<Key> = match idx {

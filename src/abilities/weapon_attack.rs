@@ -70,8 +70,8 @@ fn cast_ability(
             continue;
         }
 
-        if !ability_casting_interface.is_valid_cast(cast) {
-            warn!("invalid `CastAbility`: {cast:#?}");
+        if let Err(e) = ability_casting_interface.is_valid_cast(cast) {
+            warn!("invalid `CastAbility`: {cast:#?}, reason: {e}");
             continue;
         }
 

@@ -3,11 +3,13 @@
 use abilities::AbilitiesPlugin;
 use bevy::prelude::*;
 use bevy_inspector_egui::{bevy_egui::EguiPlugin, quick::WorldInspectorPlugin};
+use big_brain::{BigBrainPlugin, prelude::*};
 use fight_ui::FightUiPlugin;
 use game_logic::{
     GameLogicPlugin,
     ability::AbilityId,
     ability_slots::{AbilitySlot, AbilitySlotType},
+    ai_behavior::{AttackPlayerAction, CanAttackPlayerScorer},
     faction::Faction,
     fight::FightBundle,
     health::Health,
@@ -48,7 +50,22 @@ fn setup(mut commands: Commands) {
         .id();
 
     let enemy = commands
-        .spawn((Name::new("The Enemy"), Health::new(100.0), Faction::Enemy))
+        .spawn((
+            Name::new("The Enemy"),
+            Health::new(100.0),
+            Faction::Enemy,
+            Thinker::build()
+                .picker(FirstToScore { threshold: 0.5 })
+                .when(CanAttackPlayerScorer, AttackPlayerAction),
+        ))
+        .with_related_entities::<Held<AbilitySlot>>(|commands| {
+            commands.spawn(AbilitySlot {
+                tpe: AbilitySlotType::WeaponAttack,
+            });
+        })
+        .with_related_entities::<Held<AbilityId>>(|commands| {
+            commands.spawn(AbilityId::Attack);
+        })
         .id();
 
     commands
@@ -108,6 +125,7 @@ fn main() {
             enable_multipass_for_primary_context: true,
         })
         .add_plugins(WorldInspectorPlugin::new())
+        .add_plugins(BigBrainPlugin::new(PreUpdate))
         .configure_sets(
             FixedUpdate,
             (

@@ -3,6 +3,7 @@ use bevy::prelude::*;
 pub mod ability;
 pub mod ability_casting;
 pub mod ability_slots;
+pub mod ai_behavior;
 pub mod commands;
 pub mod cooldown;
 pub mod damage_resolution;
@@ -20,6 +21,7 @@ impl Plugin for GameLogicPlugin {
         app.add_plugins((
             ability::AbilityPlugin,
             ability_slots::AbilitySlotsPlugin,
+            ai_behavior::AiBehaviorPlugin,
             commands::CommandsPlugin,
             cooldown::CooldownPlugin,
             damage_resolution::DamageResolutionPlugin,
