@@ -10,6 +10,7 @@ use crate::{
         ability_casting::{AbilityCastingInterface, UseAbility},
         ability_slots::{AbilitySlot, AbilitySlotType},
         commands::{GameCommand, GameCommandKind},
+        cooldown::Cooldown,
         damage_resolution::{DamageInstance, DealDamage},
         effects::{GameEffect, ReflectGameEffect, UniqueEffectInterface},
         faction::Faction,
@@ -19,6 +20,7 @@ use crate::{
 };
 
 const THIS_ABILITY_ID: AbilityId = AbilityId::NeedlingHex;
+const THIS_ABILITY_ABILITY_COOLDOWN: Duration = Duration::from_secs(30);
 
 fn add_to_ability_catalog(mut abilties_catalog: ResMut<AbilityCatalog>) {
     abilties_catalog.0.insert(
@@ -99,6 +101,11 @@ fn cast_ability(
 
         // use the slot (so, e.g., ongoing casts can be interrupted)
         ability_casting_interface.use_slot(*slot_e);
+
+        // start cooldown on the ability
+        commands
+            .entity(cast.ability_e)
+            .insert(Cooldown::new(THIS_ABILITY_ABILITY_COOLDOWN));
 
         effects_interface.spawn_or_replace_unique_effect(target_e, NeedlingHexEffect::new());
 

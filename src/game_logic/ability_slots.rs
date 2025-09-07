@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use bevy::prelude::*;
 
 use crate::utils::holds_held::{Held, Holds};
@@ -5,6 +7,7 @@ use crate::utils::holds_held::{Held, Holds};
 #[derive(Debug, Component, Reflect)]
 pub struct AbilitySlot {
     pub tpe: AbilitySlotType,
+    pub on_use_cooldown: Option<Duration>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Reflect)]

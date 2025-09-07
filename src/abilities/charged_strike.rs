@@ -10,6 +10,7 @@ use crate::{
         ability_casting::{AbilityCastingInterface, UseAbility},
         ability_slots::{AbilitySlot, AbilitySlotType},
         commands::{GameCommand, GameCommandKind},
+        cooldown::Cooldown,
         damage_resolution::{DamageInstance, DealDamage},
         faction::Faction,
         ongoing_cast::{OngoingCast, OngoingCastAborted, OngoingCastFinishedSuccessfully},
@@ -17,7 +18,7 @@ use crate::{
 };
 
 const THIS_ABILITY_ID: AbilityId = AbilityId::ChargedStrike;
-
+const THIS_ABILITY_ABILITY_COOLDOWN: Duration = Duration::from_secs(20);
 const CAST_TIME: Duration = Duration::from_secs(2);
 
 fn add_to_ability_catalog(mut abilties_catalog: ResMut<AbilityCatalog>) {
@@ -82,6 +83,11 @@ fn cast_ability(
             ability_e: *ability_e,
             cast_timer: Timer::new(CAST_TIME, TimerMode::Once),
         });
+
+        // start cooldown on the ability
+        commands
+            .entity(*ability_e)
+            .insert(Cooldown::new(THIS_ABILITY_ABILITY_COOLDOWN));
 
         let caster_e = *caster_e;
         commands

@@ -1,5 +1,7 @@
 #![feature(duration_constructors)]
 
+use std::time::Duration;
+
 use abilities::AbilitiesPlugin;
 use bevy::prelude::*;
 use bevy_inspector_egui::{bevy_egui::EguiPlugin, quick::WorldInspectorPlugin};
@@ -34,12 +36,15 @@ fn setup(mut commands: Commands) {
         .with_related_entities::<Held<AbilitySlot>>(|commands| {
             commands.spawn(AbilitySlot {
                 tpe: AbilitySlotType::WeaponAttack,
+                on_use_cooldown: Some(Duration::from_secs(1)),
             });
             commands.spawn(AbilitySlot {
                 tpe: AbilitySlotType::ShieldDefend,
+                on_use_cooldown: None,
             });
             commands.spawn(AbilitySlot {
                 tpe: AbilitySlotType::Magic,
+                on_use_cooldown: Some(Duration::from_secs(2)),
             });
         })
         .with_related_entities::<Held<AbilityId>>(|commands| {
@@ -61,6 +66,7 @@ fn setup(mut commands: Commands) {
         .with_related_entities::<Held<AbilitySlot>>(|commands| {
             commands.spawn(AbilitySlot {
                 tpe: AbilitySlotType::WeaponAttack,
+                on_use_cooldown: Some(Duration::from_secs(1)),
             });
         })
         .with_related_entities::<Held<AbilityId>>(|commands| {
