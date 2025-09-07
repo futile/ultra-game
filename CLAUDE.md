@@ -20,13 +20,14 @@ The architecture follows Bevy's Entity-Component-System (ECS) pattern with a mod
 
 - **Entity Relationships**: Uses custom `Holds/Held<T>` pattern instead of standard Bevy hierarchies for flexible entity relationships
 - **System Ordering**: Defined execution order via `PerUpdateSet` enum with phases (at the time of writing): CommandResolution → TimeUpdate → LogicUpdate → DamageResolution → FightEndChecking
-- **Dual-Schedule Design**: FixedUpdate for game logic, Update for UI and input handling
+- **Dual-Schedule Design**: FixedUpdate for game logic, Update for UI and input handling, as well as AI calculation.
 
 ### Module Structure
 
 - `game_logic/`: Core combat mechanics
   - `ability.rs`: Ability definitions and casting system
   - `ability_casting.rs`: Unified interface for ability validation and execution
+  - `ai_behavior.rs`: AI behavior, uses the `big-brain` crate for bevy. See `notes/big-brain.md` in this repo for a summary.
   - `commands.rs`: Command pattern for game actions
   - `effects.rs`: Timed effects system with `FiniteRepeatingTimer`
   - `fight.rs`: Combat encounter management
@@ -36,6 +37,8 @@ The architecture follows Bevy's Entity-Component-System (ECS) pattern with a mod
 - `abilities/`: Specific ability implementations (WeaponAttack, NeedlingHex, ChargedStrike)
 - `fight_ui/`: UI rendering and interaction systems
 - `utils/`: Shared utilities including timing and relationship systems
+
+Many modules use the `src/foo.rs` file instead of `src/foo/mod.rs`.
 
 ### Key Design Patterns
 
