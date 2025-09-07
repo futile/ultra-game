@@ -2,14 +2,27 @@
 
 ## Next:
 
-- [ ] Figure out what's next :) More complicated abilities? More units per side? AI/Enemy behavior :O?
-  - Cooldowns? Icons for Slots/Abilities/Effects? :O
+- [ ] Slot-defined cooldown that is applied, e.g., in `use_slot()` and when an ongoing cast finishes
+  - [ ] Add an `on_use_cooldown: Duration` field to `AbilitySlot`
+  - [ ] Read & apply that field's value as `Cooldown` in `use_slot()` and when an ongoing cast finishes - but logic should be in ability_casting.rs, not in ongoing_cast.rs.
+  - [ ] Figure out how to do that, maybe through an event, or by calling a method on AbilityCastingInterface? both?
 
-- [ ] Resetting fights/fight selection menu
+- [ ] Build current fight into a very basic fight/challenge
+  - [ ] Set `Attack` damage to 5 or 10, not 50, so enemy doesn't insta kill us/we them
+  - [ ] Add cooldown to `ChargedStrike` and adjust damage, maybe 25 dmg on 20s cd?
+  - [ ] Add cooldown to `NeedlingHex` and adjust damage. Maybe 5 dmg per tick, 25-30s cd? Slot cd?
 
 ## Possible Next
 
+- [ ] Resetting fights/fight selection menu
+
 - [ ] 1 or 2 basic tests, also just to try out how well it works/how easy it is
+
+- [ ] More (complicated) abilities
+
+- [ ] More units per side(?)
+
+- [ ] Icons for Slots/Abilities/Effects
 
 - [ ] Proper Fight-Over Tracking and Handling
   - [x] Command Submission + Execution should be disabled (maybe also print/log) a warning
@@ -34,6 +47,10 @@
 # Done
 
 ---
+
+- AI/Enemy behavior: See `game_logic/ai_behavior.rs` and `docs/big-brain.md`
+
+- Cooldowns for abilities and slots: See `game_logic/cooldown.rs`
 
 - [x] Cast-Times for abilities
   - [x] Basic Cast-Times with events for `success`/`aborted`
