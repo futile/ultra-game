@@ -2,12 +2,6 @@
 
 ## Next:
 
-- [ ] Slot-defined cooldown that is applied, e.g., in `use_slot()` and when an ongoing cast finishes
-  - [x] Add an `on_use_cooldown: Duration` field to `AbilitySlot`
-  - [ ] Read & apply that field's value as `Cooldown` in `use_slot()` and
-  - [ ] Read & apply when an ongoing cast finishes - but logic should be in ability_casting.rs, not in ongoing_cast.rs.
-    - [ ] Figure out how to do that, maybe through an event, or by calling a method on AbilityCastingInterface? both?
-
 - [ ] Build current fight into a very basic fight/challenge
   - [ ] Set `Attack` damage to 5 or 10, not 50, so enemy doesn't insta kill us/we them
   - [ ] Add cooldown to `ChargedStrike` and adjust damage, maybe 25 dmg on 20s cd?
@@ -48,6 +42,12 @@
 # Done
 
 ---
+
+- [x] Slot-defined cooldown that is applied, e.g., in `use_slot()` and when an ongoing cast finishes
+  - [x] Add an `on_use_cooldown: Duration` field to `AbilitySlot`
+  - [x] Read & apply that field's value as `Cooldown` in `use_slot()` and
+  - [x] Read & apply when an ongoing cast finishes - but logic should be in ability_casting.rs, not in ongoing_cast.rs.
+    - [x] Figure out how to do that, maybe through an event, or by calling a method on AbilityCastingInterface? both?
 
 - AI/Enemy behavior: See `game_logic/ai_behavior.rs` and `docs/big-brain.md`
 

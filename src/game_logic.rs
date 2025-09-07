@@ -20,6 +20,7 @@ impl Plugin for GameLogicPlugin {
         // from https://github.com/jakobhellermann/bevy-inspector-egui/discussions/130
         app.add_plugins((
             ability::AbilityPlugin,
+            ability_casting::AbilityCastingPlugin,
             ability_slots::AbilitySlotsPlugin,
             ai_behavior::AiBehaviorPlugin,
             commands::CommandsPlugin,

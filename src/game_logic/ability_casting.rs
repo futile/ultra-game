@@ -5,7 +5,7 @@ use super::{
     ability::AbilityId,
     ability_slots::AbilitySlot,
     fight::{FightInterface, FightStatus},
-    ongoing_cast::{OngoingCast, OngoingCastInterface},
+    ongoing_cast::{OngoingCast, OngoingCastFinishedSuccessfully, OngoingCastInterface},
 };
 use crate::{abilities::AbilityInterface, game_logic::cooldown::Cooldown};
 
@@ -101,5 +101,33 @@ impl<'w, 's> AbilityCastingInterface<'w, 's> {
     /// Interrupts any ongoing cast on the specified slot (low-level method)
     fn interrupt_cast_on_slot(&mut self, slot_e: Entity) {
         self.ongoing_cast_interface.cancel_ongoing_cast(slot_e);
+    }
+}
+
+/// Observer that applies slot cooldowns when ongoing casts finish successfully
+fn apply_slot_cooldown_on_cast_finish(
+    trigger: Trigger<OngoingCastFinishedSuccessfully>,
+    ongoing_casts: Query<&OngoingCast>,
+    ability_slots: Query<&AbilitySlot>,
+    mut commands: Commands,
+) {
+    let ongoing_cast = ongoing_casts.get(trigger.target()).unwrap();
+    let slot_e = ongoing_cast.slot_e;
+    
+    // Apply slot-defined cooldown if present
+    if let Ok(slot) = ability_slots.get(slot_e)
+        && let Some(cooldown_duration) = slot.on_use_cooldown {
+            commands
+                .entity(slot_e)
+                .insert(Cooldown::new(cooldown_duration));
+        }
+}
+
+#[derive(Debug)]
+pub struct AbilityCastingPlugin;
+
+impl Plugin for AbilityCastingPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_observer(apply_slot_cooldown_on_cast_finish);
     }
 }

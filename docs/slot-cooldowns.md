@@ -1,10 +1,10 @@
 # Slot Cooldowns
 
-This document describes the slot-defined cooldown system implemented in the ultra-game project.
+This document describes the slot-defined cooldown system in the ultra-game project.
 
 ## Overview
 
-Slots can now define their own cooldowns that are automatically applied when abilities use them. This centralizes slot cooldown logic and eliminates duplicate code across ability implementations.
+Slots automatically apply their own cooldowns when abilities use them, centralizing slot cooldown logic across the codebase.
 
 ## Core Architecture
 
@@ -25,9 +25,11 @@ pub struct AbilitySlot {
 
 ### Automatic Application
 
+#### Instant Abilities
+
 **File**: `src/game_logic/ability_casting.rs`
 
-The `AbilityCastingInterface::use_slot()` method automatically applies slot cooldowns:
+The `AbilityCastingInterface::use_slot()` method automatically applies slot cooldowns for instant abilities:
 
 ```rust
 pub fn use_slot(&mut self, slot_e: Entity) {
@@ -43,7 +45,33 @@ pub fn use_slot(&mut self, slot_e: Entity) {
 }
 ```
 
-All abilities that call `use_slot()` automatically get slot cooldowns applied.
+#### Cast-Time Abilities
+
+**File**: `src/game_logic/ability_casting.rs`
+
+An observer handles slot cooldown application when cast-time abilities finish successfully:
+
+```rust
+pub fn apply_slot_cooldown_on_cast_finish(
+    trigger: Trigger<OngoingCastFinishedSuccessfully>,
+    ongoing_casts: Query<&OngoingCast>,
+    ability_slots: Query<&AbilitySlot>,
+    mut commands: Commands,
+) {
+    let ongoing_cast = ongoing_casts.get(trigger.target()).unwrap();
+    let slot_e = ongoing_cast.slot_e;
+    
+    // Apply slot-defined cooldown if present
+    if let Ok(slot) = ability_slots.get(slot_e)
+        && let Some(cooldown_duration) = slot.on_use_cooldown {
+            commands
+                .entity(slot_e)
+                .insert(Cooldown::new(cooldown_duration));
+        }
+}
+```
+
+This observer is registered in `AbilityCastingPlugin` and automatically triggered when casts complete.
 
 ## Current Configuration
 
@@ -55,39 +83,9 @@ Slot cooldowns are configured when slots are created:
 - **Magic slots**: `Some(Duration::from_secs(2))` - 2 second cooldown  
 - **ShieldDefend slots**: `None` - No cooldown (defensive abilities)
 
-## Ability Integration
-
-### Instant Abilities
-
-**Files**: 
-- `src/abilities/weapon_attack.rs`
-- `src/abilities/needling_hex.rs`
-
-Instant abilities call `ability_casting_interface.use_slot(slot_e)` which automatically applies the slot cooldown.
-
-**Previous manual slot cooldown code has been removed** from these abilities. They now only apply ability-specific cooldowns:
-
-```rust
-// OLD (removed):
-commands.entity(*slot_e).insert(Cooldown::new(THIS_ABILITY_SLOT_COOLDOWN));
-
-// NEW (automatic via use_slot()):
-ability_casting_interface.use_slot(*slot_e);
-```
-
-### Cast-Time Abilities
-
-**File**: `src/abilities/charged_strike.rs`
-
-Cast-time abilities call `ability_casting_interface.start_cast()` instead of `use_slot()`.
-
-**Current Status**: Slot cooldowns are NOT yet applied when cast-time abilities finish. This is planned for future implementation via:
-- Event when OngoingCast finishes successfully
-- Logic to apply slot cooldown at that time (in ability_casting.rs, not ongoing_cast.rs)
-
 ## Cooldown Types
 
-The system now supports two independent cooldown types:
+The system supports two independent cooldown types:
 
 1. **Ability Cooldowns**: Applied to the ability entity (`ability_e`)
    - Prevents the specific ability from being used
@@ -96,21 +94,21 @@ The system now supports two independent cooldown types:
 2. **Slot Cooldowns**: Applied to the slot entity (`slot_e`)
    - Prevents any ability from using that slot
    - Duration defined by the slot's `on_use_cooldown` field
-   - Automatically applied via `use_slot()`
+   - Automatically applied via `use_slot()` or when casts finish
 
 Both cooldowns are independent and both must be ready for an ability to be castable.
 
 ## Key Files
 
 - **`src/game_logic/ability_slots.rs`**: Defines `AbilitySlot` with `on_use_cooldown` field
-- **`src/game_logic/ability_casting.rs`**: Implements automatic slot cooldown application in `use_slot()`
-- **`src/game_logic/cooldown.rs`**: Core cooldown system (unchanged)
+- **`src/game_logic/ability_casting.rs`**: Implements automatic slot cooldown application, observer, and plugin
+- **`src/game_logic/cooldown.rs`**: Core cooldown system
 - **`src/main.rs`**: Slot creation with cooldown configuration
-- **`src/abilities/*.rs`**: Individual abilities (manual slot cooldown code removed)
+- **`src/abilities/*.rs`**: Individual abilities use the unified interface
 
 ## Implementation Notes
 
 - Slot cooldowns use the same `Cooldown` component as ability cooldowns
 - Cooldown validation in `is_valid_cast()` checks both ability and slot entities for cooldowns
-- The system preserves all existing behavior while centralizing slot cooldown logic
-- No changes needed to the core cooldown system - it already supported cooldowns on any entity
+- The system works automatically for both instant abilities (via `use_slot()`) and cast-time abilities (via observer)
+- Observer-based architecture ensures slot cooldowns are applied consistently when casts complete
