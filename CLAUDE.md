@@ -34,6 +34,7 @@ The architecture follows Bevy's Entity-Component-System (ECS) pattern with a mod
   - `damage_resolution.rs`: Damage calculation and application
   - `ongoing_cast.rs`: Cast timing and interruption system
   - `cooldown.rs`: Cooldown interface and management
+    - The file `docs/slot-cooldowns.md` contains detailed information on cooldowns for slots.
 - `abilities/`: Specific ability implementations (WeaponAttack, NeedlingHex, ChargedStrike)
 - `fight_ui/`: UI rendering and interaction systems
 - `utils/`: Shared utilities including timing and relationship systems
