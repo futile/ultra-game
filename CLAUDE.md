@@ -77,3 +77,12 @@ Many modules use the `src/foo.rs` file instead of `src/foo/mod.rs`.
 - Uses Bevy 0.16.1 with dynamic linking for faster compilation
 - Performance optimizations in Cargo.toml for debug builds (opt-level = 1 for main code, 3 for dependencies)
 - Entity inspector available via bevy-inspector-egui for debugging
+
+### Style Guidelines
+
+#### Doc-Comments
+
+- Always add doc-comments for everything you create, and update doc-comments when you change something, if it's relevant for the doc comments.
+- For functions, document parameters, return value, possible errors and panic reasons, unless they aren't really important.
+- Document in a "black-box" style, i.e., what's relevant from outside, don't describe internal behavior of the function that could change (which would be "white-box" style commenting).
+- Try to explain "why" things exist, in addition to describing "what" exists (which is always already described by the thing, function, etc. itself).
