@@ -30,7 +30,7 @@ fn add_to_ability_catalog(mut abilties_catalog: ResMut<AbilityCatalog>) {
             id: THIS_ABILITY_ID,
             slot_type: Some(AbilitySlotType::Magic),
             #[expect(clippy::useless_format, reason = "Uniformity")]
-            description: format!("Hex your enemy with repeated damage.").into(),
+            description: format!("Hex your enemy with repeated damage over time.").into(),
         },
     );
 }
@@ -45,7 +45,7 @@ impl NeedlingHexEffect {
     pub const TICK_INTERVAL: Duration = Duration::from_millis(500);
     pub const NUM_TICKS: u32 = 5;
 
-    pub const DMG_PER_TICK: f64 = 10.0;
+    pub const DMG_PER_TICK: f64 = 5.0;
 
     fn new() -> NeedlingHexEffect {
         NeedlingHexEffect(FiniteRepeatingTimer::new(

@@ -29,7 +29,7 @@ fn add_to_ability_catalog(mut abilties_catalog: ResMut<AbilityCatalog>) {
             id: THIS_ABILITY_ID,
             slot_type: Some(AbilitySlotType::WeaponAttack),
             #[expect(clippy::useless_format, reason = "Uniformity")]
-            description: format!("Charge an extra strong strike!").into(),
+            description: format!("Charge an extra strong strike, dealing 25 damage!").into(),
         },
     );
 }
@@ -98,7 +98,7 @@ fn cast_ability(
                     deal_damage_events.write(DealDamage(DamageInstance {
                         source: Some(caster_e),
                         target: target_e,
-                        amount: 51.0,
+                        amount: 25.0,
                     }));
                 },
             )

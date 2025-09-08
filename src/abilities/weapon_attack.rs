@@ -17,7 +17,7 @@ use crate::{
 };
 
 const THIS_ABILITY_ID: AbilityId = AbilityId::Attack;
-const THIS_ABILITY_DAMAGE: f64 = 51.0;
+const THIS_ABILITY_DAMAGE: f64 = 10.0;
 const THIS_ABILITY_ABILITY_COOLDOWN: Duration = Duration::from_secs(5);
 
 fn add_to_ability_catalog(mut abilties_catalog: ResMut<AbilityCatalog>) {
@@ -95,7 +95,7 @@ fn cast_ability(
         deal_damage_events.write(DealDamage(DamageInstance {
             source: Some(*caster_e),
             target: target_e,
-            amount: 51.0,
+            amount: THIS_ABILITY_DAMAGE,
         }));
 
         // fire an event for the executed `GameCommand`

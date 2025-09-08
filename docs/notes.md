@@ -2,11 +2,6 @@
 
 ## Next:
 
-- [ ] Build current fight into a very basic fight/challenge
-  - [ ] Set `Attack` damage to 5 or 10, not 50, so enemy doesn't insta kill us/we them
-  - [ ] Add cooldown to `ChargedStrike` and adjust damage, maybe 25 dmg on 20s cd?
-  - [ ] Add cooldown to `NeedlingHex` and adjust damage. Maybe 5 dmg per tick, 25-30s cd? Slot cd?
-
 ## Possible Next
 
 - [ ] Resetting fights/fight selection menu
@@ -42,6 +37,11 @@
 # Done
 
 ---
+
+- [x] Build current fight into a very basic fight/challenge
+  - [x] Set `Attack` damage to 5 or 10, not 50, so enemy doesn't insta kill us/we them
+  - [x] Add cooldown to `ChargedStrike` and adjust damage, maybe 25 dmg on 20s cd?
+  - [x] Add cooldown to `NeedlingHex` and adjust damage. Maybe 5 dmg per tick, 25-30s cd? Slot cd?
 
 - [x] Slot-defined cooldown that is applied, e.g., in `use_slot()` and when an ongoing cast finishes
   - [x] Add an `on_use_cooldown: Duration` field to `AbilitySlot`
