@@ -87,3 +87,8 @@ Many modules use the `src/foo.rs` file instead of `src/foo/mod.rs`.
 - For functions, document parameters, return value, possible errors and panic reasons, unless they aren't really important.
 - Document in a "black-box" style, i.e., what's relevant from outside, don't describe internal behavior of the function that could change (which would be "white-box" style commenting).
 - Try to explain "why" things exist, in addition to describing "what" exists (which is always already described by the thing, function, etc. itself).
+
+#### Copying code from documentation or examples
+
+- When copying code from some documentation or some example (e.g., documentation/example of a dependency), ONLY change what's required for the current task
+- **Don't** make other on-the-fly changes to code you copy, or, if really necessary, mention it & explain why. It is ok if you are wrong, the user simply wants to understand why.
