@@ -3,8 +3,11 @@
 use std::time::Duration;
 
 use abilities::AbilitiesPlugin;
-use bevy::prelude::*;
-use bevy_inspector_egui::{bevy_egui::EguiPlugin, quick::WorldInspectorPlugin};
+use bevy::{prelude::*, window::PrimaryWindow};
+use bevy_inspector_egui::{
+    bevy_egui::{EguiContext, EguiContextPass, EguiPlugin, egui},
+    bevy_inspector,
+};
 use big_brain::{BigBrainPlugin, prelude::*};
 use fight_ui::FightUiPlugin;
 use game_logic::{
@@ -96,6 +99,33 @@ fn close_on_esc(
     }
 }
 
+/// Custom world inspector system positioned in top-right corner, so it doesn't overlap with the
+/// fight window we open.
+///
+/// See https://github.com/jakobhellermann/bevy-inspector-egui/blob/v0.31.0/crates/bevy-inspector-egui/src/quick.rs#L92-L110
+/// for where the code was derived from.
+fn positioned_world_inspector(world: &mut World) {
+    let egui_context = world
+        .query_filtered::<&mut EguiContext, With<PrimaryWindow>>()
+        .single(world);
+
+    let Ok(egui_context) = egui_context else {
+        return;
+    };
+
+    let mut egui_context = egui_context.clone();
+
+    egui::Window::new("World Inspector")
+        .default_size((320.0, 160.0))
+        .anchor(egui::Align2::RIGHT_TOP, egui::Vec2::ZERO)
+        .show(egui_context.get_mut(), |ui| {
+            egui::ScrollArea::both().show(ui, |ui| {
+                bevy_inspector::ui_for_world(world, ui);
+                ui.allocate_space(ui.available_size());
+            });
+        });
+}
+
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone, Copy)]
 enum PerUpdateSet {
     // FixedUpdate
@@ -130,7 +160,6 @@ fn main() {
         .add_plugins(EguiPlugin {
             enable_multipass_for_primary_context: true,
         })
-        .add_plugins(WorldInspectorPlugin::new())
         .add_plugins(BigBrainPlugin::new(PreUpdate))
         .configure_sets(
             FixedUpdate,
@@ -149,5 +178,6 @@ fn main() {
         .add_plugins(FightUiPlugin)
         .add_systems(Startup, setup)
         .add_systems(Update, close_on_esc)
+        .add_systems(EguiContextPass, positioned_world_inspector)
         .run();
 }
