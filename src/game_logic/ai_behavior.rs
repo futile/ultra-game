@@ -23,6 +23,15 @@ pub fn can_attack_player_scorer_system(
     let fight_interface = &ability_casting_interface.fight_interface;
 
     for (Actor(actor), mut score) in scorers.iter_mut() {
+        // Find the fight entity
+        let fight_e = fight_interface.get_fight_of_entity(*actor);
+
+        // Don't score if fight is paused
+        if fight_interface.is_fight_paused(fight_e) {
+            score.set(0.0);
+            continue;
+        }
+
         // Find Attack ability entity using iter_descendants
         let attack_ability_entity = ability_holders.iter_descendants(*actor).find(|&ability_e| {
             ability_ids
@@ -46,9 +55,6 @@ pub fn can_attack_player_scorer_system(
             score.set(0.0);
             continue;
         };
-
-        // Find the fight entity
-        let fight_e = fight_interface.get_fight_of_entity(*actor);
 
         // Create UseAbility request to validate
         let use_ability = UseAbility {
@@ -87,6 +93,14 @@ pub fn attack_player_action_system(
     for (Actor(actor), mut action_state) in actions.iter_mut() {
         match *action_state {
             ActionState::Requested => {
+                let fight_e = fight_interface.get_fight_of_entity(*actor);
+
+                // Don't act if fight is paused
+                if fight_interface.is_fight_paused(fight_e) {
+                    *action_state = ActionState::Failure;
+                    continue;
+                }
+
                 // Find the enemy's Attack ability and WeaponAttack slot
                 let attack_ability_entity =
                     ability_holders.iter_descendants(*actor).find(|&ability_e| {
@@ -111,8 +125,6 @@ pub fn attack_player_action_system(
                     continue;
                 };
 
-                let fight_e = fight_interface.get_fight_of_entity(*actor);
-
                 // Create and send the game command
                 let use_ability = UseAbility {
                     caster_e: *actor,
@@ -128,7 +140,7 @@ pub fn attack_player_action_system(
                 }
 
                 let game_command = GameCommand::new(
-                    GameCommandSource::UserInteraction, // AI counts as user interaction for now
+                    GameCommandSource::AIAction,
                     GameCommandKind::UseAbility(use_ability),
                 );
 

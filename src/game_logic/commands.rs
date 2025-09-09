@@ -22,6 +22,7 @@ impl GameCommand {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum GameCommandSource {
     UserInteraction,
+    AIAction,
 }
 
 #[derive(Debug, Clone, From)]
