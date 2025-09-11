@@ -65,6 +65,15 @@ Many modules use the `src/foo.rs` file instead of `src/foo/mod.rs`.
 - Cast abilities (ChargedStrike): Call `ability_casting_interface.start_cast()` - interruption handled automatically
 - Interruption occurs via observers in `ongoing_cast.rs` when new casts are created
 
+**Cooldown Mechanics:**
+
+- **Ability Cooldown**: How long until THIS specific ability can be cast again
+- **Slot Cooldown**: How long until ANY ability can be cast on this slot
+- After casting an ability, both cooldowns apply independently:
+  - The slot is blocked for the slot cooldown duration (prevents any ability on that slot)
+  - The specific ability cannot be cast again until its ability cooldown expires
+- Example: WeaponAttack (5s ability cooldown, 1s slot cooldown) → slot available after 1s for other WeaponAttack slot abilities, but WeaponAttack itself needs 5s
+
 **AbilityCastingInterface Usage:**
 
 - **Validation**: `is_valid_cast()`, `is_matching_cast()`, `can_cast_on_slot()`
