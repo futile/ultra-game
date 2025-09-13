@@ -1,28 +1,18 @@
 #![feature(duration_constructors)]
 
-use std::time::Duration;
-
 use abilities::AbilitiesPlugin;
 use bevy::{prelude::*, window::PrimaryWindow};
 use bevy_inspector_egui::{
     bevy_egui::{EguiContext, EguiContextPass, EguiPlugin, egui},
     bevy_inspector,
 };
-use big_brain::{BigBrainPlugin, prelude::*};
+use big_brain::BigBrainPlugin;
+use fight_selection_ui::FightSelectionUiPlugin;
 use fight_ui::FightUiPlugin;
-use game_logic::{
-    GameLogicPlugin,
-    ability::AbilityId,
-    ability_slots::{AbilitySlot, AbilitySlotType},
-    ai_behavior::{AttackPlayerAction, CanAttackPlayerScorer},
-    faction::Faction,
-    fight::FightBundle,
-    health::Health,
-};
-
-use crate::utils::holds_held::Held;
+use game_logic::GameLogicPlugin;
 
 pub mod abilities;
+pub mod fight_selection_ui;
 pub mod fight_ui;
 pub mod game_logic;
 pub mod utils;
@@ -30,56 +20,7 @@ pub mod utils;
 fn setup(mut commands: Commands) {
     commands.spawn(Camera2d);
 
-    let player_character = commands
-        .spawn((
-            Health::new(100.0),
-            Faction::Player,
-            Name::new("Player Character"),
-        ))
-        .with_related_entities::<Held<AbilitySlot>>(|commands| {
-            commands.spawn(AbilitySlot {
-                tpe: AbilitySlotType::WeaponAttack,
-                on_use_cooldown: Some(Duration::from_secs(1)),
-            });
-            commands.spawn(AbilitySlot {
-                tpe: AbilitySlotType::ShieldDefend,
-                on_use_cooldown: None,
-            });
-            commands.spawn(AbilitySlot {
-                tpe: AbilitySlotType::Magic,
-                on_use_cooldown: Some(Duration::from_secs(2)),
-            });
-        })
-        .with_related_entities::<Held<AbilityId>>(|commands| {
-            commands.spawn(AbilityId::Attack);
-            commands.spawn(AbilityId::NeedlingHex);
-            commands.spawn(AbilityId::ChargedStrike);
-        })
-        .id();
-
-    let enemy = commands
-        .spawn((
-            Name::new("The Enemy"),
-            Health::new(100.0),
-            Faction::Enemy,
-            Thinker::build()
-                .picker(FirstToScore { threshold: 0.5 })
-                .when(CanAttackPlayerScorer, AttackPlayerAction),
-        ))
-        .with_related_entities::<Held<AbilitySlot>>(|commands| {
-            commands.spawn(AbilitySlot {
-                tpe: AbilitySlotType::WeaponAttack,
-                on_use_cooldown: Some(Duration::from_secs(1)),
-            });
-        })
-        .with_related_entities::<Held<AbilityId>>(|commands| {
-            commands.spawn(AbilityId::Attack);
-        })
-        .id();
-
-    commands
-        .spawn((FightBundle::new(), Name::new("The Fight")))
-        .add_children(&[player_character, enemy]);
+    fight_selection_ui::spawn_basic_fight(&mut commands);
 }
 
 // from https://github.com/bevyengine/bevy/pull/12859
@@ -175,6 +116,7 @@ fn main() {
         .configure_sets(Update, (PerUpdateSet::CommandSubmission,).chain())
         .add_plugins(AbilitiesPlugin)
         .add_plugins(GameLogicPlugin)
+        .add_plugins(FightSelectionUiPlugin)
         .add_plugins(FightUiPlugin)
         .add_systems(Startup, setup)
         .add_systems(Update, close_on_esc)

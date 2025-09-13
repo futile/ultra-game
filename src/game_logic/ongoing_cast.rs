@@ -13,6 +13,11 @@ pub struct OngoingCast {
     pub cast_timer: Timer,
 }
 
+// TODO: Make this a regular `Holds<OngoingCast>`, or maybe `HoldsSingle<OngoingCast>` or
+// something. Maybe even OngoingCast directly on as Component on the slot_e? Or maybe not, but for
+// now we want to fix Fight despawning, and this currently doesn't work with that. On that note, I
+// also might have to fix the other non-Holds/Held manual relationship-thingy for Fight
+// despawning.. (:
 #[derive(Debug, Component, Reflect)]
 pub struct HasOngoingCast {
     ongoing_cast_e: Entity,

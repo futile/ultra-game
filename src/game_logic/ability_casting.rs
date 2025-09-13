@@ -81,14 +81,15 @@ impl<'w, 's> AbilityCastingInterface<'w, 's> {
     /// Uses a slot for an instant ability, interrupting any ongoing cast on it
     pub fn use_slot(&mut self, slot_e: Entity) {
         self.interrupt_cast_on_slot(slot_e);
-        
+
         // Apply slot-defined cooldown if present
         if let Ok(slot) = self.ability_slots.get(slot_e)
-            && let Some(cooldown_duration) = slot.on_use_cooldown {
-                self.commands
-                    .entity(slot_e)
-                    .insert(Cooldown::new(cooldown_duration));
-            }
+            && let Some(cooldown_duration) = slot.on_use_cooldown
+        {
+            self.commands
+                .entity(slot_e)
+                .insert(Cooldown::new(cooldown_duration));
+        }
     }
 
     /// Starts a cast on a slot, automatically interrupting any existing cast on the same slot
@@ -113,14 +114,15 @@ fn apply_slot_cooldown_on_cast_finish(
 ) {
     let ongoing_cast = ongoing_casts.get(trigger.target()).unwrap();
     let slot_e = ongoing_cast.slot_e;
-    
+
     // Apply slot-defined cooldown if present
     if let Ok(slot) = ability_slots.get(slot_e)
-        && let Some(cooldown_duration) = slot.on_use_cooldown {
-            commands
-                .entity(slot_e)
-                .insert(Cooldown::new(cooldown_duration));
-        }
+        && let Some(cooldown_duration) = slot.on_use_cooldown
+    {
+        commands
+            .entity(slot_e)
+            .insert(Cooldown::new(cooldown_duration));
+    }
 }
 
 #[derive(Debug)]
