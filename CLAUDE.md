@@ -72,14 +72,13 @@ Many modules use the `src/foo.rs` file instead of `src/foo/mod.rs`.
 - After casting an ability, both cooldowns apply independently:
   - The slot is blocked for the slot cooldown duration (prevents any ability on that slot)
   - The specific ability cannot be cast again until its ability cooldown expires
-- Example: WeaponAttack (5s ability cooldown, 1s slot cooldown) → slot available after 1s for other WeaponAttack slot abilities, but WeaponAttack itself needs 5s
+  - Example: WeaponAttack (5s ability cooldown, 1s slot cooldown) → slot available after 1s for other WeaponAttack slot abilities, but WeaponAttack itself needs 5s
 
 **AbilityCastingInterface Usage:**
 
 - **Validation**: `is_valid_cast()`, `is_matching_cast()`, `can_cast_on_slot()`
 - **Execution**: `use_slot(slot_e)` for instant abilities, `start_cast(OngoingCast)` for cast abilities
 - **Manual**: `interrupt_cast_on_slot(slot_e)` for special cases
-- Replaces old separate `CastAbilityInterface` + `SlotCastingInterface` pattern
 
 ### Development Notes
 
@@ -87,6 +86,7 @@ Many modules use the `src/foo.rs` file instead of `src/foo/mod.rs`.
 - Uses Bevy 0.16.1 with dynamic linking for faster compilation
 - Performance optimizations in Cargo.toml for debug builds (opt-level = 1 for main code, 3 for dependencies)
 - Entity inspector available via bevy-inspector-egui for debugging
+- After finishing a task, when `cargo check`, `cargo clippy`, etc. pass, always format with `cargo fmt`
 
 ### Style Guidelines
 
