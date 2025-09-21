@@ -82,6 +82,10 @@ pub fn render_fight_windows(
     for fight_window_e in fight_windows.into_iter() {
         egui::Window::new("Fight")
             .id(Id::new(fight_window_e))
+            // default_pos() is a small "hack" so that spawning a fight while a fight window still
+            // exists will position the new window in the top-left again, instead of
+            // trying to make space for the window that is about to be removed anyway.
+            .default_pos((0.0, 0.0))
             .default_size((500.0, 500.0))
             .show(&ui_ctx, |ui: &mut Ui| {
                 run_ui_system(
