@@ -2,21 +2,6 @@
 
 ## Next:
 
-- [x] Resetting fights/fight selection menu
-  - [x] Should be implemented in src/ui_fight_selection.rs
-  - [x] Should have two buttons for now, vertically below each other:
-    - [x] 1. "Despawn Fight": Takes the single current `Fight`-entity, uses despawn_recursive() on `player` and `enemy` and on the fight itself.
-    - [x] 2. "Basic Fight": Spawns the fight that is currently defined in `main.rs`.
-      - [x] More fights will be added to this later, so selecting a fight to spawn should execute the "Despawn Fight" logic first. -> it should be factored out
-    - [-] Buttons should use the full width of the window, and a larger font, and be horizontally centered.
-      - Sucky situation, not super easy, let it go for now
-    - [-] Fight selection window (and egui inspector window) should be movable
-      - Sucky situation, kinda bugged, see comment in `main.rs` re/ World Inspector window
-    - [x] Debugging, should not cause problems when an ongoing_cast exists. Probably despawning needs to be done correctly? this is nontrivial oO
-      - [x] Maybe just make OngoingCast a component on a slot? support for multiple casts per slot could come later
-      - [n] Alternative: Need to use Holds/Held, or even better, HoldsOne/HeldOne, etc., maybe even HoldsN/HeldN
-        - For now: Just as a component on an AbilitySlot entity
-
 - [ ] Refactor abilility usage system. maybe use generic system + system chaining?
 
 - [ ] Auto-slot choice when only 1 slot fits (for now, maybe later also if other fitting slots on cd, etc.)
@@ -59,6 +44,21 @@
 # Done
 
 ---
+
+- [x] Resetting fights/fight selection menu
+  - [x] Should be implemented in src/ui_fight_selection.rs
+  - [x] Should have two buttons for now, vertically below each other:
+    - [x] 1. "Despawn Fight": Takes the single current `Fight`-entity, uses despawn_recursive() on `player` and `enemy` and on the fight itself.
+    - [x] 2. "Basic Fight": Spawns the fight that is currently defined in `main.rs`.
+      - [x] More fights will be added to this later, so selecting a fight to spawn should execute the "Despawn Fight" logic first. -> it should be factored out
+    - [-] Buttons should use the full width of the window, and a larger font, and be horizontally centered.
+      - Sucky situation, not super easy, let it go for now
+    - [-] Fight selection window (and egui inspector window) should be movable
+      - Sucky situation, kinda bugged, see comment in `main.rs` re/ World Inspector window
+    - [x] Debugging, should not cause problems when an ongoing_cast exists. Probably despawning needs to be done correctly? this is nontrivial oO
+      - [x] Maybe just make OngoingCast a component on a slot? support for multiple casts per slot could come later
+      - [n] Alternative: Need to use Holds/Held, or even better, HoldsOne/HeldOne, etc., maybe even HoldsN/HeldN
+        - For now: Just as a component on an AbilitySlot entity
 
 - [x] Build current fight into a very basic fight/challenge
   - [x] Set `Attack` damage to 5 or 10, not 50, so enemy doesn't insta kill us/we them
