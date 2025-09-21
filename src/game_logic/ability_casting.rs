@@ -93,10 +93,10 @@ impl<'w, 's> AbilityCastingInterface<'w, 's> {
     }
 
     /// Starts a cast on a slot, automatically interrupting any existing cast on the same slot
-    pub fn start_cast(&mut self, cast: OngoingCast) -> Entity {
+    pub fn start_cast(&mut self, slot_e: Entity, cast: OngoingCast) -> Entity {
         // The OngoingCast system will automatically handle interruption when we create the new cast
         // (see on_add_ongoing_cast observer in ongoing_cast.rs)
-        self.ongoing_cast_interface.start_new_cast(cast)
+        self.ongoing_cast_interface.start_new_cast(slot_e, cast)
     }
 
     /// Interrupts any ongoing cast on the specified slot (low-level method)
@@ -108,12 +108,10 @@ impl<'w, 's> AbilityCastingInterface<'w, 's> {
 /// Observer that applies slot cooldowns when ongoing casts finish successfully
 fn apply_slot_cooldown_on_cast_finish(
     trigger: Trigger<OngoingCastFinishedSuccessfully>,
-    ongoing_casts: Query<&OngoingCast>,
     ability_slots: Query<&AbilitySlot>,
     mut commands: Commands,
 ) {
-    let ongoing_cast = ongoing_casts.get(trigger.target()).unwrap();
-    let slot_e = ongoing_cast.slot_e;
+    let slot_e = trigger.target();
 
     // Apply slot-defined cooldown if present
     if let Ok(slot) = ability_slots.get(slot_e)

@@ -20,7 +20,7 @@ opt-level = 3
 
 [dependencies]
 ahash = "0.8.12"
-bevy = { version = "0.16.1", features = ["wayland", "dynamic_linking"] }
+bevy = { version = "0.16.1", features = ["wayland", "dynamic_linking", "track_location"] }
 bevy-inspector-egui = "0.31.0"
 # latest version on crates.io, 0.22.0, only supports bevy 0.15. `main` supports 0.16.
 big-brain = { git = "https://github.com/zkat/big-brain", branch = "main" }

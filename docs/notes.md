@@ -9,9 +9,11 @@
     - [x] 2. "Basic Fight": Spawns the fight that is currently defined in `main.rs`.
       - [ ] More fights will be added to this later, so selecting a fight to spawn should execute the "Despawn Fight" logic first. -> it should be factored out
     - [ ] Buttons should use the full width of the window, and a larger font, and be horizontally centered.
-    - [ ] Debugging, should not cause problems when an ongoing_cast exists. Probably despawning needs to be done correctly? this is nontrivial oO
-      - [ ] Maybe just make OngoingCast a component on a slot? support for multiple casts per slot could come later
+    - [ ] Fight selection window (and egui inspector window) should be movable
+    - [x] Debugging, should not cause problems when an ongoing_cast exists. Probably despawning needs to be done correctly? this is nontrivial oO
+      - [x] Maybe just make OngoingCast a component on a slot? support for multiple casts per slot could come later
       - [ ] Alternative: Need to use Holds/Held, or even better, HoldsOne/HeldOne, etc., maybe even HoldsN/HeldN
+        - For now: Just as a component on an AbilitySlot entity
 
 - [ ] Refactor abilility usage system. maybe use generic system + system chaining?
 

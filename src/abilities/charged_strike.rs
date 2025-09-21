@@ -77,12 +77,13 @@ fn cast_ability(
             "Casting ability: {THIS_ABILITY_ID:?} | Fight: {fight_e:?} | Caster: {caster_e:?} | Slot: {slot_e:?} [{slot:?}] | Target: {target_e:?}"
         );
 
-        let ongoing_cast_e = ability_casting_interface.start_cast(OngoingCast {
-            slot_e: *slot_e,
-            fight_e: *fight_e,
-            ability_e: *ability_e,
-            cast_timer: Timer::new(CAST_TIME, TimerMode::Once),
-        });
+        let ongoing_cast_e = ability_casting_interface.start_cast(
+            *slot_e,
+            OngoingCast {
+                ability_e: *ability_e,
+                cast_timer: Timer::new(CAST_TIME, TimerMode::Once),
+            },
+        );
 
         // start cooldown on the ability
         commands
@@ -104,9 +105,11 @@ fn cast_ability(
             )
             .observe(
                 // for debugging atm.
-                move |trigger: Trigger<OngoingCastAborted>, mut commands: Commands| {
+                move |_trigger: Trigger<OngoingCastAborted>, mut _commands: Commands| {
                     println!("Charged Strike aborted!");
-                    commands.entity(trigger.target()).log_components();
+
+                    // doesn't work, triggers panic
+                    // commands.entity(trigger.target()).log_components();
                 },
             );
 
