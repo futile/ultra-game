@@ -7,7 +7,7 @@
   - [x] Should have two buttons for now, vertically below each other:
     - [x] 1. "Despawn Fight": Takes the single current `Fight`-entity, uses despawn_recursive() on `player` and `enemy` and on the fight itself.
     - [x] 2. "Basic Fight": Spawns the fight that is currently defined in `main.rs`.
-      - [ ] More fights will be added to this later, so selecting a fight to spawn should execute the "Despawn Fight" logic first. -> it should be factored out
+      - [x] More fights will be added to this later, so selecting a fight to spawn should execute the "Despawn Fight" logic first. -> it should be factored out
     - [-] Buttons should use the full width of the window, and a larger font, and be horizontally centered.
       - Sucky situation, not super easy, let it go for now
     - [-] Fight selection window (and egui inspector window) should be movable

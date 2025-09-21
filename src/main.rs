@@ -20,7 +20,7 @@ pub mod utils;
 fn setup(mut commands: Commands) {
     commands.spawn(Camera2d);
 
-    fight_selection_ui::spawn_basic_fight(&mut commands);
+    fight_selection_ui::spawn_basic_fight(commands);
 }
 
 // from https://github.com/bevyengine/bevy/pull/12859

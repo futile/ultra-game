@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use bevy::{prelude::*, window::PrimaryWindow};
+use bevy::{ecs::system::RunSystemOnce, prelude::*, window::PrimaryWindow};
 use bevy_inspector_egui::bevy_egui::{EguiContext, EguiContextPass, egui};
 use big_brain::prelude::*;
 
@@ -26,7 +26,7 @@ impl Plugin for FightSelectionUiPlugin {
 
 /// Despawns the current fight by finding the Fight entity and recursively despawning
 /// its children (player and enemy) and the fight itself.
-pub fn despawn_current_fight(commands: &mut Commands, fights: &Query<Entity, With<Fight>>) {
+pub fn despawn_current_fight(mut commands: Commands, fights: Query<Entity, With<Fight>>) {
     // if no fights exist, just return
     if fights.is_empty() {
         return;
@@ -40,7 +40,7 @@ pub fn despawn_current_fight(commands: &mut Commands, fights: &Query<Entity, Wit
 }
 
 /// Spawns a basic fight
-pub fn spawn_basic_fight(commands: &mut Commands) {
+pub fn spawn_basic_fight(mut commands: Commands) {
     let player_character = commands
         .spawn((
             Health::new(100.0),
@@ -111,70 +111,25 @@ fn render_fight_selection_window(world: &mut World) {
         .show(egui_context.get_mut(), |ui| {
             ui.vertical(|ui| {
                 if ui.button("Despawn Fight").clicked() {
-                    // First collect all the data we need
-                    let fights: Vec<Entity> = world
-                        .query_filtered::<Entity, With<Fight>>()
-                        .iter(world)
-                        .collect();
-                    let mut fights_with_children: Vec<(Entity, Vec<Entity>)> = Vec::new();
-
-                    for fight_e in fights {
-                        let children = if let Some(fight_children) = world.get::<Children>(fight_e)
-                        {
-                            fight_children.to_vec()
-                        } else {
-                            Vec::new()
-                        };
-                        fights_with_children.push((fight_e, children));
-                    }
-
-                    // Now get commands and do the despawning
-                    let mut commands = world.commands();
-
-                    for (fight_e, children) in fights_with_children {
-                        // Despawn all children (player and enemy)
-                        for child_e in children {
-                            commands.entity(child_e).despawn();
-                        }
-
-                        // Despawn the fight entity itself
-                        commands.entity(fight_e).despawn();
-                    }
+                    // despawn fight
+                    world
+                        .run_system_once(despawn_current_fight)
+                        .inspect_err(|e| warn!("could not despawn_current_fight: {e:?}"))
+                        .ok();
                 }
 
                 if ui.button("Basic Fight").clicked() {
-                    // First collect all the data we need for despawning
-                    let fights: Vec<Entity> = world
-                        .query_filtered::<Entity, With<Fight>>()
-                        .iter(world)
-                        .collect();
-                    let mut fights_with_children: Vec<(Entity, Vec<Entity>)> = Vec::new();
-
-                    for fight_e in fights {
-                        let children = if let Some(fight_children) = world.get::<Children>(fight_e)
-                        {
-                            fight_children.to_vec()
-                        } else {
-                            Vec::new()
-                        };
-                        fights_with_children.push((fight_e, children));
-                    }
-
-                    // Now get commands and do the despawning and spawning
-                    let mut commands = world.commands();
-
-                    for (fight_e, children) in fights_with_children {
-                        // Despawn all children (player and enemy)
-                        for child_e in children {
-                            commands.entity(child_e).despawn();
-                        }
-
-                        // Despawn the fight entity itself
-                        commands.entity(fight_e).despawn();
-                    }
+                    // despawn first
+                    world
+                        .run_system_once(despawn_current_fight)
+                        .inspect_err(|e| warn!("could not despawn_current_fight: {e:?}"))
+                        .ok();
 
                     // Then spawn new fight
-                    spawn_basic_fight(&mut commands);
+                    world
+                        .run_system_once(spawn_basic_fight)
+                        .inspect_err(|e| warn!("could spawn_basic_fight: {e:?}"))
+                        .ok();
                 }
             });
         });
