@@ -8,12 +8,13 @@
     - [x] 1. "Despawn Fight": Takes the single current `Fight`-entity, uses despawn_recursive() on `player` and `enemy` and on the fight itself.
     - [x] 2. "Basic Fight": Spawns the fight that is currently defined in `main.rs`.
       - [ ] More fights will be added to this later, so selecting a fight to spawn should execute the "Despawn Fight" logic first. -> it should be factored out
-    - [ ] Buttons should use the full width of the window, and a larger font, and be horizontally centered.
+    - [-] Buttons should use the full width of the window, and a larger font, and be horizontally centered.
+      - Sucky situation, not super easy, let it go for now
     - [-] Fight selection window (and egui inspector window) should be movable
       - Sucky situation, kinda bugged, see comment in `main.rs` re/ World Inspector window
     - [x] Debugging, should not cause problems when an ongoing_cast exists. Probably despawning needs to be done correctly? this is nontrivial oO
       - [x] Maybe just make OngoingCast a component on a slot? support for multiple casts per slot could come later
-      - [ ] Alternative: Need to use Holds/Held, or even better, HoldsOne/HeldOne, etc., maybe even HoldsN/HeldN
+      - [n] Alternative: Need to use Holds/Held, or even better, HoldsOne/HeldOne, etc., maybe even HoldsN/HeldN
         - For now: Just as a component on an AbilitySlot entity
 
 - [ ] Refactor abilility usage system. maybe use generic system + system chaining?
