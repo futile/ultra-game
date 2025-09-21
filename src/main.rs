@@ -56,6 +56,14 @@ fn positioned_world_inspector(world: &mut World) {
 
     let mut egui_context = egui_context.clone();
 
+    // meh, all of these currently don't work, because _something_ resizes the screen_rect to 512
+    // for one frame, which clips this window into that area as well, hiding it behind the fight
+    // window.
+    // let top_right = dbg!(egui_context.get_mut().screen_rect().right_top());
+    // .pivot(egui::Align2::RIGHT_TOP)
+    // .default_pos(dbg!(top_right - egui::Vec2::new(320.0, 0.0)))
+    // .default_pos(egui::Pos2::new(960.0, 0.0))
+
     egui::Window::new("World Inspector")
         .default_size((320.0, 160.0))
         .anchor(egui::Align2::RIGHT_TOP, egui::Vec2::ZERO)

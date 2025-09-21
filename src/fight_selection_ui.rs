@@ -107,7 +107,7 @@ fn render_fight_selection_window(world: &mut World) {
 
     egui::Window::new("Fight Selection")
         .default_size((200.0, 100.0))
-        .anchor(egui::Align2::RIGHT_TOP, egui::Vec2::new(0.0, 180.0))
+        .anchor(egui::Align2::CENTER_TOP, egui::Vec2::new(0.0, 0.0))
         .show(egui_context.get_mut(), |ui| {
             ui.vertical(|ui| {
                 if ui.button("Despawn Fight").clicked() {
