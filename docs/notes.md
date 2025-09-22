@@ -2,7 +2,7 @@
 
 ## Next:
 
-- [ ] Refactor abilility usage system. maybe use generic system + system chaining?
+- [ ] Refactor ability usage system. maybe use generic system + system chaining?
 
 - [ ] Auto-slot choice when only 1 slot fits (for now, maybe later also if other fitting slots on cd, etc.)
 
