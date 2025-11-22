@@ -54,7 +54,12 @@
             # common bevy dependencies
             udev
             alsa-lib
+            # vulkan-loader
+
+            # Cross Platform 3D Graphics API
             vulkan-loader
+            # For debugging around vulkan
+            vulkan-tools
 
             # bevy x11 feature
             xorg.libX11
