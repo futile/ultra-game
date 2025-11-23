@@ -81,7 +81,7 @@ pub struct AttackPlayerAction;
 
 pub fn attack_player_action_system(
     mut actions: Query<(&Actor, &mut ActionState), With<AttackPlayerAction>>,
-    mut game_commands: EventWriter<GameCommand>,
+    mut game_commands: MessageWriter<GameCommand>,
     ability_casting_interface: AbilityCastingInterface,
     ability_holders: Query<&Holds<AbilityId>>,
     slot_holders: Query<&Holds<AbilitySlot>>,

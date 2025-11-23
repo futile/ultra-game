@@ -9,7 +9,7 @@ use crate::{
         ability::{Ability, AbilityId},
         ability_casting::{AbilityCastingInterface, UseAbility},
         ability_slots::{AbilitySlot, AbilitySlotType},
-        commands::{GameCommand, GameCommandKind},
+        commands::{GameCommand, GameCommandFightScoped, GameCommandKind},
         cooldown::Cooldown,
         damage_resolution::{DamageInstance, DealDamage},
         faction::Faction,
@@ -34,8 +34,8 @@ fn add_to_ability_catalog(mut abilties_catalog: ResMut<AbilityCatalog>) {
 }
 
 fn cast_ability(
-    mut game_commands: EventReader<GameCommand>,
-    mut deal_damage_events: EventWriter<DealDamage>,
+    mut game_commands: MessageReader<GameCommand>,
+    mut deal_damage_events: MessageWriter<DealDamage>,
     ability_slots: Query<&AbilitySlot>,
     factions: Query<(Entity, &Faction)>,
     // ability_catalog: Res<AbilityCatalog>,
@@ -99,7 +99,10 @@ fn cast_ability(
         }));
 
         // fire an event for the executed `GameCommand`
-        commands.trigger_targets(cmd.clone(), *fight_e);
+        commands.trigger(GameCommandFightScoped {
+            fight_e: *fight_e,
+            command: cmd.clone(),
+        });
     }
 }
 

@@ -54,15 +54,13 @@ pub fn render_fight_windows(
         let (mut egui_contexts, fight_windows) = params.get_mut(world);
 
         // context for the primary (so far, only) window
-        let ui_ctx = match egui_contexts.try_ctx_mut() {
-            None => {
-                // prevent/avoid a panic when bevy exits.
-                // another workaround can be found in https://github.com/mvlabat/bevy_egui/issues/212
+        // context for the primary (so far, only) window
+        let ui_ctx = match egui_contexts.ctx_mut() {
+            Ok(ctx) => ctx.clone(),
+            Err(_) => {
                 warn!("No egui context, skipping rendering.");
                 return;
             }
-            // have to make sure not to borrow world. cloning `Context` is cheap.
-            Some(ui_ctx) => ui_ctx.clone(),
         };
 
         // need this owned/non-borrowed as well, so we can still use `world`
@@ -567,7 +565,7 @@ fn ui_abilities(
                             // );
 
                             // show the tooltip next to the button, i.e., to the right-side of it.
-                            egui::containers::popup::show_tooltip_at(
+                            egui::show_tooltip_at(
                                 ui.ctx(),
                                 ui.layer_id(),
                                 Id::new("AbilityTooltip").with(idx),
@@ -659,22 +657,23 @@ fn ui_effects(
                     component_info.name()
                 );
 
-                let short_name = component_info
-                    .name()
+                let name = component_info.name();
+                let name_str = format!("{}", name);
+                let short_name = name_str
                     .rsplit_once(':')
                     .map(|(_prefix, shortname)| shortname)
-                    .unwrap_or(component_info.name());
+                    .unwrap_or(&name_str);
 
                 let label = ui.label(format!("[UNKNOWN] {short_name}"));
 
                 if label.contains_pointer() {
-                    egui::containers::popup::show_tooltip_at(
+                    egui::show_tooltip_at(
                         ui.ctx(),
                         ui.layer_id(),
                         Id::new("UnknownEffectTooltip").with(comp_as_reflect as *const _),
                         label.rect.right_top(),
                         |ui| {
-                            ui.label(component_info.name());
+                            ui.label(&name_str);
                         },
                     );
                 }

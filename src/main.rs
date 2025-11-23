@@ -3,7 +3,7 @@
 use abilities::AbilitiesPlugin;
 use bevy::{prelude::*, window::PrimaryWindow};
 use bevy_inspector_egui::{
-    bevy_egui::{EguiContext, EguiContextPass, EguiPlugin, egui},
+    bevy_egui::{EguiContext, EguiPlugin, EguiPrimaryContextPass, PrimaryEguiContext, egui},
     bevy_inspector,
 };
 use big_brain::BigBrainPlugin;
@@ -47,7 +47,7 @@ fn close_on_esc(
 /// for where the code was derived from.
 fn positioned_world_inspector(world: &mut World) {
     let egui_context = world
-        .query_filtered::<&mut EguiContext, With<PrimaryWindow>>()
+        .query_filtered::<&mut EguiContext, With<PrimaryEguiContext>>()
         .single(world);
 
     let Ok(egui_context) = egui_context else {
@@ -106,9 +106,7 @@ fn main() {
         //     });
         // })
         .add_plugins(DefaultPlugins)
-        .add_plugins(EguiPlugin {
-            enable_multipass_for_primary_context: true,
-        })
+        .add_plugins(EguiPlugin::default())
         .add_plugins(BigBrainPlugin::new(PreUpdate))
         .configure_sets(
             FixedUpdate,
@@ -128,6 +126,6 @@ fn main() {
         .add_plugins(FightUiPlugin)
         .add_systems(Startup, setup)
         .add_systems(Update, close_on_esc)
-        .add_systems(EguiContextPass, positioned_world_inspector)
+        .add_systems(EguiPrimaryContextPass, positioned_world_inspector)
         .run();
 }

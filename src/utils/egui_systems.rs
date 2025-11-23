@@ -77,7 +77,7 @@ where
     };
 
     // run the system
-    let result = system.run(input, world);
+    let result = system.run(input, world).unwrap();
 
     // apply any pending changes
     system.apply_deferred(world);

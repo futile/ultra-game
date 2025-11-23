@@ -49,7 +49,7 @@ fn tick_cooldowns(
             continue;
         }
 
-        if cooldown.cooldown_timer.finished() {
+        if cooldown.cooldown_timer.is_finished() {
             warn!(
                 "finished Cooldown exists on entity '{e}', but should already be removed. removing it now."
             );
@@ -57,7 +57,7 @@ fn tick_cooldowns(
 
         cooldown.cooldown_timer.tick(delta);
 
-        if cooldown.cooldown_timer.finished() {
+        if cooldown.cooldown_timer.is_finished() {
             commands.entity(e).remove::<Cooldown>();
         }
     }

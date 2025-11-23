@@ -10,11 +10,11 @@ pub struct DamageInstance {
     pub amount: f64,
 }
 
-#[derive(Debug, Event)]
+#[derive(Event, Message, Debug, Clone)]
 pub struct DealDamage(pub DamageInstance);
 
 fn damage_resolution_system(
-    mut deal_damage_events: EventReader<DealDamage>,
+    mut deal_damage_events: MessageReader<DealDamage>,
     mut health_interface: HealthInterface,
 ) {
     for deal_damage_event in deal_damage_events.read() {
@@ -32,7 +32,7 @@ pub struct DamageResolutionPlugin;
 impl Plugin for DamageResolutionPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<DamageInstance>()
-            .add_event::<DealDamage>()
+            .add_message::<DealDamage>()
             .add_systems(
                 Update,
                 damage_resolution_system.in_set(PerUpdateSet::DamageResolution),

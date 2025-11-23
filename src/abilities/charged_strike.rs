@@ -9,7 +9,7 @@ use crate::{
         ability::{Ability, AbilityId},
         ability_casting::{AbilityCastingInterface, UseAbility},
         ability_slots::{AbilitySlot, AbilitySlotType},
-        commands::{GameCommand, GameCommandKind},
+        commands::{GameCommand, GameCommandFightScoped, GameCommandKind},
         cooldown::Cooldown,
         damage_resolution::{DamageInstance, DealDamage},
         faction::Faction,
@@ -35,7 +35,7 @@ fn add_to_ability_catalog(mut abilties_catalog: ResMut<AbilityCatalog>) {
 }
 
 fn cast_ability(
-    mut game_commands: EventReader<GameCommand>,
+    mut game_commands: MessageReader<GameCommand>,
     ability_slots: Query<&AbilitySlot>,
     factions: Query<(Entity, &Faction)>,
     mut ability_casting_interface: AbilityCastingInterface,
@@ -94,8 +94,8 @@ fn cast_ability(
         commands
             .entity(ongoing_cast_e)
             .observe(
-                move |_trigger: Trigger<OngoingCastFinishedSuccessfully>,
-                      mut deal_damage_events: EventWriter<DealDamage>| {
+                move |_trigger: On<OngoingCastFinishedSuccessfully>,
+                      mut deal_damage_events: MessageWriter<DealDamage>| {
                     deal_damage_events.write(DealDamage(DamageInstance {
                         source: Some(caster_e),
                         target: target_e,
@@ -105,16 +105,19 @@ fn cast_ability(
             )
             .observe(
                 // for debugging atm.
-                move |_trigger: Trigger<OngoingCastAborted>, mut _commands: Commands| {
+                move |_trigger: On<OngoingCastAborted>, mut _commands: Commands| {
                     println!("Charged Strike aborted!");
 
                     // doesn't work, triggers panic
-                    // commands.entity(trigger.target()).log_components();
+                    // commands.entity(trigger.entity()).log_components();
                 },
             );
 
         // fire an event for the executed `GameCommand`
-        commands.trigger_targets(cmd.clone(), *fight_e);
+        commands.trigger(GameCommandFightScoped {
+            fight_e: *fight_e,
+            command: cmd.clone(),
+        });
     }
 }
 

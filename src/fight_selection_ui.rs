@@ -1,7 +1,9 @@
 use std::time::Duration;
 
 use bevy::{ecs::system::RunSystemOnce, prelude::*, window::PrimaryWindow};
-use bevy_inspector_egui::bevy_egui::{EguiContext, EguiContextPass, egui};
+use bevy_inspector_egui::bevy_egui::{
+    EguiContext, EguiPrimaryContextPass, PrimaryEguiContext, egui,
+};
 use big_brain::prelude::*;
 
 use crate::{
@@ -20,7 +22,7 @@ pub struct FightSelectionUiPlugin;
 
 impl Plugin for FightSelectionUiPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(EguiContextPass, render_fight_selection_window);
+        app.add_systems(EguiPrimaryContextPass, render_fight_selection_window);
     }
 }
 
@@ -96,7 +98,7 @@ pub fn spawn_basic_fight(mut commands: Commands) {
 /// Renders the fight selection window positioned below the World Inspector
 fn render_fight_selection_window(world: &mut World) {
     let egui_context = world
-        .query_filtered::<&mut EguiContext, With<PrimaryWindow>>()
+        .query_filtered::<&mut EguiContext, With<PrimaryEguiContext>>()
         .single(world);
 
     let Ok(egui_context) = egui_context else {

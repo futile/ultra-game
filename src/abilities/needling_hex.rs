@@ -9,7 +9,7 @@ use crate::{
         ability::{Ability, AbilityId},
         ability_casting::{AbilityCastingInterface, UseAbility},
         ability_slots::{AbilitySlot, AbilitySlotType},
-        commands::{GameCommand, GameCommandKind},
+        commands::{GameCommand, GameCommandFightScoped, GameCommandKind},
         cooldown::Cooldown,
         damage_resolution::{DamageInstance, DealDamage},
         effects::{GameEffect, ReflectGameEffect, UniqueEffectInterface},
@@ -56,7 +56,7 @@ impl NeedlingHexEffect {
 }
 
 fn cast_ability(
-    mut game_commands: EventReader<GameCommand>,
+    mut game_commands: MessageReader<GameCommand>,
     ability_slots: Query<&AbilitySlot>,
     factions: Query<(Entity, &Faction)>,
     mut ability_casting_interface: AbilityCastingInterface,
@@ -110,14 +110,17 @@ fn cast_ability(
         effects_interface.spawn_or_replace_unique_effect(target_e, NeedlingHexEffect::new());
 
         // fire an event for the executed `GameCommand`
-        commands.trigger_targets(cmd.clone(), *fight_e);
+        commands.trigger(GameCommandFightScoped {
+            fight_e: *fight_e,
+            command: cmd.clone(),
+        });
     }
 }
 
 fn tick_needling_hex_effects(
     mut effects: Query<(Entity, &mut NeedlingHexEffect)>,
     mut effects_interface: UniqueEffectInterface<NeedlingHexEffect>,
-    mut deal_damage_events: EventWriter<DealDamage>,
+    mut deal_damage_events: MessageWriter<DealDamage>,
     fight_interface: FightInterface,
     time: Res<Time>,
 ) {

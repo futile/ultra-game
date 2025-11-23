@@ -1,5 +1,5 @@
 use bevy::{
-    ecs::{component::HookContext, system::SystemParam, world::DeferredWorld},
+    ecs::{lifecycle::HookContext, system::SystemParam, world::DeferredWorld},
     prelude::*,
 };
 
@@ -11,17 +11,22 @@ use crate::{PerUpdateSet, game_logic::ability_slots::AbilitySlot, utils::holds_h
 //   need during development.
 // * When multiple `OngoingCast`s per Slot should be supported, add a Relationship here
 #[derive(Debug, Component, Reflect)]
-#[component(on_replace = on_replace_ongoing_cast)]
 pub struct OngoingCast {
     pub ability_e: Entity,
     pub cast_timer: Timer,
 }
 
-#[derive(Debug, Reflect, Event)]
-pub struct OngoingCastFinishedSuccessfully;
+#[derive(Debug, Reflect, EntityEvent)]
+pub struct OngoingCastFinishedSuccessfully {
+    #[event_target]
+    pub target: Entity,
+}
 
-#[derive(Debug, Reflect, Event)]
-pub struct OngoingCastAborted;
+#[derive(Debug, Reflect, EntityEvent)]
+pub struct OngoingCastAborted {
+    #[event_target]
+    pub target: Entity,
+}
 
 #[derive(SystemParam)]
 pub struct OngoingCastInterface<'w, 's> {
@@ -58,28 +63,31 @@ fn tick_ongoing_casts(
             continue;
         }
 
-        assert!(!ongoing_cast.cast_timer.finished());
+        assert!(!ongoing_cast.cast_timer.is_finished());
 
         ongoing_cast.cast_timer.tick(time.delta());
 
         if ongoing_cast.cast_timer.just_finished() {
-            commands.trigger_targets(OngoingCastFinishedSuccessfully, slot_e);
+            commands.trigger(OngoingCastFinishedSuccessfully { target: slot_e });
             commands.entity(slot_e).remove::<OngoingCast>();
         }
     }
 }
 
 fn on_replace_ongoing_cast(mut world: DeferredWorld, hook_context: HookContext) {
-    let ongoing_cast = world.get::<OngoingCast>(hook_context.entity).unwrap();
+    let ongoing_cast_e = hook_context.entity;
+    let ongoing_cast = world.get::<OngoingCast>(ongoing_cast_e).unwrap();
 
-    if !ongoing_cast.cast_timer.finished() {
+    if !ongoing_cast.cast_timer.is_finished() {
         // maybe fire an event or sth. -- need to make sure the `OngoingCast` isn't despawned
         // while the event is still being handled..
         // -> does indeed remove the `OngoingCast` before the event is being handled.
         // TODO: maybe consumers should also listen for `OnReplaced<OngoingCast>`, instead of this
         // event? and then have a method like `OngoingCast::finished_successfully()`, that will
         // return `false` (or `Aborted` etc.) in this case.
-        world.trigger_targets(OngoingCastAborted, hook_context.entity);
+        world.trigger(OngoingCastAborted {
+            target: ongoing_cast_e,
+        });
     }
 }
 
@@ -92,5 +100,9 @@ impl Plugin for OngoingCastPlugin {
             FixedUpdate,
             tick_ongoing_casts.in_set(PerUpdateSet::LogicUpdate),
         );
+
+        app.world_mut()
+            .register_component_hooks::<OngoingCast>()
+            .on_replace(on_replace_ongoing_cast);
     }
 }

@@ -1,5 +1,5 @@
 use bevy::{ecs::entity::EntityHashSet, prelude::*};
-use bevy_inspector_egui::bevy_egui::EguiContextPass;
+use bevy_inspector_egui::bevy_egui::EguiPrimaryContextPass;
 use render_effects::RenderEffectsPlugin;
 use render_fight_window::{FightWindowUiState, render_fight_windows};
 
@@ -16,7 +16,7 @@ impl Plugin for FightUiPlugin {
             //
             .add_plugins(RenderEffectsPlugin)
             .add_systems(
-                EguiContextPass,
+                EguiPrimaryContextPass,
                 (sync_fight_windows_to_fights, render_fight_windows)
                     .chain()
                     .in_set(PerUpdateSet::CommandSubmission),

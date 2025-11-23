@@ -28,7 +28,7 @@ impl RenderGameEffectImmediate for NeedlingHexEffect {
         ));
 
         if label.contains_pointer() {
-            egui::containers::popup::show_tooltip_at(
+            egui::show_tooltip_at(
                 ui.ctx(),
                 ui.layer_id(),
                 Id::new("EffectTooltip").with(self as *const _),

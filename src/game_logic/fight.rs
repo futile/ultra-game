@@ -3,7 +3,7 @@ use std::time::Duration;
 use bevy::{ecs::system::SystemParam, platform::collections::HashSet, prelude::*, time::Stopwatch};
 
 use super::{
-    commands::{GameCommand, GameCommandSource},
+    commands::{GameCommandFightScoped, GameCommandSource},
     faction::Faction,
     health::{Health, LivenessChangeEvent},
 };
@@ -130,7 +130,7 @@ impl<'w, 's> FightInterface<'w, 's> {
 
 fn single_faction_survives_check(
     mut commands: Commands,
-    mut liveness_events: EventReader<LivenessChangeEvent>,
+    mut liveness_events: MessageReader<LivenessChangeEvent>,
     fight_end_conditions: Query<&FightEndCondition, (With<Fight>, Without<FightResult>)>,
     parents: Query<&ChildOf>,
     childrens: Query<&Children>,
@@ -195,21 +195,21 @@ fn pause_just_ended_fights(
 }
 
 fn unpause_fight_on_user_command(
-    trigger: Trigger<GameCommand>,
+    trigger: On<GameCommandFightScoped>,
     mut fight_times: Query<&mut FightTime>,
 ) {
-    if trigger.event().source == GameCommandSource::UserInteraction {
+    if trigger.event().command.source == GameCommandSource::UserInteraction {
         fight_times
-            .get_mut(trigger.target())
+            .get_mut(trigger.event().fight_e)
             .unwrap()
             .stop_watch
             .unpause();
     }
 }
 
-fn on_add_fight(trigger: Trigger<OnAdd, Fight>, mut commands: Commands) {
+fn on_add_fight(trigger: On<Add, Fight>, mut commands: Commands) {
     commands
-        .entity(trigger.target())
+        .entity(trigger.entity)
         .observe(unpause_fight_on_user_command);
 }
 

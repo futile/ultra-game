@@ -107,11 +107,11 @@ impl<'w, 's> AbilityCastingInterface<'w, 's> {
 
 /// Observer that applies slot cooldowns when ongoing casts finish successfully
 fn apply_slot_cooldown_on_cast_finish(
-    trigger: Trigger<OngoingCastFinishedSuccessfully>,
+    trigger: On<OngoingCastFinishedSuccessfully>,
     ability_slots: Query<&AbilitySlot>,
     mut commands: Commands,
 ) {
-    let slot_e = trigger.target();
+    let slot_e = trigger.target;
 
     // Apply slot-defined cooldown if present
     if let Ok(slot) = ability_slots.get(slot_e)

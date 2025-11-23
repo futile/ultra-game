@@ -3,7 +3,14 @@ use derive_more::From;
 
 use crate::game_logic::ability_casting::UseAbility;
 
-#[derive(Debug, Clone, Event)]
+#[derive(Debug, Clone, EntityEvent)]
+pub struct GameCommandFightScoped {
+    #[event_target]
+    pub fight_e: Entity,
+    pub command: GameCommand,
+}
+
+#[derive(Event, Message, Debug, Clone)]
 pub struct GameCommand {
     pub source: GameCommandSource,
     pub kind: GameCommandKind,
@@ -34,6 +41,6 @@ pub struct CommandsPlugin;
 
 impl Plugin for CommandsPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<GameCommand>();
+        app.add_message::<GameCommand>();
     }
 }

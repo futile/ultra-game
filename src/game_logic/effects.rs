@@ -127,12 +127,12 @@ impl Plugin for EffectsPlugin {
 }
 
 fn on_add_has_effects(
-    trigger: Trigger<OnAdd, HasEffects>,
+    trigger: On<Add, HasEffects>,
     has_effects: Query<&HasEffects>,
     effects_holder: Query<Entity, With<EffectsHolder>>,
     mut commands: Commands,
 ) {
-    let holding_entity = trigger.target();
+    let holding_entity = trigger.entity;
     let holder = has_effects.get(holding_entity).unwrap().holder;
 
     // assert that the holder doesn't have `EffectsHolder` yet
@@ -144,11 +144,11 @@ fn on_add_has_effects(
 }
 
 fn on_remove_has_effects(
-    trigger: Trigger<OnRemove, HasEffects>,
+    trigger: On<Remove, HasEffects>,
     has_effects: Query<&HasEffects>,
     mut commands: Commands,
 ) {
-    let holder = has_effects.get(trigger.target()).unwrap().holder;
+    let holder = has_effects.get(trigger.entity).unwrap().holder;
 
     commands.entity(holder).despawn();
 }
