@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use bevy::{ecs::system::RunSystemOnce, prelude::*, window::PrimaryWindow};
+use bevy::{ecs::system::RunSystemOnce, prelude::*};
 use bevy_inspector_egui::bevy_egui::{
     EguiContext, EguiPrimaryContextPass, PrimaryEguiContext, egui,
 };

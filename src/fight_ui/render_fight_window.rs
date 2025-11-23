@@ -482,7 +482,7 @@ fn ui_abilities(
         Query<&Cooldown>,
         AbilityInterface,
         AbilityCastingInterface,
-        EventWriter<GameCommand>,
+        MessageWriter<GameCommand>,
     )>,
 ) -> (Ui, FightColumnUiState) {
     {
@@ -565,13 +565,13 @@ fn ui_abilities(
                             // );
 
                             // show the tooltip next to the button, i.e., to the right-side of it.
-                            egui::show_tooltip_at(
-                                ui.ctx(),
+                            egui::Tooltip::always_open(
+                                ui.ctx().clone(),
                                 ui.layer_id(),
                                 Id::new("AbilityTooltip").with(idx),
                                 ability_button.rect.right_top(),
-                                tooltip_for_ability(ability.clone()),
-                            );
+                            )
+                            .show(tooltip_for_ability(ability.clone()));
                         }
 
                         if let Some(valid_cast) = valid_cast
@@ -667,15 +667,15 @@ fn ui_effects(
                 let label = ui.label(format!("[UNKNOWN] {short_name}"));
 
                 if label.contains_pointer() {
-                    egui::show_tooltip_at(
-                        ui.ctx(),
+                    egui::Tooltip::always_open(
+                        ui.ctx().clone(),
                         ui.layer_id(),
                         Id::new("UnknownEffectTooltip").with(comp_as_reflect as *const _),
                         label.rect.right_top(),
-                        |ui| {
-                            ui.label(&name_str);
-                        },
-                    );
+                    )
+                    .show(|ui| {
+                        ui.label(&name_str);
+                    });
                 }
 
                 continue;

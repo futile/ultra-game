@@ -28,17 +28,17 @@ impl RenderGameEffectImmediate for NeedlingHexEffect {
         ));
 
         if label.contains_pointer() {
-            egui::show_tooltip_at(
-                ui.ctx(),
+            egui::Tooltip::always_open(
+                ui.ctx().clone(),
                 ui.layer_id(),
                 Id::new("EffectTooltip").with(self as *const _),
                 label.rect.right_top(),
-                |ui| {
-                    ui.label("A maddening hex that causes you to repeatedly take damage.");
-                    ui.label("");
-                    ui.label(&*DMG_DESCRIPTION);
-                },
-            );
+            )
+            .show(|ui| {
+                ui.label("A maddening hex that causes you to repeatedly take damage.");
+                ui.label("");
+                ui.label(&*DMG_DESCRIPTION);
+            });
         }
     }
 }

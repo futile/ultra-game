@@ -1,7 +1,7 @@
 #![feature(duration_constructors)]
 
 use abilities::AbilitiesPlugin;
-use bevy::{prelude::*, window::PrimaryWindow};
+use bevy::prelude::*;
 use bevy_inspector_egui::{
     bevy_egui::{EguiContext, EguiPlugin, EguiPrimaryContextPass, PrimaryEguiContext, egui},
     bevy_inspector,
