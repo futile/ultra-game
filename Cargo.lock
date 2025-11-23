@@ -1493,7 +1493,7 @@ dependencies = [
 [[package]]
 name = "big-brain"
 version = "0.23.0"
-source = "git+https://github.com/zkat/big-brain?branch=main#7d3911c15078db332b97a91886de02d8c9bdd9b4"
+source = "git+https://codeberg.org/zkat/big-brain.git?rev=7d3911c15078db332b97a91886de02d8c9bdd9b4#7d3911c15078db332b97a91886de02d8c9bdd9b4"
 dependencies = [
  "bevy",
  "big-brain-derive",
@@ -1502,7 +1502,7 @@ dependencies = [
 [[package]]
 name = "big-brain-derive"
 version = "0.23.0"
-source = "git+https://github.com/zkat/big-brain?branch=main#7d3911c15078db332b97a91886de02d8c9bdd9b4"
+source = "git+https://codeberg.org/zkat/big-brain.git?rev=7d3911c15078db332b97a91886de02d8c9bdd9b4#7d3911c15078db332b97a91886de02d8c9bdd9b4"
 dependencies = [
  "proc-macro2",
  "quote",

@@ -20,11 +20,17 @@ opt-level = 3
 
 [dependencies]
 ahash = "0.8.12"
-bevy = { version = "0.16.1", features = ["wayland", "dynamic_linking", "track_location"] }
+bevy = { version = "0.16.1", features = [
+    "wayland",
+    "dynamic_linking",
+    "track_location",
+] }
 bevy-inspector-egui = "0.31.0"
 # latest version on crates.io, 0.22.0, only supports bevy 0.15. `main` supports 0.16.
-big-brain = { git = "https://github.com/zkat/big-brain", branch = "main" }
-derive_more = { version = "2.0.1", features = ["full"] } # TODO: can probably slim down the feature set. but didn't bother for now.
+big-brain = { git = "https://codeberg.org/zkat/big-brain.git", rev = "7d3911c15078db332b97a91886de02d8c9bdd9b4" }
+derive_more = { version = "2.0.1", features = [
+    "full",
+] } # TODO: can probably slim down the feature set. but didn't bother for now.
 itertools = "0.14.0"
 
 # fix https://github.com/futile/ultra-game/security/dependabot/6
