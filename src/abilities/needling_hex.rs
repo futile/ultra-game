@@ -13,10 +13,9 @@ use crate::{
         ability_slots::AbilitySlotType,
         damage_resolution::{DamageInstance, DealDamage},
         effects::{GameEffect, ReflectGameEffect, UniqueEffectInterface},
-        faction::Faction,
         fight::FightInterface,
     },
-    utils::{FiniteRepeatingTimer, holds_held::Held},
+    utils::FiniteRepeatingTimer,
 };
 
 const THIS_ABILITY_ID: AbilityId = AbilityId::NeedlingHex;
@@ -66,13 +65,16 @@ impl NeedlingHexEffect {
 fn on_needling_hex(
     trigger: On<PerformAbility>,
     mut effects_interface: UniqueEffectInterface<NeedlingHexEffect>,
-    abilities: Query<&Held<Ability>>,
+    // abilities: Query<&Held<Ability>>, // Will only need this when we need to track down the
+    // caster.
 ) {
     let event = trigger.event();
-    let ability_e = trigger.target;
 
     // Needling Hex needs a target.
+    // TODO: Should probably be a panic, or an Error, to not drop this silently? Maybe an
+    // `error!()`?
     let Some(target_e) = event.target else {
+        error!("Needling Hex without target - ignoring. Event: {event:?}");
         return;
     };
 

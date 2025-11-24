@@ -115,6 +115,7 @@ impl<'w, 's> AbilityCastingInterface<'w, 's> {
 /// Spawns a CastRequest entity for each UseAbility command
 fn request_ability_cast(mut commands: Commands, mut game_commands: MessageReader<GameCommand>) {
     for command in game_commands.read() {
+        #[expect(irrefutable_let_patterns, reason = "We only have UseAbility currently")]
         if let GameCommandKind::UseAbility(use_ability) = &command.kind {
             commands.spawn(use_ability.clone());
         }
@@ -136,34 +137,13 @@ fn check_ability_cooldowns(
     }
 }
 
-/// Checks if the slot is on cooldown
-fn check_slot_cooldowns(
-    cast_requests: Query<(Entity, &UseAbility), Without<CastFailed<AbilityCooldown>>>, /* Optimization: skip if already failed? */
-    has_cooldown: Query<Has<Cooldown>>,
-    mut commands: Commands,
-) {
-    for (req_e, use_ability) in cast_requests.iter() {
-        if has_cooldown.get(use_ability.slot_e).unwrap_or(false) {
-            commands
-                .entity(req_e)
-                .insert(CastFailed::<AbilityCooldown>::default()); // Reuse AbilityCooldown or create SlotCooldown?
-            // Plan said CastFailed<SlotCooldown>. I need to define SlotCooldown or use
-            // AbilityCooldown as generic? Let's define SlotCooldown struct locally or
-            // in ability.rs? For now, I'll use AbilityCooldown as a placeholder or
-            // define a local struct. Actually, I should define `SlotCooldown` in
-            // ability_slots.rs or ability.rs. Let's assume I can define it here for now
-            // or use a marker.
-        }
-    }
-}
-
-// Wait, I need to define the error types.
 #[derive(Debug, Clone, Reflect)]
 pub struct SlotCooldown;
 
 #[derive(Debug, Clone, Reflect)]
 pub struct SlotRequirement;
 
+/// Checks if the slot is on cooldown
 fn check_slot_cooldowns_real(
     cast_requests: Query<(Entity, &UseAbility), Without<CastFailed<SlotCooldown>>>,
     has_cooldown: Query<Has<Cooldown>>,
@@ -186,12 +166,11 @@ fn check_slot_requirements(
 ) {
     for (req_e, use_ability) in cast_requests.iter() {
         let Ok(requirement) = abilities.get(use_ability.ability_e) else {
-            // If no requirement, it matches any slot? Or maybe it's invalid?
-            // Assume no requirement means any slot or no slot needed?
-            // Existing logic: `self.slot_type == selected_slot_type`.
-            // If `slot_type` is None, it matches `None`?
-            // But `AbilitySlot` always has a type.
-            // Let's assume abilities MUST have a requirement if they use a slot.
+            // TODO: Can we enforce this at compile time somehow?
+            error!(
+                "Ability {} has no slot requirement but uses a slot. UseAbility: {use_ability:?}",
+                use_ability.ability_e
+            );
             continue;
         };
 
@@ -280,6 +259,16 @@ fn apply_slot_cooldown_on_cast_finish(
             .entity(slot_e)
             .insert(Cooldown::new(cooldown_duration));
     }
+}
+
+/// Observer that triggers PerformAbility when OngoingCast finishes
+fn trigger_perform_ability(trigger: On<OngoingCastFinishedSuccessfully>, mut commands: Commands) {
+    let event = trigger.event();
+    commands.trigger(PerformAbility {
+        ability_entity: event.ability_entity,
+        target: event.cast_target,
+        slot: event.slot_entity,
+    });
 }
 
 #[derive(Debug)]

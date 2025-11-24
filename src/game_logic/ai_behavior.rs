@@ -64,14 +64,11 @@ pub fn can_attack_player_scorer_system(
             continue;
         };
 
-        let target_e = fight_children
-            .iter()
-            .find(|&&child| {
-                factions
-                    .get(child)
-                    .is_ok_and(|f| *f == crate::game_logic::faction::Faction::Player)
-            })
-            .copied();
+        let target_e = fight_children.iter().find(|child| {
+            factions
+                .get(*child)
+                .is_ok_and(|f| *f == crate::game_logic::faction::Faction::Player)
+        });
 
         let Some(target_e) = target_e else {
             score.set(0.0);
@@ -154,14 +151,11 @@ pub fn attack_player_action_system(
                     continue;
                 };
 
-                let target_e = fight_children
-                    .iter()
-                    .find(|&&child| {
-                        factions
-                            .get(child)
-                            .is_ok_and(|f| *f == crate::game_logic::faction::Faction::Player)
-                    })
-                    .copied();
+                let target_e = fight_children.iter().find(|child| {
+                    factions
+                        .get(*child)
+                        .is_ok_and(|f| *f == crate::game_logic::faction::Faction::Player)
+                });
 
                 let Some(target_e) = target_e else {
                     *action_state = ActionState::Failure;

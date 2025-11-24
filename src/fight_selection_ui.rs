@@ -43,7 +43,6 @@ pub fn despawn_current_fight(mut commands: Commands, fights: Query<Entity, With<
 }
 
 /// Spawns a basic fight
-/// Spawns a basic fight
 pub fn spawn_basic_fight(mut commands: Commands, ability_catalog: Res<AbilityCatalog>) {
     let player_character = commands
         .spawn((

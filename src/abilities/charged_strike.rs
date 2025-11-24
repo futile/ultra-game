@@ -46,7 +46,7 @@ fn on_charged_strike(
     abilities: Query<&Held<Ability>>,
 ) {
     let event = trigger.event();
-    let ability_e = trigger.target;
+    let ability_e = event.ability_entity;
 
     let Ok(held) = abilities.get(ability_e) else {
         warn!("Charged Strike ability not held by anyone?");
