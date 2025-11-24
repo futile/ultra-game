@@ -209,7 +209,12 @@ pub fn render_fight_window(
             Id::new("fight_column")
                 .with(fight_window_e)
                 .with(player_entity),
-            (ui_state.player_column_state.clone(), player_entity, fight_e),
+            (
+                ui_state.player_column_state.clone(),
+                player_entity,
+                enemy_entity,
+                fight_e,
+            ),
             ui_fight_column,
         );
 
@@ -221,7 +226,12 @@ pub fn render_fight_window(
             Id::new("fight_column")
                 .with(fight_window_e)
                 .with(enemy_entity),
-            (ui_state.enemy_column_state.clone(), enemy_entity, fight_e),
+            (
+                ui_state.enemy_column_state.clone(),
+                enemy_entity,
+                player_entity,
+                fight_e,
+            ),
             ui_fight_column,
         );
     });
@@ -272,9 +282,9 @@ impl AbilitySlotsSectionUiState {
 }
 
 fn ui_fight_column(
-    In((mut ui, (mut ui_column_state, model_e, fight_e))): In<(
+    In((mut ui, (mut ui_column_state, model_e, target_e, fight_e))): In<(
         Ui,
-        (FightColumnUiState, Entity, Entity),
+        (FightColumnUiState, Entity, Entity, Entity),
     )>,
     world: &mut World,
     names: &mut QueryState<&Name>,
@@ -324,7 +334,7 @@ fn ui_fight_column(
             &mut ui,
             world,
             Id::new("abilities_section").with(model_e),
-            (model_e, fight_e, ui_column_state.clone()),
+            (model_e, target_e, fight_e, ui_column_state.clone()),
             ui_abilities,
         );
     }
@@ -472,14 +482,15 @@ fn ui_ability_slots(
     reason = "SystemState<..> big but ok, part of the ui-pattern (for now)"
 )]
 fn ui_abilities(
-    In((mut ui, (model_e, fight_e, mut ui_column_state))): In<(
+    In((mut ui, (model_e, target_e, fight_e, mut ui_column_state))): In<(
         Ui,
-        (Entity, Entity, FightColumnUiState),
+        (Entity, Entity, Entity, FightColumnUiState),
     )>,
     world: &mut World,
     params: &mut SystemState<(
         Query<&Holds<AbilityId>>,
         Query<&Cooldown>,
+        Query<&crate::game_logic::ability::AbilitySlotRequirement>,
         AbilityInterface,
         AbilityCastingInterface,
         MessageWriter<GameCommand>,
@@ -490,6 +501,7 @@ fn ui_abilities(
         let (
             holds_ability_ids,
             cooldowns,
+            ability_slot_requirements,
             ability_interface,
             ability_casting_interface,
             mut game_commands,
@@ -509,6 +521,7 @@ fn ui_abilities(
                         caster_e: model_e,
                         slot_e: selected_slot_e,
                         ability_e: ability_id_e,
+                        target: Some(target_e),
                         fight_e,
                     })
                     .filter(|possible_cast| {
@@ -571,7 +584,10 @@ fn ui_abilities(
                                 Id::new("AbilityTooltip").with(idx),
                                 ability_button.rect.right_top(),
                             )
-                            .show(tooltip_for_ability(ability.clone()));
+                            .show(tooltip_for_ability(
+                                ability.clone(),
+                                ability_slot_requirements.get(ability_id_e).ok(),
+                            ));
                         }
 
                         if let Some(valid_cast) = valid_cast
@@ -710,12 +726,15 @@ fn monospace_checked_shortcut(ui: &mut Ui, shortcut: Option<&KeyboardShortcut>) 
     shortcut_pressed
 }
 
-fn tooltip_for_ability(ability: Ability) -> impl FnOnce(&mut Ui) {
+fn tooltip_for_ability(
+    ability: Ability,
+    slot_requirement: Option<&crate::game_logic::ability::AbilitySlotRequirement>,
+) -> impl FnOnce(&mut Ui) {
     move |ui| {
-        if let Some(required_slot_type) = ability.slot_type {
+        if let Some(req) = slot_requirement {
             ui.label(format!(
                 "Required Slot: {}\n", // newline for spacing
-                text_for_slot_type(&required_slot_type)
+                text_for_slot_type(&req.0)
             ));
         }
 

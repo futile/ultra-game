@@ -17,10 +17,10 @@ pub mod fight_ui;
 pub mod game_logic;
 pub mod utils;
 
-fn setup(mut commands: Commands) {
+fn setup(mut commands: Commands, ability_catalog: Res<abilities::AbilityCatalog>) {
     commands.spawn(Camera2d);
 
-    fight_selection_ui::spawn_basic_fight(commands);
+    fight_selection_ui::spawn_basic_fight(commands, ability_catalog);
 }
 
 // from https://github.com/bevyengine/bevy/pull/12859

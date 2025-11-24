@@ -1,18 +1,25 @@
+use std::time::Duration;
+
 use bevy::{ecs::system::SystemParam, prelude::*};
 use derive_more::{Display, Error};
 
 use super::{
-    ability::AbilityId,
+    ability::{
+        AbilityCastTime, AbilityCooldown, AbilityId, AbilitySlotRequirement, CastFailed,
+        PerformAbility,
+    },
     ability_slots::AbilitySlot,
+    commands::{GameCommand, GameCommandKind},
     fight::{FightInterface, FightStatus},
     ongoing_cast::{OngoingCast, OngoingCastFinishedSuccessfully, OngoingCastInterface},
 };
-use crate::{abilities::AbilityInterface, game_logic::cooldown::Cooldown};
+use crate::{PerUpdateSet, abilities::AbilityInterface, game_logic::cooldown::Cooldown};
 
 #[derive(SystemParam)]
 pub struct AbilityCastingInterface<'w, 's> {
     ability_ids: Query<'w, 's, &'static AbilityId>,
     ability_slots: Query<'w, 's, &'static AbilitySlot>,
+    ability_slot_requirements: Query<'w, 's, &'static AbilitySlotRequirement>,
     has_cooldown: Query<'w, 's, Has<Cooldown>>,
     pub ability_interface: AbilityInterface<'w, 's>,
     pub fight_interface: FightInterface<'w, 's>,
@@ -21,11 +28,12 @@ pub struct AbilityCastingInterface<'w, 's> {
 }
 
 /// Represents the usage of an ability
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Component, Reflect)]
 pub struct UseAbility {
     pub caster_e: Entity,
     pub slot_e: Entity,
     pub ability_e: Entity,
+    pub target: Option<Entity>,
     pub fight_e: Entity,
 }
 
@@ -52,10 +60,7 @@ impl<'w, 's> AbilityCastingInterface<'w, 's> {
             }
         };
 
-        let ability = self
-            .ability_interface
-            .get_ability_from_entity(cast.ability_e);
-
+        // Check cooldowns
         if self
             .has_cooldown
             .iter_many([cast.ability_e, cast.slot_e])
@@ -64,10 +69,12 @@ impl<'w, 's> AbilityCastingInterface<'w, 's> {
             return Err(InvalidCastReason::AbilityOrSlotOnCooldown);
         }
 
-        let slot = self.ability_slots.get(cast.slot_e).unwrap();
-
-        if !ability.can_use_slot(slot) {
-            return Err(InvalidCastReason::CantUseSlot);
+        // Check slot requirement
+        if let Ok(requirement) = self.ability_slot_requirements.get(cast.ability_e) {
+            let slot = self.ability_slots.get(cast.slot_e).unwrap();
+            if requirement.0 != slot.tpe {
+                return Err(InvalidCastReason::CantUseSlot);
+            }
         }
 
         Ok(())
@@ -105,13 +112,165 @@ impl<'w, 's> AbilityCastingInterface<'w, 's> {
     }
 }
 
+/// Spawns a CastRequest entity for each UseAbility command
+fn request_ability_cast(mut commands: Commands, mut game_commands: MessageReader<GameCommand>) {
+    for command in game_commands.read() {
+        if let GameCommandKind::UseAbility(use_ability) = &command.kind {
+            commands.spawn(use_ability.clone());
+        }
+    }
+}
+
+/// Checks if the ability is on cooldown
+fn check_ability_cooldowns(
+    cast_requests: Query<(Entity, &UseAbility), Without<CastFailed<AbilityCooldown>>>,
+    has_cooldown: Query<Has<Cooldown>>,
+    mut commands: Commands,
+) {
+    for (req_e, use_ability) in cast_requests.iter() {
+        if has_cooldown.get(use_ability.ability_e).unwrap_or(false) {
+            commands
+                .entity(req_e)
+                .insert(CastFailed::<AbilityCooldown>::default());
+        }
+    }
+}
+
+/// Checks if the slot is on cooldown
+fn check_slot_cooldowns(
+    cast_requests: Query<(Entity, &UseAbility), Without<CastFailed<AbilityCooldown>>>, /* Optimization: skip if already failed? */
+    has_cooldown: Query<Has<Cooldown>>,
+    mut commands: Commands,
+) {
+    for (req_e, use_ability) in cast_requests.iter() {
+        if has_cooldown.get(use_ability.slot_e).unwrap_or(false) {
+            commands
+                .entity(req_e)
+                .insert(CastFailed::<AbilityCooldown>::default()); // Reuse AbilityCooldown or create SlotCooldown?
+            // Plan said CastFailed<SlotCooldown>. I need to define SlotCooldown or use
+            // AbilityCooldown as generic? Let's define SlotCooldown struct locally or
+            // in ability.rs? For now, I'll use AbilityCooldown as a placeholder or
+            // define a local struct. Actually, I should define `SlotCooldown` in
+            // ability_slots.rs or ability.rs. Let's assume I can define it here for now
+            // or use a marker.
+        }
+    }
+}
+
+// Wait, I need to define the error types.
+#[derive(Debug, Clone, Reflect)]
+pub struct SlotCooldown;
+
+#[derive(Debug, Clone, Reflect)]
+pub struct SlotRequirement;
+
+fn check_slot_cooldowns_real(
+    cast_requests: Query<(Entity, &UseAbility), Without<CastFailed<SlotCooldown>>>,
+    has_cooldown: Query<Has<Cooldown>>,
+    mut commands: Commands,
+) {
+    for (req_e, use_ability) in cast_requests.iter() {
+        if has_cooldown.get(use_ability.slot_e).unwrap_or(false) {
+            commands
+                .entity(req_e)
+                .insert(CastFailed::<SlotCooldown>::default());
+        }
+    }
+}
+
+fn check_slot_requirements(
+    cast_requests: Query<(Entity, &UseAbility), Without<CastFailed<SlotRequirement>>>,
+    abilities: Query<&AbilitySlotRequirement>,
+    slots: Query<&AbilitySlot>,
+    mut commands: Commands,
+) {
+    for (req_e, use_ability) in cast_requests.iter() {
+        let Ok(requirement) = abilities.get(use_ability.ability_e) else {
+            // If no requirement, it matches any slot? Or maybe it's invalid?
+            // Assume no requirement means any slot or no slot needed?
+            // Existing logic: `self.slot_type == selected_slot_type`.
+            // If `slot_type` is None, it matches `None`?
+            // But `AbilitySlot` always has a type.
+            // Let's assume abilities MUST have a requirement if they use a slot.
+            continue;
+        };
+
+        let Ok(slot) = slots.get(use_ability.slot_e) else {
+            // Invalid slot entity
+            commands
+                .entity(req_e)
+                .insert(CastFailed::<SlotRequirement>::default());
+            continue;
+        };
+
+        if requirement.0 != slot.tpe {
+            commands
+                .entity(req_e)
+                .insert(CastFailed::<SlotRequirement>::default());
+        }
+    }
+}
+
+fn process_valid_casts(
+    cast_requests: Query<
+        (Entity, &UseAbility),
+        (
+            Without<CastFailed<AbilityCooldown>>,
+            Without<CastFailed<SlotCooldown>>,
+            Without<CastFailed<SlotRequirement>>,
+        ),
+    >,
+    mut ability_casting_interface: AbilityCastingInterface,
+    ability_cast_times: Query<&AbilityCastTime>,
+    mut commands: Commands,
+) {
+    for (req_e, use_ability) in cast_requests.iter() {
+        // Use the slot (interrupts, applies slot on-use cooldown)
+        ability_casting_interface.use_slot(use_ability.slot_e);
+
+        let cast_duration = ability_cast_times
+            .get(use_ability.ability_e)
+            .map(|ct| ct.0)
+            .unwrap_or(Duration::ZERO);
+
+        let ongoing_cast = OngoingCast {
+            ability_e: use_ability.ability_e,
+            target: use_ability.target,
+            cast_timer: Timer::new(cast_duration, TimerMode::Once),
+        };
+
+        // Start the cast (spawns OngoingCast entity attached to slot)
+        ability_casting_interface.start_cast(use_ability.slot_e, ongoing_cast);
+
+        // Despawn the request
+        commands.entity(req_e).despawn();
+    }
+}
+
+fn cleanup_failed_casts(
+    cast_requests: Query<
+        Entity,
+        Or<(
+            With<CastFailed<AbilityCooldown>>,
+            With<CastFailed<SlotCooldown>>,
+            With<CastFailed<SlotRequirement>>,
+        )>,
+    >,
+    mut commands: Commands,
+) {
+    for req_e in cast_requests.iter() {
+        // TODO: Emit UI error events here
+        commands.entity(req_e).despawn();
+    }
+}
+
 /// Observer that applies slot cooldowns when ongoing casts finish successfully
 fn apply_slot_cooldown_on_cast_finish(
     trigger: On<OngoingCastFinishedSuccessfully>,
     ability_slots: Query<&AbilitySlot>,
     mut commands: Commands,
 ) {
-    let slot_e = trigger.target;
+    let slot_e = trigger.event().slot_entity;
 
     // Apply slot-defined cooldown if present
     if let Ok(slot) = ability_slots.get(slot_e)
@@ -128,6 +287,24 @@ pub struct AbilityCastingPlugin;
 
 impl Plugin for AbilityCastingPlugin {
     fn build(&self, app: &mut App) {
-        app.add_observer(apply_slot_cooldown_on_cast_finish);
+        app.add_observer(apply_slot_cooldown_on_cast_finish)
+            .add_observer(trigger_perform_ability)
+            .register_type::<UseAbility>()
+            .register_type::<SlotCooldown>()
+            .register_type::<SlotRequirement>()
+            .add_systems(
+                Update,
+                (
+                    request_ability_cast,
+                    (
+                        check_ability_cooldowns,
+                        check_slot_cooldowns_real,
+                        check_slot_requirements,
+                    ),
+                    (process_valid_casts, cleanup_failed_casts),
+                )
+                    .chain()
+                    .in_set(PerUpdateSet::CommandResolution),
+            );
     }
 }
