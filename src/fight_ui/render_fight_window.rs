@@ -17,7 +17,7 @@ use super::{
 use crate::{
     abilities::AbilityInterface,
     game_logic::{
-        ability::{Ability, AbilityId},
+        ability::Ability,
         ability_casting::{AbilityCastingInterface, UseAbility},
         ability_slots::{AbilitySlot, AbilitySlotType},
         commands::GameCommand,
@@ -290,7 +290,7 @@ fn ui_fight_column(
     names: &mut QueryState<&Name>,
     healths: &mut QueryState<&Health>,
     holds_ability_slots: &mut QueryState<&Holds<AbilitySlot>>,
-    holds_ability_ids: &mut QueryState<&Holds<AbilityId>>,
+    holds_abilities: &mut QueryState<&Holds<Ability>>,
     has_effects: &mut QueryState<&HasEffects>,
 ) -> (Ui, FightColumnUiState) {
     ui.indent(ui.id().with("entity_overview_section"), |ui: &mut Ui| {
@@ -327,7 +327,7 @@ fn ui_fight_column(
         );
     }
 
-    if holds_ability_ids.get(world, model_e).is_ok() {
+    if holds_abilities.get(world, model_e).is_ok() {
         ui.add_space(10.);
 
         ui_column_state = run_ui_system(
@@ -488,7 +488,7 @@ fn ui_abilities(
     )>,
     world: &mut World,
     params: &mut SystemState<(
-        Query<&Holds<AbilityId>>,
+        Query<&Holds<Ability>>,
         Query<&Cooldown>,
         Query<&crate::game_logic::ability::AbilitySlotRequirement>,
         AbilityInterface,
@@ -499,7 +499,7 @@ fn ui_abilities(
     {
         #[rustfmt::skip]
         let (
-            holds_ability_ids,
+            holds_abilities,
             cooldowns,
             ability_slot_requirements,
             ability_interface,
@@ -513,14 +513,14 @@ fn ui_abilities(
         ui.heading("Abilities");
 
         ui.indent(ui.id().with("abilities"), |ui: &mut Ui| {
-            for (idx, ability_id_e) in holds_ability_ids.relationship_sources(model_e).enumerate() {
-                let ability = ability_interface.get_ability_from_entity(ability_id_e);
+            for (idx, ability_e) in holds_abilities.relationship_sources(model_e).enumerate() {
+                let ability = ability_interface.get_ability_from_entity(ability_e);
 
                 let valid_cast = selected_slot_e
                     .map(|selected_slot_e| UseAbility {
                         caster_e: model_e,
                         slot_e: selected_slot_e,
-                        ability_e: ability_id_e,
+                        ability_e,
                         target: Some(target_e),
                         fight_e,
                     })
@@ -548,7 +548,7 @@ fn ui_abilities(
                         let shortcut_pressed =
                             monospace_checked_shortcut(ui, keyboard_shortcut.as_ref());
 
-                        if let Ok(active_cooldown) = cooldowns.get(ability_id_e)
+                        if let Ok(active_cooldown) = cooldowns.get(ability_e)
                             && !active_cooldown.remaining_cooldown().is_zero()
                         {
                             let cooldown_str =
@@ -586,7 +586,7 @@ fn ui_abilities(
                             )
                             .show(tooltip_for_ability(
                                 ability.clone(),
-                                ability_slot_requirements.get(ability_id_e).ok(),
+                                ability_slot_requirements.get(ability_e).ok(),
                             ));
                         }
 
