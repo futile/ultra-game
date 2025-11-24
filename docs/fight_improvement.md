@@ -11,11 +11,17 @@
 
 ### Ability Details
 
+Abilities are now entities with components defining their properties:
+
 | Ability           | Slot Type    | Damage     | Cast Time | Ability Cooldown | Slot Cooldown | Notes                            |
 | ----------------- | ------------ | ---------- | --------- | ---------------- | ------------- | -------------------------------- |
 | **WeaponAttack**  | WeaponAttack | 10.0       | Instant   | 5s               | 1s            | Basic attack                     |
 | **ChargedStrike** | WeaponAttack | 25.0       | 2s cast   | 20s              | 1s            | High damage, long cooldown       |
 | **NeedlingHex**   | Magic        | 25.0 total | Instant   | 30s              | 2s            | DoT: 5.0 dmg × 5 ticks over 2.5s |
+
+- Ability properties are defined via components: `AbilityCooldown`, `AbilityCastTime`, `AbilitySlotRequirement`
+- All abilities go through `OngoingCast` → `PerformAbility` flow (instant abilities have Duration::ZERO cast time)
+- Specific ability logic is implemented as observers responding to `PerformAbility` events
 
 ### Detailed NeedlingHex Mechanics
 
