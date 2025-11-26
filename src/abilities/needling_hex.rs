@@ -65,10 +65,17 @@ impl NeedlingHexEffect {
 fn on_needling_hex(
     trigger: On<PerformAbility>,
     mut effects_interface: UniqueEffectInterface<NeedlingHexEffect>,
-    // abilities: Query<&Held<Ability>>, // Will only need this when we need to track down the
-    // caster.
+    abilities: Query<&AbilityId>,
 ) {
     let event = trigger.event();
+
+    if let Ok(ability_id) = abilities.get(event.ability_entity) {
+        if *ability_id != THIS_ABILITY_ID {
+            return;
+        }
+    } else {
+        return;
+    }
 
     // Needling Hex needs a target.
     // TODO: Should probably be a panic, or an Error, to not drop this silently? Maybe an

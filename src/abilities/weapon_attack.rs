@@ -52,15 +52,20 @@ fn register_ability(catalog: Res<AbilityCatalog>) {
 fn on_weapon_attack(
     trigger: On<PerformAbility>,
     mut deal_damage_events: MessageWriter<DealDamage>,
-    abilities: Query<&Held<Ability>>,
+    abilities: Query<(&Held<Ability>, &AbilityId)>,
 ) {
     let event = trigger.event();
     let ability_e = event.ability_entity;
 
-    let Ok(held) = abilities.get(ability_e) else {
+    let Ok((held, ability_id)) = abilities.get(ability_e) else {
         warn!("Weapon Attack ability not held by anyone?");
         return;
     };
+
+    if *ability_id != THIS_ABILITY_ID {
+        return;
+    }
+
     let caster_e = held.held_by;
 
     let Some(target_e) = event.target else {

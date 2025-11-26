@@ -1,4 +1,5 @@
 #![feature(duration_constructors)]
+#![feature(assert_matches)]
 
 use abilities::AbilitiesPlugin;
 use bevy::prelude::*;
@@ -16,6 +17,9 @@ pub mod fight_selection_ui;
 pub mod fight_ui;
 pub mod game_logic;
 pub mod utils;
+
+#[cfg(test)]
+mod ability_fixes_test;
 
 fn setup(mut commands: Commands, ability_catalog: Res<abilities::AbilityCatalog>) {
     commands.spawn(Camera2d);

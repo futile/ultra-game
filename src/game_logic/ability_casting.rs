@@ -24,7 +24,6 @@ pub struct AbilityCastingInterface<'w, 's> {
     pub ability_interface: AbilityInterface<'w, 's>,
     pub fight_interface: FightInterface<'w, 's>,
     pub ongoing_cast_interface: OngoingCastInterface<'w, 's>,
-    commands: Commands<'w, 's>,
 }
 
 /// Represents the usage of an ability
@@ -86,17 +85,9 @@ impl<'w, 's> AbilityCastingInterface<'w, 's> {
     // want to loop.
 
     /// Uses a slot for an instant ability, interrupting any ongoing cast on it
+    /// Uses a slot for an instant ability, interrupting any ongoing cast on it
     pub fn use_slot(&mut self, slot_e: Entity) {
         self.interrupt_cast_on_slot(slot_e);
-
-        // Apply slot-defined cooldown if present
-        if let Ok(slot) = self.ability_slots.get(slot_e)
-            && let Some(cooldown_duration) = slot.on_use_cooldown
-        {
-            self.commands
-                .entity(slot_e)
-                .insert(Cooldown::new(cooldown_duration));
-        }
     }
 
     /// Starts a cast on a slot, automatically interrupting any existing cast on the same slot
@@ -261,6 +252,21 @@ fn apply_slot_cooldown_on_cast_finish(
     }
 }
 
+/// Observer that applies ability cooldowns when ongoing casts finish successfully
+fn apply_ability_cooldown_on_cast_finish(
+    trigger: On<OngoingCastFinishedSuccessfully>,
+    ability_cooldowns: Query<&AbilityCooldown>,
+    mut commands: Commands,
+) {
+    let ability_e = trigger.event().ability_entity;
+
+    if let Ok(cooldown) = ability_cooldowns.get(ability_e) {
+        commands
+            .entity(ability_e)
+            .insert(Cooldown::new(cooldown.duration));
+    }
+}
+
 /// Observer that triggers PerformAbility when OngoingCast finishes
 fn trigger_perform_ability(trigger: On<OngoingCastFinishedSuccessfully>, mut commands: Commands) {
     let event = trigger.event();
@@ -277,6 +283,7 @@ pub struct AbilityCastingPlugin;
 impl Plugin for AbilityCastingPlugin {
     fn build(&self, app: &mut App) {
         app.add_observer(apply_slot_cooldown_on_cast_finish)
+            .add_observer(apply_ability_cooldown_on_cast_finish)
             .add_observer(trigger_perform_ability)
             .register_type::<UseAbility>()
             .register_type::<SlotCooldown>()
