@@ -54,13 +54,16 @@ impl<'w, 's> OngoingCastInterface<'w, 's> {
 }
 
 fn tick_ongoing_casts(
-    mut ongoing_casts: Query<(Entity, &mut OngoingCast, &Held<AbilitySlot>)>,
+    mut ongoing_casts: Query<(Entity, &mut OngoingCast)>,
+    held_slots: Query<&Held<AbilitySlot>>,
     fight_interface: FightInterface,
     time: Res<Time>,
     mut commands: Commands,
 ) {
-    for (slot_e, mut ongoing_cast, held_ability_slot) in &mut ongoing_casts {
-        let slot_holder_e = held_ability_slot.held_by;
+    for (slot_e, mut ongoing_cast) in &mut ongoing_casts {
+        let Some(slot_holder_e) = held_slots.related::<Held<AbilitySlot>>(slot_e) else {
+            continue;
+        };
 
         if fight_interface.is_fight_paused(fight_interface.get_fight_of_entity(slot_holder_e)) {
             continue;

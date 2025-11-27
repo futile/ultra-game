@@ -15,16 +15,21 @@ use crate::{
     utils::holds_held::Held,
 };
 
+// Marker component for charged strike ability
+#[derive(Component, Debug, Reflect)]
+pub struct ChargedStrikeAbility;
+
 const THIS_ABILITY_ID: AbilityId = AbilityId::ChargedStrike;
 
 fn spawn_charged_strike(commands: &mut Commands) -> Entity {
     commands
         .spawn((
             Ability {
+                id: THIS_ABILITY_ID,
                 name: "Charged Strike".into(),
                 description: format!("Charge an extra strong strike, dealing 25 damage!").into(),
             },
-            THIS_ABILITY_ID,
+            ChargedStrikeAbility,
             AbilitySlotRequirement(AbilitySlotType::WeaponAttack),
             AbilityCooldown {
                 duration: Duration::from_secs(20),
@@ -41,16 +46,18 @@ fn register_ability(catalog: Res<AbilityCatalog>) {
 fn on_charged_strike(
     trigger: On<PerformAbility>,
     mut deal_damage_events: MessageWriter<DealDamage>,
-    abilities: Query<&Held<Ability>>,
+    abilities: Query<&Held<Ability>, With<ChargedStrikeAbility>>,
 ) {
     let event = trigger.event();
-    let ability_e = event.ability_entity;
 
-    let Ok(held) = abilities.get(ability_e) else {
-        warn!("Charged Strike ability not held by anyone?");
+    let Ok(_ability_e) = abilities.get(event.ability_entity) else {
         return;
     };
-    let caster_e = held.held_by;
+
+    let Some(caster_e) = abilities.related::<Held<Ability>>(event.ability_entity) else {
+        error!("Charged Strike ability holder not found? Event: {event:?}");
+        return;
+    };
 
     let Some(target_e) = event.target else {
         error!("Charged Strike performed without a target");
@@ -69,7 +76,8 @@ pub struct ChargedStrikePlugin;
 
 impl Plugin for ChargedStrikePlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, register_ability)
+        app.register_type::<ChargedStrikeAbility>()
+            .add_systems(Startup, register_ability)
             .add_observer(on_charged_strike);
     }
 }

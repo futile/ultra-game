@@ -15,7 +15,11 @@ use crate::{
     utils::holds_held::Held,
 };
 
-const THIS_ABILITY_ID: AbilityId = AbilityId::Attack;
+// Marker component for weapon attack ability
+#[derive(Component, Debug, Reflect)]
+pub struct WeaponAttackAbility;
+
+const THIS_ABILITY_ID: AbilityId = AbilityId::WeaponAttack;
 const THIS_ABILITY_DAMAGE: f64 = 10.0;
 const THIS_ABILITY_ABILITY_COOLDOWN: Duration = Duration::from_secs(5);
 
@@ -23,13 +27,14 @@ fn spawn_weapon_attack(commands: &mut Commands) -> Entity {
     commands
         .spawn((
             Ability {
+                id: THIS_ABILITY_ID,
                 name: "Attack".into(),
                 description: format!(
                     "Strike with your weapon, dealing {THIS_ABILITY_DAMAGE} damage."
                 )
                 .into(),
             },
-            THIS_ABILITY_ID,
+            WeaponAttackAbility,
             AbilitySlotRequirement(AbilitySlotType::WeaponAttack),
             AbilityCooldown {
                 duration: THIS_ABILITY_ABILITY_COOLDOWN,
@@ -46,21 +51,18 @@ fn register_ability(catalog: Res<AbilityCatalog>) {
 fn on_weapon_attack(
     trigger: On<PerformAbility>,
     mut deal_damage_events: MessageWriter<DealDamage>,
-    abilities: Query<(&Held<Ability>, &AbilityId)>,
+    abilities: Query<&Held<Ability>, With<WeaponAttackAbility>>,
 ) {
     let event = trigger.event();
-    let ability_e = event.ability_entity;
 
-    let Ok((held, ability_id)) = abilities.get(ability_e) else {
-        warn!("Weapon Attack ability not held by anyone?");
+    let Ok(_ability_e) = abilities.get(event.ability_entity) else {
         return;
     };
 
-    if *ability_id != THIS_ABILITY_ID {
+    let Some(caster_e) = abilities.related::<Held<Ability>>(event.ability_entity) else {
+        error!("Weapon Attack ability holder not found? Event: {event:?}");
         return;
-    }
-
-    let caster_e = held.held_by;
+    };
 
     let Some(target_e) = event.target else {
         error!("Weapon Attack ability performed without a target!");
@@ -80,7 +82,8 @@ pub struct WeaponAttackPlugin;
 
 impl Plugin for WeaponAttackPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, register_ability)
+        app.register_type::<WeaponAttackAbility>()
+            .add_systems(Startup, register_ability)
             .add_observer(on_weapon_attack);
     }
 }

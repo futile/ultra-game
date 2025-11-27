@@ -7,8 +7,8 @@ mod tests {
     use crate::{
         abilities::{
             AbilityCatalog,
-            needling_hex::{NeedlingHexEffect, NeedlingHexPlugin},
-            weapon_attack::WeaponAttackPlugin,
+            needling_hex::{NeedlingHexAbility, NeedlingHexEffect, NeedlingHexPlugin},
+            weapon_attack::{WeaponAttackAbility, WeaponAttackPlugin},
         },
         game_logic::{
             ability::{Ability, AbilityCastTime, AbilityCooldown, AbilityId},
@@ -59,12 +59,17 @@ mod tests {
         // Spawn ability
         let ability_e = commands
             .spawn((
-                AbilityId::Attack,
-                AbilityCastTime(Duration::ZERO),
+                Ability {
+                    id: AbilityId::WeaponAttack,
+                    name: "Attack".into(),
+                    description: "Attack".into(),
+                },
+                AbilityCastTime(Duration::from_secs(0)),
                 Held::<Ability> {
                     held_by: caster_e,
                     _phantom_t: std::marker::PhantomData,
                 },
+                WeaponAttackAbility,
             ))
             .id();
 
@@ -94,7 +99,8 @@ mod tests {
             .add_plugins(FightPlugin)
             .add_plugins(CommandsPlugin)
             .add_plugins(AbilityCastingPlugin)
-            .add_plugins(OngoingCastPlugin);
+            .add_plugins(OngoingCastPlugin)
+            .add_plugins(WeaponAttackPlugin);
 
         let TestFightEntities {
             fight_e,
@@ -137,7 +143,11 @@ mod tests {
         let ability_e = app
             .world_mut()
             .spawn((
-                AbilityId::Attack,
+                Ability {
+                    id: AbilityId::WeaponAttack,
+                    name: "Attack".into(),
+                    description: "Attack".into(),
+                },
                 AbilityCooldown {
                     duration: Duration::from_secs(5),
                 },
@@ -178,7 +188,11 @@ mod tests {
         let ability_e = app
             .world_mut()
             .spawn((
-                AbilityId::Attack,
+                Ability {
+                    id: AbilityId::WeaponAttack,
+                    name: "Attack".into(),
+                    description: "Attack".into(),
+                },
                 AbilityCooldown {
                     duration: Duration::from_secs(5),
                 },
@@ -325,7 +339,17 @@ mod tests {
             .clear();
 
         // 2. Test Needling Hex
-        let hex_ability_e = app.world_mut().spawn(AbilityId::NeedlingHex).id();
+        let hex_ability_e = app
+            .world_mut()
+            .spawn((
+                Ability {
+                    id: AbilityId::NeedlingHex,
+                    name: "Needling Hex".into(),
+                    description: "Needling Hex".into(),
+                },
+                NeedlingHexAbility,
+            ))
+            .id();
 
         app.world_mut().trigger(OngoingCastFinishedSuccessfully {
             slot_entity: slot_e,

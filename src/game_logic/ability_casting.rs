@@ -13,11 +13,15 @@ use super::{
     fight::{FightInterface, FightStatus},
     ongoing_cast::{OngoingCast, OngoingCastFinishedSuccessfully, OngoingCastInterface},
 };
-use crate::{PerUpdateSet, abilities::AbilityInterface, game_logic::cooldown::Cooldown};
+use crate::{
+    PerUpdateSet,
+    abilities::AbilityInterface,
+    game_logic::{ability::Ability, cooldown::Cooldown},
+};
 
 #[derive(SystemParam)]
 pub struct AbilityCastingInterface<'w, 's> {
-    ability_ids: Query<'w, 's, &'static AbilityId>,
+    abilities: Query<'w, 's, &'static Ability>,
     ability_slots: Query<'w, 's, &'static AbilitySlot>,
     ability_slot_requirements: Query<'w, 's, &'static AbilitySlotRequirement>,
     has_cooldown: Query<'w, 's, Has<Cooldown>>,
@@ -46,8 +50,8 @@ pub enum InvalidCastReason {
 impl<'w, 's> AbilityCastingInterface<'w, 's> {
     /// Checks if the cast request matches the given ability ID
     pub fn is_matching_cast(&self, cast: &UseAbility, id: &AbilityId) -> bool {
-        let ability_id = self.ability_ids.get(cast.ability_e).unwrap();
-        ability_id == id
+        let ability = self.abilities.get(cast.ability_e).unwrap();
+        ability.id == *id
     }
 
     /// Validates if the cast request is valid (fight ongoing, slot compatibility)

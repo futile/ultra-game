@@ -18,6 +18,10 @@ use crate::{
     utils::FiniteRepeatingTimer,
 };
 
+// Marker component for needling hex ability
+#[derive(Component, Debug, Reflect)]
+pub struct NeedlingHexAbility;
+
 const THIS_ABILITY_ID: AbilityId = AbilityId::NeedlingHex;
 const THIS_ABILITY_ABILITY_COOLDOWN: Duration = Duration::from_secs(30);
 
@@ -25,10 +29,11 @@ fn spawn_needling_hex(commands: &mut Commands) -> Entity {
     commands
         .spawn((
             Ability {
+                id: THIS_ABILITY_ID,
                 name: "Needling Hex".into(),
                 description: format!("Hex your enemy with repeated damage over time.").into(),
             },
-            THIS_ABILITY_ID,
+            NeedlingHexAbility,
             AbilitySlotRequirement(AbilitySlotType::Magic),
             AbilityCooldown {
                 duration: THIS_ABILITY_ABILITY_COOLDOWN,
@@ -65,21 +70,15 @@ impl NeedlingHexEffect {
 fn on_needling_hex(
     trigger: On<PerformAbility>,
     mut effects_interface: UniqueEffectInterface<NeedlingHexEffect>,
-    abilities: Query<&AbilityId>,
+    abilities: Query<(), With<NeedlingHexAbility>>,
 ) {
     let event = trigger.event();
 
-    if let Ok(ability_id) = abilities.get(event.ability_entity) {
-        if *ability_id != THIS_ABILITY_ID {
-            return;
-        }
-    } else {
+    let Ok(_ability_e) = abilities.get(event.ability_entity) else {
         return;
-    }
+    };
 
     // Needling Hex needs a target.
-    // TODO: Should probably be a panic, or an Error, to not drop this silently? Maybe an
-    // `error!()`?
     let Some(target_e) = event.target else {
         error!("Needling Hex without target - ignoring. Event: {event:?}");
         return;
@@ -126,6 +125,7 @@ pub struct NeedlingHexPlugin;
 impl Plugin for NeedlingHexPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<NeedlingHexEffect>()
+            .register_type::<NeedlingHexAbility>()
             .add_systems(Startup, register_ability)
             .add_systems(
                 FixedUpdate,

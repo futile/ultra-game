@@ -68,7 +68,7 @@ pub fn spawn_basic_fight(mut commands: Commands, ability_catalog: Res<AbilityCat
 
     // Spawn abilities for player
     for ability_id in [
-        AbilityId::Attack,
+        AbilityId::WeaponAttack,
         AbilityId::NeedlingHex,
         AbilityId::ChargedStrike,
     ] {
@@ -97,7 +97,7 @@ pub fn spawn_basic_fight(mut commands: Commands, ability_catalog: Res<AbilityCat
         .id();
 
     // Spawn abilities for enemy
-    for ability_id in [AbilityId::Attack] {
+    for ability_id in [AbilityId::WeaponAttack] {
         let ability_e = ability_catalog.spawn(ability_id, &mut commands);
         commands.entity(ability_e).insert(Held::<Ability> {
             held_by: enemy,

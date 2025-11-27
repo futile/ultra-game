@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use big_brain::prelude::*;
 
 use super::{
-    ability::AbilityId,
+    ability::{Ability, AbilityId},
     ability_casting::{AbilityCastingInterface, UseAbility},
     ability_slots::AbilitySlot,
     commands::{GameCommand, GameCommandKind, GameCommandSource},
@@ -19,7 +19,7 @@ pub fn can_attack_player_scorer_system(
     ability_casting_interface: AbilityCastingInterface,
     ability_holders: Query<&Holds<AbilityId>>,
     slot_holders: Query<&Holds<AbilitySlot>>,
-    ability_ids: Query<&AbilityId>,
+    abilities: Query<&Ability>,
     ability_slots: Query<&AbilitySlot>,
     fights: Query<&Children, With<Fight>>,
     factions: Query<&Faction>,
@@ -38,9 +38,9 @@ pub fn can_attack_player_scorer_system(
 
         // Find Attack ability entity using iter_descendants
         let attack_ability_entity = ability_holders.iter_descendants(*actor).find(|&ability_e| {
-            ability_ids
+            abilities
                 .get(ability_e)
-                .is_ok_and(|id| *id == AbilityId::Attack)
+                .is_ok_and(|ability| ability.id == AbilityId::WeaponAttack)
         });
 
         let Some(ability_e) = attack_ability_entity else {
@@ -107,7 +107,7 @@ pub fn attack_player_action_system(
     ability_casting_interface: AbilityCastingInterface,
     ability_holders: Query<&Holds<AbilityId>>,
     slot_holders: Query<&Holds<AbilitySlot>>,
-    ability_ids: Query<&AbilityId>,
+    abilities: Query<&Ability>,
     ability_slots: Query<&AbilitySlot>,
     fights: Query<&Children, With<Fight>>,
     factions: Query<&Faction>,
@@ -128,9 +128,9 @@ pub fn attack_player_action_system(
                 // Find the enemy's Attack ability and WeaponAttack slot
                 let attack_ability_entity =
                     ability_holders.iter_descendants(*actor).find(|&ability_e| {
-                        ability_ids
+                        abilities
                             .get(ability_e)
-                            .is_ok_and(|id| *id == AbilityId::Attack)
+                            .is_ok_and(|ability| ability.id == AbilityId::WeaponAttack)
                     });
 
                 let Some(ability_e) = attack_ability_entity else {

@@ -7,15 +7,16 @@ use crate::{
     utils::holds_held::{Held, Holds},
 };
 
-#[derive(Component, Clone, Copy, Debug, PartialEq, Eq, Hash, Reflect)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Reflect)]
 pub enum AbilityId {
-    Attack,
+    WeaponAttack,
     NeedlingHex,
     ChargedStrike,
 }
 
 #[derive(Debug, Clone, Component, Reflect)]
 pub struct Ability {
+    pub id: AbilityId,
     pub name: Cow<'static, str>,
     pub description: Cow<'static, str>,
 }
@@ -51,7 +52,6 @@ impl Plugin for AbilityPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<Holds<Ability>>()
             .register_type::<Held<Ability>>()
-            .register_type::<AbilityId>()
             .register_type::<Ability>()
             .register_type::<AbilitySlotRequirement>()
             .register_type::<AbilityCooldown>()
