@@ -17,6 +17,8 @@ pub struct OngoingCast {
     pub cast_timer: Timer,
 }
 
+// NOTE: Consider unifying this with `PerformAbility` at some point in the future, because the
+// fields are (currently) the same. But it's still too early to do that imo.
 #[derive(Debug, Reflect, EntityEvent)]
 pub struct OngoingCastFinishedSuccessfully {
     #[event_target]
