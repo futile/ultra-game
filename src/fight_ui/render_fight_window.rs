@@ -17,7 +17,7 @@ use super::{
 use crate::{
     abilities::AbilityInterface,
     game_logic::{
-        ability::Ability,
+        ability::{Ability, AbilitySlotRequirement},
         ability_casting::{AbilityCastingInterface, UseAbility},
         ability_slots::{AbilitySlot, AbilitySlotType},
         commands::GameCommand,
@@ -490,7 +490,7 @@ fn ui_abilities(
     params: &mut SystemState<(
         Query<&Holds<Ability>>,
         Query<&Cooldown>,
-        Query<&crate::game_logic::ability::AbilitySlotRequirement>,
+        Query<&AbilitySlotRequirement>,
         AbilityInterface,
         AbilityCastingInterface,
         MessageWriter<GameCommand>,
@@ -728,7 +728,7 @@ fn monospace_checked_shortcut(ui: &mut Ui, shortcut: Option<&KeyboardShortcut>) 
 
 fn tooltip_for_ability(
     ability: Ability,
-    slot_requirement: Option<&crate::game_logic::ability::AbilitySlotRequirement>,
+    slot_requirement: Option<&AbilitySlotRequirement>,
 ) -> impl FnOnce(&mut Ui) {
     move |ui| {
         if let Some(req) = slot_requirement {

@@ -43,12 +43,6 @@ fn register_ability(catalog: Res<AbilityCatalog>) {
     catalog.register(THIS_ABILITY_ID, spawn_weapon_attack);
 }
 
-// I need to query caster.
-// fn on_weapon_attack(trigger: On<PerformAbility>, query: Query<&Held<Ability>>, ...)
-// But Held<Ability> is on the ability entity?
-// No, Held<T> is on the held entity (ability), pointing to holder (caster).
-// So `Held<Ability>` component on `ability_entity` contains `held_by` (caster).
-
 fn on_weapon_attack(
     trigger: On<PerformAbility>,
     mut deal_damage_events: MessageWriter<DealDamage>,
@@ -69,6 +63,7 @@ fn on_weapon_attack(
     let caster_e = held.held_by;
 
     let Some(target_e) = event.target else {
+        error!("Weapon Attack ability performed without a target!");
         return;
     };
 

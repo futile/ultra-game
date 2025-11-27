@@ -6,6 +6,8 @@ use super::{
     ability_casting::{AbilityCastingInterface, UseAbility},
     ability_slots::AbilitySlot,
     commands::{GameCommand, GameCommandKind, GameCommandSource},
+    faction::Faction,
+    fight::Fight,
 };
 use crate::utils::holds_held::Holds;
 
@@ -19,9 +21,8 @@ pub fn can_attack_player_scorer_system(
     slot_holders: Query<&Holds<AbilitySlot>>,
     ability_ids: Query<&AbilityId>,
     ability_slots: Query<&AbilitySlot>,
-    // New queries to find target
-    fights: Query<&Children, With<crate::game_logic::fight::Fight>>,
-    factions: Query<&crate::game_logic::faction::Faction>,
+    fights: Query<&Children, With<Fight>>,
+    factions: Query<&Faction>,
 ) {
     let fight_interface = &ability_casting_interface.fight_interface;
 
@@ -58,16 +59,18 @@ pub fn can_attack_player_scorer_system(
             score.set(0.0);
             continue;
         };
-        // Find target (Player)
+
         let Ok(fight_children) = fights.get(fight_e) else {
             score.set(0.0);
             continue;
         };
 
+        let own_faction = factions.get(*actor).ok();
         let target_e = fight_children.iter().find(|child| {
             factions
                 .get(*child)
-                .is_ok_and(|f| *f == crate::game_logic::faction::Faction::Player)
+                .ok()
+                .is_some_and(|f| own_faction.is_some_and(|own| f != own))
         });
 
         let Some(target_e) = target_e else {
@@ -106,8 +109,8 @@ pub fn attack_player_action_system(
     slot_holders: Query<&Holds<AbilitySlot>>,
     ability_ids: Query<&AbilityId>,
     ability_slots: Query<&AbilitySlot>,
-    fights: Query<&Children, With<crate::game_logic::fight::Fight>>,
-    factions: Query<&crate::game_logic::faction::Faction>,
+    fights: Query<&Children, With<Fight>>,
+    factions: Query<&Faction>,
 ) {
     let fight_interface = &ability_casting_interface.fight_interface;
 
@@ -145,16 +148,18 @@ pub fn attack_player_action_system(
                     *action_state = ActionState::Failure;
                     continue;
                 };
-                // Find target (Player)
+
                 let Ok(fight_children) = fights.get(fight_e) else {
                     *action_state = ActionState::Failure;
                     continue;
                 };
 
+                let own_faction = factions.get(*actor).ok();
                 let target_e = fight_children.iter().find(|child| {
                     factions
                         .get(*child)
-                        .is_ok_and(|f| *f == crate::game_logic::faction::Faction::Player)
+                        .ok()
+                        .is_some_and(|f| own_faction.is_some_and(|own| f != own))
                 });
 
                 let Some(target_e) = target_e else {

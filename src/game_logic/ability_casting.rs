@@ -128,14 +128,14 @@ fn check_ability_cooldowns(
     }
 }
 
-#[derive(Debug, Clone, Reflect)]
+#[derive(Debug, Clone, Reflect, Default)]
 pub struct SlotCooldown;
 
-#[derive(Debug, Clone, Reflect)]
+#[derive(Debug, Clone, Reflect, Default)]
 pub struct SlotRequirement;
 
 /// Checks if the slot is on cooldown
-fn check_slot_cooldowns_real(
+fn check_slot_cooldowns(
     cast_requests: Query<(Entity, &UseAbility), Without<CastFailed<SlotCooldown>>>,
     has_cooldown: Query<Has<Cooldown>>,
     mut commands: Commands,
@@ -166,7 +166,10 @@ fn check_slot_requirements(
         };
 
         let Ok(slot) = slots.get(use_ability.slot_e) else {
-            // Invalid slot entity
+            error!(
+                "Slot entity {} does not have an AbilitySlot component in UseAbility: {use_ability:?}",
+                use_ability.slot_e
+            );
             commands
                 .entity(req_e)
                 .insert(CastFailed::<SlotRequirement>::default());
@@ -294,7 +297,7 @@ impl Plugin for AbilityCastingPlugin {
                     request_ability_cast,
                     (
                         check_ability_cooldowns,
-                        check_slot_cooldowns_real,
+                        check_slot_cooldowns,
                         check_slot_requirements,
                     ),
                     (process_valid_casts, cleanup_failed_casts),

@@ -6,14 +6,16 @@ pub mod charged_strike;
 pub mod needling_hex;
 pub mod weapon_attack;
 
+pub type AbilitySpawner = fn(&mut Commands) -> Entity;
+
 // AbilityCatalog maps AbilityId to a function that spawns the ability entity
 #[derive(Resource, Default, Clone)]
 pub struct AbilityCatalog(
-    pub std::sync::Arc<std::sync::RwLock<HashMap<AbilityId, fn(&mut Commands) -> Entity>>>,
+    pub std::sync::Arc<std::sync::RwLock<HashMap<AbilityId, AbilitySpawner>>>,
 );
 
 impl AbilityCatalog {
-    pub fn register(&self, id: AbilityId, spawner: fn(&mut Commands) -> Entity) {
+    pub fn register(&self, id: AbilityId, spawner: AbilitySpawner) {
         self.0.write().unwrap().insert(id, spawner);
     }
 

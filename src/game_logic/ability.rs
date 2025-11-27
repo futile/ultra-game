@@ -23,7 +23,7 @@ pub struct Ability {
 #[derive(Debug, Clone, Component, Reflect)]
 pub struct AbilitySlotRequirement(pub AbilitySlotType);
 
-#[derive(Debug, Clone, Component, Reflect)]
+#[derive(Debug, Clone, Component, Reflect, Default)]
 pub struct AbilityCooldown {
     pub duration: std::time::Duration,
 }
@@ -39,18 +39,10 @@ pub struct PerformAbility {
     pub slot: Entity,
 }
 
-#[derive(Component, Debug, Reflect)]
+#[derive(Component, Debug, Reflect, Default)]
 pub struct CastFailed<T: Send + Sync + 'static> {
     #[reflect(ignore)]
     pub _marker: std::marker::PhantomData<T>,
-}
-
-impl<T: Send + Sync + 'static> Default for CastFailed<T> {
-    fn default() -> Self {
-        Self {
-            _marker: std::marker::PhantomData,
-        }
-    }
 }
 
 pub struct AbilityPlugin;

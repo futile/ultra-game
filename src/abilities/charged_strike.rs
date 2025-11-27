@@ -16,8 +16,6 @@ use crate::{
 };
 
 const THIS_ABILITY_ID: AbilityId = AbilityId::ChargedStrike;
-const THIS_ABILITY_ABILITY_COOLDOWN: Duration = Duration::from_secs(20);
-const CAST_TIME: Duration = Duration::from_secs(2);
 
 fn spawn_charged_strike(commands: &mut Commands) -> Entity {
     commands
@@ -29,9 +27,9 @@ fn spawn_charged_strike(commands: &mut Commands) -> Entity {
             THIS_ABILITY_ID,
             AbilitySlotRequirement(AbilitySlotType::WeaponAttack),
             AbilityCooldown {
-                duration: THIS_ABILITY_ABILITY_COOLDOWN,
+                duration: Duration::from_secs(20),
             },
-            AbilityCastTime(CAST_TIME),
+            AbilityCastTime(Duration::from_secs(2)),
         ))
         .id()
 }
@@ -55,6 +53,7 @@ fn on_charged_strike(
     let caster_e = held.held_by;
 
     let Some(target_e) = event.target else {
+        error!("Charged Strike performed without a target");
         return;
     };
 
