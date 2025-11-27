@@ -5,7 +5,7 @@ use derive_more::{Display, Error};
 
 use super::{
     ability::{
-        AbilityCastTime, AbilityCooldown, AbilityId, AbilitySlotRequirement, CastFailed,
+        AbilityCastTime, AbilityCooldown, AbilityId, AbilitySlotRequirement, CastFailureReason,
         PerformAbility,
     },
     ability_slots::AbilitySlot,
@@ -119,7 +119,7 @@ fn request_ability_cast(mut commands: Commands, mut game_commands: MessageReader
 
 /// Checks if the ability is on cooldown
 fn check_ability_cooldowns(
-    cast_requests: Query<(Entity, &UseAbility), Without<CastFailed<AbilityCooldown>>>,
+    cast_requests: Query<(Entity, &UseAbility), Without<CastFailureReason>>,
     has_cooldown: Query<Has<Cooldown>>,
     mut commands: Commands,
 ) {
@@ -127,20 +127,13 @@ fn check_ability_cooldowns(
         if has_cooldown.get(use_ability.ability_e).unwrap_or(false) {
             commands
                 .entity(req_e)
-                .insert(CastFailed::<AbilityCooldown>::default());
+                .insert(CastFailureReason::AbilityCooldown);
         }
     }
 }
 
-#[derive(Debug, Clone, Reflect, Default)]
-pub struct SlotCooldown;
-
-#[derive(Debug, Clone, Reflect, Default)]
-pub struct SlotRequirement;
-
-/// Checks if the slot is on cooldown
 fn check_slot_cooldowns(
-    cast_requests: Query<(Entity, &UseAbility), Without<CastFailed<SlotCooldown>>>,
+    cast_requests: Query<(Entity, &UseAbility), Without<CastFailureReason>>,
     has_cooldown: Query<Has<Cooldown>>,
     mut commands: Commands,
 ) {
@@ -148,13 +141,13 @@ fn check_slot_cooldowns(
         if has_cooldown.get(use_ability.slot_e).unwrap_or(false) {
             commands
                 .entity(req_e)
-                .insert(CastFailed::<SlotCooldown>::default());
+                .insert(CastFailureReason::SlotCooldown);
         }
     }
 }
 
 fn check_slot_requirements(
-    cast_requests: Query<(Entity, &UseAbility), Without<CastFailed<SlotRequirement>>>,
+    cast_requests: Query<(Entity, &UseAbility), Without<CastFailureReason>>,
     abilities: Query<&AbilitySlotRequirement>,
     slots: Query<&AbilitySlot>,
     mut commands: Commands,
@@ -176,27 +169,20 @@ fn check_slot_requirements(
             );
             commands
                 .entity(req_e)
-                .insert(CastFailed::<SlotRequirement>::default());
+                .insert(CastFailureReason::SlotRequirement);
             continue;
         };
 
         if requirement.0 != slot.tpe {
             commands
                 .entity(req_e)
-                .insert(CastFailed::<SlotRequirement>::default());
+                .insert(CastFailureReason::SlotRequirement);
         }
     }
 }
 
 fn process_valid_casts(
-    cast_requests: Query<
-        (Entity, &UseAbility),
-        (
-            Without<CastFailed<AbilityCooldown>>,
-            Without<CastFailed<SlotCooldown>>,
-            Without<CastFailed<SlotRequirement>>,
-        ),
-    >,
+    cast_requests: Query<(Entity, &UseAbility), Without<CastFailureReason>>,
     mut ability_casting_interface: AbilityCastingInterface,
     ability_cast_times: Query<&AbilityCastTime>,
     mut commands: Commands,
@@ -225,14 +211,7 @@ fn process_valid_casts(
 }
 
 fn cleanup_failed_casts(
-    cast_requests: Query<
-        Entity,
-        Or<(
-            With<CastFailed<AbilityCooldown>>,
-            With<CastFailed<SlotCooldown>>,
-            With<CastFailed<SlotRequirement>>,
-        )>,
-    >,
+    cast_requests: Query<Entity, With<CastFailureReason>>,
     mut commands: Commands,
 ) {
     for req_e in cast_requests.iter() {
@@ -293,8 +272,6 @@ impl Plugin for AbilityCastingPlugin {
             .add_observer(apply_ability_cooldown_on_cast_finish)
             .add_observer(trigger_perform_ability)
             .register_type::<UseAbility>()
-            .register_type::<SlotCooldown>()
-            .register_type::<SlotRequirement>()
             .add_systems(
                 Update,
                 (

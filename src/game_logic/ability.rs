@@ -40,10 +40,12 @@ pub struct PerformAbility {
     pub slot: Entity,
 }
 
-#[derive(Component, Debug, Reflect, Default)]
-pub struct CastFailed<T: Send + Sync + 'static> {
-    #[reflect(ignore)]
-    pub _marker: std::marker::PhantomData<T>,
+#[derive(Component, Debug, Clone, Copy, PartialEq, Eq, Reflect)]
+pub enum CastFailureReason {
+    AbilityCooldown,
+    SlotCooldown,
+    SlotRequirement,
+    FightEnded,
 }
 
 pub struct AbilityPlugin;
@@ -56,6 +58,7 @@ impl Plugin for AbilityPlugin {
             .register_type::<AbilitySlotRequirement>()
             .register_type::<AbilityCooldown>()
             .register_type::<AbilityCastTime>()
-            .register_type::<PerformAbility>();
+            .register_type::<PerformAbility>()
+            .register_type::<CastFailureReason>();
     }
 }
