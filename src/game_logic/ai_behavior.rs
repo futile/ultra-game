@@ -4,7 +4,7 @@ use big_brain::prelude::*;
 use super::{
     ability::{Ability, AbilityId},
     ability_casting::{AbilityCastingInterface, UseAbility},
-    ability_slots::AbilitySlot,
+    ability_slots::{AbilitySlot, AbilitySlotType},
     commands::{GameCommand, GameCommandKind, GameCommandSource},
     faction::Faction,
     fight::Fight,
@@ -17,7 +17,7 @@ pub struct CanAttackPlayerScorer;
 pub fn can_attack_player_scorer_system(
     mut scorers: Query<(&Actor, &mut Score), With<CanAttackPlayerScorer>>,
     ability_casting_interface: AbilityCastingInterface,
-    ability_holders: Query<&Holds<AbilityId>>,
+    ability_holders: Query<&Holds<Ability>>,
     slot_holders: Query<&Holds<AbilitySlot>>,
     abilities: Query<&Ability>,
     ability_slots: Query<&AbilitySlot>,
@@ -52,7 +52,7 @@ pub fn can_attack_player_scorer_system(
         let weapon_slot_entity = slot_holders.iter_descendants(*actor).find(|&slot_e| {
             ability_slots
                 .get(slot_e)
-                .is_ok_and(|slot| slot.tpe == super::ability_slots::AbilitySlotType::WeaponAttack)
+                .is_ok_and(|slot| slot.tpe == AbilitySlotType::WeaponAttack)
         });
 
         let Some(slot_e) = weapon_slot_entity else {
@@ -105,7 +105,7 @@ pub fn attack_player_action_system(
     mut actions: Query<(&Actor, &mut ActionState), With<AttackPlayerAction>>,
     mut game_commands: MessageWriter<GameCommand>,
     ability_casting_interface: AbilityCastingInterface,
-    ability_holders: Query<&Holds<AbilityId>>,
+    ability_holders: Query<&Holds<Ability>>,
     slot_holders: Query<&Holds<AbilitySlot>>,
     abilities: Query<&Ability>,
     ability_slots: Query<&AbilitySlot>,
@@ -139,9 +139,9 @@ pub fn attack_player_action_system(
                 };
 
                 let weapon_slot_entity = slot_holders.iter_descendants(*actor).find(|&slot_e| {
-                    ability_slots.get(slot_e).is_ok_and(|slot| {
-                        slot.tpe == super::ability_slots::AbilitySlotType::WeaponAttack
-                    })
+                    ability_slots
+                        .get(slot_e)
+                        .is_ok_and(|slot| slot.tpe == AbilitySlotType::WeaponAttack)
                 });
 
                 let Some(slot_e) = weapon_slot_entity else {
