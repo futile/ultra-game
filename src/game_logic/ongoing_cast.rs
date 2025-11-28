@@ -13,13 +13,18 @@ use crate::{PerUpdateSet, game_logic::ability_slots::AbilitySlot, utils::holds_h
 #[derive(Debug, Component, Reflect)]
 pub struct OngoingCast {
     pub ability_e: Entity,
+    pub target: Option<Entity>,
     pub cast_timer: Timer,
 }
 
+// NOTE: Consider unifying this with `PerformAbility` at some point in the future, because the
+// fields are (currently) the same. But it's still too early to do that imo.
 #[derive(Debug, Reflect, EntityEvent)]
 pub struct OngoingCastFinishedSuccessfully {
     #[event_target]
-    pub target: Entity,
+    pub slot_entity: Entity,
+    pub ability_entity: Entity,
+    pub cast_target: Option<Entity>,
 }
 
 #[derive(Debug, Reflect, EntityEvent)]
@@ -51,13 +56,16 @@ impl<'w, 's> OngoingCastInterface<'w, 's> {
 }
 
 fn tick_ongoing_casts(
-    mut ongoing_casts: Query<(Entity, &mut OngoingCast, &Held<AbilitySlot>)>,
+    mut ongoing_casts: Query<(Entity, &mut OngoingCast)>,
+    held_slots: Query<&Held<AbilitySlot>>,
     fight_interface: FightInterface,
     time: Res<Time>,
     mut commands: Commands,
 ) {
-    for (slot_e, mut ongoing_cast, held_ability_slot) in &mut ongoing_casts {
-        let slot_holder_e = held_ability_slot.held_by;
+    for (slot_e, mut ongoing_cast) in &mut ongoing_casts {
+        let Some(slot_holder_e) = held_slots.related::<Held<AbilitySlot>>(slot_e) else {
+            continue;
+        };
 
         if fight_interface.is_fight_paused(fight_interface.get_fight_of_entity(slot_holder_e)) {
             continue;
@@ -68,7 +76,11 @@ fn tick_ongoing_casts(
         ongoing_cast.cast_timer.tick(time.delta());
 
         if ongoing_cast.cast_timer.just_finished() {
-            commands.trigger(OngoingCastFinishedSuccessfully { target: slot_e });
+            commands.trigger(OngoingCastFinishedSuccessfully {
+                slot_entity: slot_e,
+                ability_entity: ongoing_cast.ability_e,
+                cast_target: ongoing_cast.target,
+            });
             commands.entity(slot_e).remove::<OngoingCast>();
         }
     }

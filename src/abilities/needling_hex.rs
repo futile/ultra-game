@@ -6,33 +6,45 @@ use super::AbilityCatalog;
 use crate::{
     PerUpdateSet,
     game_logic::{
-        ability::{Ability, AbilityId},
-        ability_casting::{AbilityCastingInterface, UseAbility},
-        ability_slots::{AbilitySlot, AbilitySlotType},
-        commands::{GameCommand, GameCommandFightScoped, GameCommandKind},
-        cooldown::Cooldown,
+        ability::{
+            Ability, AbilityCastTime, AbilityCooldown, AbilityId, AbilitySlotRequirement,
+            PerformAbility,
+        },
+        ability_slots::AbilitySlotType,
         damage_resolution::{DamageInstance, DealDamage},
         effects::{GameEffect, ReflectGameEffect, UniqueEffectInterface},
-        faction::Faction,
         fight::FightInterface,
     },
     utils::FiniteRepeatingTimer,
 };
 
+// Marker component for needling hex ability
+#[derive(Component, Debug, Reflect)]
+pub struct NeedlingHexAbility;
+
 const THIS_ABILITY_ID: AbilityId = AbilityId::NeedlingHex;
 const THIS_ABILITY_ABILITY_COOLDOWN: Duration = Duration::from_secs(30);
 
-fn add_to_ability_catalog(mut abilties_catalog: ResMut<AbilityCatalog>) {
-    abilties_catalog.0.insert(
-        THIS_ABILITY_ID,
-        Ability {
-            name: "Needling Hex".into(),
-            id: THIS_ABILITY_ID,
-            slot_type: Some(AbilitySlotType::Magic),
-            #[expect(clippy::useless_format, reason = "Uniformity")]
-            description: format!("Hex your enemy with repeated damage over time.").into(),
-        },
-    );
+fn spawn_needling_hex(commands: &mut Commands) -> Entity {
+    commands
+        .spawn((
+            Ability {
+                id: THIS_ABILITY_ID,
+                name: "Needling Hex".into(),
+                description: format!("Hex your enemy with repeated damage over time.").into(),
+            },
+            NeedlingHexAbility,
+            AbilitySlotRequirement(AbilitySlotType::Magic),
+            AbilityCooldown {
+                duration: THIS_ABILITY_ABILITY_COOLDOWN,
+            },
+            AbilityCastTime(Duration::ZERO),
+        ))
+        .id()
+}
+
+fn register_ability(catalog: Res<AbilityCatalog>) {
+    catalog.register(THIS_ABILITY_ID, spawn_needling_hex);
 }
 
 #[derive(Debug, Component, Reflect, Deref, DerefMut)]
@@ -55,66 +67,25 @@ impl NeedlingHexEffect {
     }
 }
 
-fn cast_ability(
-    mut game_commands: MessageReader<GameCommand>,
-    ability_slots: Query<&AbilitySlot>,
-    factions: Query<(Entity, &Faction)>,
-    mut ability_casting_interface: AbilityCastingInterface,
+fn on_needling_hex(
+    trigger: On<PerformAbility>,
     mut effects_interface: UniqueEffectInterface<NeedlingHexEffect>,
-    mut commands: Commands,
+    abilities: Query<(), With<NeedlingHexAbility>>,
 ) {
-    for cmd in game_commands.read() {
-        #[expect(irrefutable_let_patterns, reason = "only one enum variant for now")]
-        let GameCommand {
-            source: _,
-            kind:
-                GameCommandKind::UseAbility(
-                    cast @ UseAbility {
-                        caster_e,
-                        slot_e,
-                        ability_e: _,
-                        fight_e,
-                    },
-                ),
-        } = cmd
-        else {
-            continue;
-        };
+    let event = trigger.event();
 
-        if !ability_casting_interface.is_matching_cast(cast, &THIS_ABILITY_ID) {
-            continue;
-        }
+    let Ok(_ability_e) = abilities.get(event.ability_entity) else {
+        return;
+    };
 
-        if let Err(e) = ability_casting_interface.is_valid_cast(cast) {
-            warn!("invalid `CastAbility`: {cast:#?}, reason: {e}");
-            continue;
-        }
+    // Needling Hex needs a target.
+    let Some(target_e) = event.target else {
+        error!("Needling Hex without target - ignoring. Event: {event:?}");
+        return;
+    };
 
-        let slot = ability_slots.get(*slot_e).unwrap();
-        let (_, faction) = factions.get(*caster_e).unwrap();
-
-        let (target_e, _target_faction) = faction.find_single_enemy(&factions);
-
-        println!(
-            "Casting ability: {THIS_ABILITY_ID:?} | Fight: {fight_e:?} | Caster: {caster_e:?} | Slot: {slot_e:?} [{slot:?}] | Target: {target_e:?}"
-        );
-
-        // use the slot (so, e.g., ongoing casts can be interrupted)
-        ability_casting_interface.use_slot(*slot_e);
-
-        // start cooldown on the ability
-        commands
-            .entity(cast.ability_e)
-            .insert(Cooldown::new(THIS_ABILITY_ABILITY_COOLDOWN));
-
-        effects_interface.spawn_or_replace_unique_effect(target_e, NeedlingHexEffect::new());
-
-        // fire an event for the executed `GameCommand`
-        commands.trigger(GameCommandFightScoped {
-            fight_e: *fight_e,
-            command: cmd.clone(),
-        });
-    }
+    // Apply effect
+    effects_interface.spawn_or_replace_unique_effect(target_e, NeedlingHexEffect::new());
 }
 
 fn tick_needling_hex_effects(
@@ -154,11 +125,12 @@ pub struct NeedlingHexPlugin;
 impl Plugin for NeedlingHexPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<NeedlingHexEffect>()
-            .add_systems(Startup, add_to_ability_catalog)
+            .register_type::<NeedlingHexAbility>()
+            .add_systems(Startup, register_ability)
             .add_systems(
                 FixedUpdate,
                 tick_needling_hex_effects.in_set(PerUpdateSet::LogicUpdate),
             )
-            .add_systems(Update, cast_ability.in_set(PerUpdateSet::CommandResolution));
+            .add_observer(on_needling_hex);
     }
 }

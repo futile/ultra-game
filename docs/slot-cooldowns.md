@@ -25,53 +25,33 @@ pub struct AbilitySlot {
 
 ### Automatic Application
 
-#### Instant Abilities
+#### All Abilities (Instant and Cast-Time)
 
 **File**: `src/game_logic/ability_casting.rs`
 
-The `AbilityCastingInterface::use_slot()` method automatically applies slot cooldowns for instant abilities:
-
-```rust
-pub fn use_slot(&mut self, slot_e: Entity) {
-    self.interrupt_cast_on_slot(slot_e);
-    
-    // Apply slot-defined cooldown if present
-    if let Ok(slot) = self.ability_slots.get(slot_e)
-        && let Some(cooldown_duration) = slot.on_use_cooldown {
-            self.commands
-                .entity(slot_e)
-                .insert(Cooldown::new(cooldown_duration));
-        }
-}
-```
-
-#### Cast-Time Abilities
-
-**File**: `src/game_logic/ability_casting.rs`
-
-An observer handles slot cooldown application when cast-time abilities finish successfully:
+Slot cooldowns are applied automatically via an observer that responds to `OngoingCastFinishedSuccessfully` events:
 
 ```rust
 pub fn apply_slot_cooldown_on_cast_finish(
-    trigger: Trigger<OngoingCastFinishedSuccessfully>,
-    ongoing_casts: Query<&OngoingCast>,
+    trigger: On<OngoingCastFinishedSuccessfully>,
     ability_slots: Query<&AbilitySlot>,
     mut commands: Commands,
 ) {
-    let ongoing_cast = ongoing_casts.get(trigger.target()).unwrap();
-    let slot_e = ongoing_cast.slot_e;
+    let event = trigger.event();
+    let slot_e = event.slot_entity;
     
     // Apply slot-defined cooldown if present
-    if let Ok(slot) = ability_slots.get(slot_e)
-        && let Some(cooldown_duration) = slot.on_use_cooldown {
+    if let Ok(slot) = ability_slots.get(slot_e) {
+        if let Some(cooldown_duration) = slot.on_use_cooldown {
             commands
                 .entity(slot_e)
                 .insert(Cooldown::new(cooldown_duration));
         }
+    }
 }
 ```
 
-This observer is registered in `AbilityCastingPlugin` and automatically triggered when casts complete.
+This observer is registered in `AbilityCastingPlugin` and automatically triggered when any ability cast completes (both instant abilities with Duration::ZERO and cast-time abilities).
 
 ## Current Configuration
 

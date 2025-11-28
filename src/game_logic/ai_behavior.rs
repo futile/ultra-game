@@ -2,10 +2,12 @@ use bevy::prelude::*;
 use big_brain::prelude::*;
 
 use super::{
-    ability::AbilityId,
+    ability::{Ability, AbilityId},
     ability_casting::{AbilityCastingInterface, UseAbility},
-    ability_slots::AbilitySlot,
+    ability_slots::{AbilitySlot, AbilitySlotType},
     commands::{GameCommand, GameCommandKind, GameCommandSource},
+    faction::Faction,
+    fight::Fight,
 };
 use crate::utils::holds_held::Holds;
 
@@ -15,10 +17,12 @@ pub struct CanAttackPlayerScorer;
 pub fn can_attack_player_scorer_system(
     mut scorers: Query<(&Actor, &mut Score), With<CanAttackPlayerScorer>>,
     ability_casting_interface: AbilityCastingInterface,
-    ability_holders: Query<&Holds<AbilityId>>,
+    ability_holders: Query<&Holds<Ability>>,
     slot_holders: Query<&Holds<AbilitySlot>>,
-    ability_ids: Query<&AbilityId>,
+    abilities: Query<&Ability>,
     ability_slots: Query<&AbilitySlot>,
+    fights: Query<&Children, With<Fight>>,
+    factions: Query<&Faction>,
 ) {
     let fight_interface = &ability_casting_interface.fight_interface;
 
@@ -34,9 +38,9 @@ pub fn can_attack_player_scorer_system(
 
         // Find Attack ability entity using iter_descendants
         let attack_ability_entity = ability_holders.iter_descendants(*actor).find(|&ability_e| {
-            ability_ids
+            abilities
                 .get(ability_e)
-                .is_ok_and(|id| *id == AbilityId::Attack)
+                .is_ok_and(|ability| ability.id == AbilityId::WeaponAttack)
         });
 
         let Some(ability_e) = attack_ability_entity else {
@@ -48,7 +52,7 @@ pub fn can_attack_player_scorer_system(
         let weapon_slot_entity = slot_holders.iter_descendants(*actor).find(|&slot_e| {
             ability_slots
                 .get(slot_e)
-                .is_ok_and(|slot| slot.tpe == super::ability_slots::AbilitySlotType::WeaponAttack)
+                .is_ok_and(|slot| slot.tpe == AbilitySlotType::WeaponAttack)
         });
 
         let Some(slot_e) = weapon_slot_entity else {
@@ -56,11 +60,29 @@ pub fn can_attack_player_scorer_system(
             continue;
         };
 
+        let Ok(fight_children) = fights.get(fight_e) else {
+            score.set(0.0);
+            continue;
+        };
+
+        let own_faction = factions.get(*actor).ok();
+        let target_e = fight_children.iter().find(|child| {
+            factions
+                .get(*child)
+                .ok()
+                .is_some_and(|f| own_faction.is_some_and(|own| f != own))
+        });
+
+        let Some(target_e) = target_e else {
+            score.set(0.0);
+            continue;
+        };
         // Create UseAbility request to validate
         let use_ability = UseAbility {
             caster_e: *actor,
             slot_e,
             ability_e,
+            target: Some(target_e),
             fight_e,
         };
 
@@ -83,10 +105,12 @@ pub fn attack_player_action_system(
     mut actions: Query<(&Actor, &mut ActionState), With<AttackPlayerAction>>,
     mut game_commands: MessageWriter<GameCommand>,
     ability_casting_interface: AbilityCastingInterface,
-    ability_holders: Query<&Holds<AbilityId>>,
+    ability_holders: Query<&Holds<Ability>>,
     slot_holders: Query<&Holds<AbilitySlot>>,
-    ability_ids: Query<&AbilityId>,
+    abilities: Query<&Ability>,
     ability_slots: Query<&AbilitySlot>,
+    fights: Query<&Children, With<Fight>>,
+    factions: Query<&Faction>,
 ) {
     let fight_interface = &ability_casting_interface.fight_interface;
 
@@ -104,9 +128,9 @@ pub fn attack_player_action_system(
                 // Find the enemy's Attack ability and WeaponAttack slot
                 let attack_ability_entity =
                     ability_holders.iter_descendants(*actor).find(|&ability_e| {
-                        ability_ids
+                        abilities
                             .get(ability_e)
-                            .is_ok_and(|id| *id == AbilityId::Attack)
+                            .is_ok_and(|ability| ability.id == AbilityId::WeaponAttack)
                     });
 
                 let Some(ability_e) = attack_ability_entity else {
@@ -115,9 +139,9 @@ pub fn attack_player_action_system(
                 };
 
                 let weapon_slot_entity = slot_holders.iter_descendants(*actor).find(|&slot_e| {
-                    ability_slots.get(slot_e).is_ok_and(|slot| {
-                        slot.tpe == super::ability_slots::AbilitySlotType::WeaponAttack
-                    })
+                    ability_slots
+                        .get(slot_e)
+                        .is_ok_and(|slot| slot.tpe == AbilitySlotType::WeaponAttack)
                 });
 
                 let Some(slot_e) = weapon_slot_entity else {
@@ -125,11 +149,29 @@ pub fn attack_player_action_system(
                     continue;
                 };
 
+                let Ok(fight_children) = fights.get(fight_e) else {
+                    *action_state = ActionState::Failure;
+                    continue;
+                };
+
+                let own_faction = factions.get(*actor).ok();
+                let target_e = fight_children.iter().find(|child| {
+                    factions
+                        .get(*child)
+                        .ok()
+                        .is_some_and(|f| own_faction.is_some_and(|own| f != own))
+                });
+
+                let Some(target_e) = target_e else {
+                    *action_state = ActionState::Failure;
+                    continue;
+                };
                 // Create and send the game command
                 let use_ability = UseAbility {
                     caster_e: *actor,
                     slot_e,
                     ability_e,
+                    target: Some(target_e),
                     fight_e,
                 };
 
@@ -145,6 +187,10 @@ pub fn attack_player_action_system(
                 );
 
                 game_commands.write(game_command);
+
+                // TODO: execution is only done once the command we wrote was processed, which
+                // requires (at least?) FixedUpdate to run. Track this somehow, maybe using `Tick`,
+                // maybe through something else.
                 *action_state = ActionState::Success;
             }
             ActionState::Executing => {

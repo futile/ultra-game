@@ -5,7 +5,7 @@ use bevy::{ecs::system::SystemParam, prelude::*};
 use crate::{
     PerUpdateSet,
     game_logic::{
-        ability::AbilityId,
+        ability::Ability,
         ability_slots::AbilitySlot,
         fight::{FightInterface, FightTime},
     },
@@ -18,7 +18,7 @@ pub struct Cooldown {
 }
 
 impl Cooldown {
-    /// Starts a new [`Cooldown`] that should be on the same entity as an [`AbilityId`] or
+    /// Starts a new [`Cooldown`] that should be on the same entity as an [`Ability`] or
     /// [`AbilitySlot`]
     pub fn new(cooldown_duration: Duration) -> Cooldown {
         Cooldown {
@@ -65,16 +65,16 @@ fn tick_cooldowns(
 
 #[derive(SystemParam)]
 pub struct CooldownInterface<'w, 's> {
-    held_ability_ids: Query<'w, 's, &'static Held<AbilityId>>,
+    held_abilities: Query<'w, 's, &'static Held<Ability>>,
     held_ability_slots: Query<'w, 's, &'static Held<AbilitySlot>>,
 }
 
 impl<'w, 's> CooldownInterface<'w, 's> {
-    /// `entity` should have a [`Cooldown`] and be either an [`AbilityId`] or [`AbilitySlot`]
+    /// `entity` should have a [`Cooldown`] and be either an [`Ability`] or [`AbilitySlot`]
     pub fn find_character_of_cooldown(&self, entity: Entity) -> Option<Entity> {
-        // First try to find if this entity has Held<AbilityId>,
+        // First try to find if this entity has Held<Ability>,
         // then try to find if this entity has Held<AbilitySlot>
-        self.held_ability_ids
+        self.held_abilities
             .related(entity)
             .or(self.held_ability_slots.related(entity))
     }

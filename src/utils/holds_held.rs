@@ -8,7 +8,7 @@ pub struct Held<T: Send + Sync + 'static> {
     #[relationship]
     pub held_by: Entity,
     #[reflect(ignore)]
-    _phantom_t: PhantomData<T>,
+    pub _phantom_t: PhantomData<T>,
 }
 
 #[derive(Debug, Component, Reflect)]

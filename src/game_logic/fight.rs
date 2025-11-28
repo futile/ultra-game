@@ -2,12 +2,14 @@ use std::time::Duration;
 
 use bevy::{ecs::system::SystemParam, platform::collections::HashSet, prelude::*, time::Stopwatch};
 
-use super::{
-    commands::{GameCommandFightScoped, GameCommandSource},
-    faction::Faction,
-    health::{Health, LivenessChangeEvent},
+use crate::{
+    PerUpdateSet,
+    game_logic::{
+        commands::{GameCommand, GameCommandSource},
+        faction::Faction,
+        health::{Health, LivenessChangeEvent},
+    },
 };
-use crate::PerUpdateSet;
 
 #[derive(Debug, Default, Clone, Component, Reflect)]
 pub struct Fight;
@@ -33,6 +35,14 @@ impl FightTime {
 
     pub fn is_paused(&self) -> bool {
         self.stop_watch.is_paused()
+    }
+
+    pub fn set_paused(&mut self, should_pause: bool) {
+        if should_pause {
+            self.stop_watch.pause();
+        } else {
+            self.stop_watch.unpause();
+        }
     }
 
     pub fn stop_watch(&self) -> &Stopwatch {
@@ -195,22 +205,16 @@ fn pause_just_ended_fights(
 }
 
 fn unpause_fight_on_user_command(
-    trigger: On<GameCommandFightScoped>,
+    mut game_commands: MessageReader<GameCommand>,
     mut fight_times: Query<&mut FightTime>,
 ) {
-    if trigger.event().command.source == GameCommandSource::UserInteraction {
-        fight_times
-            .get_mut(trigger.event().fight_e)
-            .unwrap()
-            .stop_watch
-            .unpause();
+    for game_command in game_commands.read() {
+        if game_command.source == GameCommandSource::UserInteraction {
+            if let Some(fight_e) = game_command.kind.get_fight_e() {
+                fight_times.get_mut(fight_e).unwrap().stop_watch.unpause();
+            }
+        }
     }
-}
-
-fn on_add_fight(trigger: On<Add, Fight>, mut commands: Commands) {
-    commands
-        .entity(trigger.entity)
-        .observe(unpause_fight_on_user_command);
 }
 
 pub struct FightPlugin;
@@ -221,6 +225,7 @@ impl Plugin for FightPlugin {
             .register_type::<FightEndCondition>()
             .register_type::<FightResult>()
             .register_type::<FightTime>()
+            .add_message::<LivenessChangeEvent>()
             .add_systems(
                 FixedUpdate,
                 (
@@ -230,6 +235,9 @@ impl Plugin for FightPlugin {
                         .in_set(PerUpdateSet::FightEndChecking),
                 ),
             )
-            .add_observer(on_add_fight);
+            .add_systems(
+                Update,
+                unpause_fight_on_user_command.after(PerUpdateSet::CommandSubmission),
+            );
     }
 }

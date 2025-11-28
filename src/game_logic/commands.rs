@@ -3,13 +3,6 @@ use derive_more::From;
 
 use crate::game_logic::ability_casting::UseAbility;
 
-#[derive(Debug, Clone, EntityEvent)]
-pub struct GameCommandFightScoped {
-    #[event_target]
-    pub fight_e: Entity,
-    pub command: GameCommand,
-}
-
 #[derive(Event, Message, Debug, Clone)]
 pub struct GameCommand {
     pub source: GameCommandSource,
@@ -35,6 +28,14 @@ pub enum GameCommandSource {
 #[derive(Debug, Clone, From)]
 pub enum GameCommandKind {
     UseAbility(UseAbility),
+}
+
+impl GameCommandKind {
+    pub fn get_fight_e(&self) -> Option<Entity> {
+        match self {
+            GameCommandKind::UseAbility(use_ability) => Some(use_ability.fight_e),
+        }
+    }
 }
 
 pub struct CommandsPlugin;

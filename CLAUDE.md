@@ -25,17 +25,17 @@ The architecture follows Bevy's Entity-Component-System (ECS) pattern with a mod
 ### Module Structure
 
 - `game_logic/`: Core combat mechanics
-  - `ability.rs`: Ability definitions and casting system
-  - `ability_casting.rs`: Unified interface for ability validation and execution
-  - `ai_behavior.rs`: AI behavior, uses the `big-brain` crate for bevy. See `notes/big-brain.md` in this repo for a summary.
-  - `commands.rs`: Command pattern for game actions
+  - `ability.rs`: Ability components (`Ability`, `AbilitySlotRequirement`, `AbilityCooldown`, `AbilityCastTime`) and `PerformAbility` event
+  - `ability_casting.rs`: Validation systems (veto pattern with `CastRequest` entities), `AbilityCastingInterface`, and observers
+  - `ai_behavior.rs`: AI behavior, uses the `big-brain` crate for bevy. See `docs/big-brain.md` in this repo for a summary.
+  - `commands.rs`: Command pattern for game actions (`GameCommand` with `UseAbility`)
   - `effects.rs`: Timed effects system with `FiniteRepeatingTimer`
   - `fight.rs`: Combat encounter management
   - `damage_resolution.rs`: Damage calculation and application
-  - `ongoing_cast.rs`: Cast timing and interruption system
+  - `ongoing_cast.rs`: Cast timing system - all abilities go through `OngoingCast` → `PerformAbility` flow
   - `cooldown.rs`: Cooldown interface and management
     - The file `docs/slot-cooldowns.md` contains detailed information on cooldowns for slots.
-- `abilities/`: Specific ability implementations (WeaponAttack, NeedlingHex, ChargedStrike)
+- `abilities/`: Specific ability implementations as observers responding to `PerformAbility` events (WeaponAttack, NeedlingHex, ChargedStrike)
 - `fight_ui/`: UI rendering and interaction systems
 - `utils/`: Shared utilities including timing and relationship systems
 
@@ -44,41 +44,65 @@ Many modules use the `src/foo.rs` file instead of `src/foo/mod.rs`.
 ### Key Design Patterns
 
 - **Command Pattern**: All game actions go through `game_logic::commands` for validation and execution
+- **Observer Pattern**: Abilities use Bevy Observers to respond to `PerformAbility` events, decoupling execution from casting mechanics
+- **Component-Based Abilities**: Abilities are entities with components defining their properties (cooldowns, cast times, slot requirements)
+- **Veto Validation Pattern**: Validation uses `CastRequest` entities where systems add `CastFailed<Reason>` components if checks fail
 - **Effect System**: Time-based effects using components with tick-based resolution
 - **Unified Slot System**: Every ability requires a slot to cast - slot types include WeaponAttack, ShieldDefend, and Magic
-- **Casting System**: Abilities support cast times with automatic interruption mechanics
+- **Unified Casting Flow**: All abilities (instant and casted) go through `OngoingCast` → `PerformAbility` flow
 - **Relationship Tracking**: Custom `Holds<T>/Held<T>` components for entity relationships instead of Bevy's parent/child system
-- **Interface Pattern**: Many plugins provide `Interface`-named SystemParam types that consolidate related functionality (e.g., `AbilityCastingInterface` combines validation + execution)
+- **Interface Pattern**: Many plugins provide `Interface`-named SystemParam types that consolidate related functionality (e.g., `AbilityCastingInterface` for validation)
 
-### Ability Casting & Interruption Mechanics
+### Ability System Architecture
 
-**Slot-Based Casting:**
+**Component-Based Abilities:**
 
-- All abilities require a slot to cast (no slot=None abilities)
-- Slot types: `WeaponAttack`, `ShieldDefend`, `Magic`
-- All slots work identically for interruption purposes
+- Abilities are **entities** with components defining their properties:
+  - `Ability` - name and description
+  - `AbilitySlotRequirement` - which slot type the ability requires
+  - `AbilityCooldown` - how long until the ability can be cast again
+  - `AbilityCastTime` - cast duration (Duration::ZERO for instant abilities)
+- Abilities are spawned via `AbilityCatalog` and associated with casters via `Held<Ability>` component
+
+**Validation Flow (Veto Pattern):**
+
+- Ability usage requests create `CastRequest` entities (spawned from `GameCommand`)
+- Validation systems add `CastFailed<Reason>` components if checks fail:
+  - `check_ability_cooldowns` - checks if ability is on cooldown
+  - `check_slot_cooldowns_real` - checks if slot is on cooldown  
+  - `check_slot_requirements` - checks if ability matches slot type
+- Valid requests (without `CastFailed`) are processed into `OngoingCast` entities
+- Failed requests are automatically despawned
+
+**Execution Flow:**
+
+- All abilities (instant and casted) go through `OngoingCast` → `PerformAbility` flow
+- `OngoingCast` component tracks cast progress with timer
+- When cast completes, `OngoingCastFinishedSuccessfully` event is triggered
+- `trigger_perform_ability` observer converts this to `PerformAbility` event
+- Specific ability logic is implemented as observers responding to `PerformAbility`
 
 **Interruption Rules:**
 
 - **Any ability usage interrupts ongoing casts on the same slot**
-- Instant abilities (WeaponAttack, NeedlingHex): Call `ability_casting_interface.use_slot(slot_e)` before execution
-- Cast abilities (ChargedStrike): Call `ability_casting_interface.start_cast()` - interruption handled automatically
 - Interruption occurs via observers in `ongoing_cast.rs` when new casts are created
+- Both instant and cast-time abilities trigger interruption automatically
 
 **Cooldown Mechanics:**
 
-- **Ability Cooldown**: How long until THIS specific ability can be cast again
-- **Slot Cooldown**: How long until ANY ability can be cast on this slot
+- **Ability Cooldown**: How long until THIS specific ability can be cast again (component on ability entity)
+- **Slot Cooldown**: How long until ANY ability can be cast on this slot (component on slot entity)
 - After casting an ability, both cooldowns apply independently:
   - The slot is blocked for the slot cooldown duration (prevents any ability on that slot)
   - The specific ability cannot be cast again until its ability cooldown expires
   - Example: WeaponAttack (5s ability cooldown, 1s slot cooldown) → slot available after 1s for other WeaponAttack slot abilities, but WeaponAttack itself needs 5s
+- Slot cooldowns are applied automatically via observer (`apply_slot_cooldown_on_cast_finish`)
 
 **AbilityCastingInterface Usage:**
 
-- **Validation**: `is_valid_cast()`, `is_matching_cast()`, `can_cast_on_slot()`
-- **Execution**: `use_slot(slot_e)` for instant abilities, `start_cast(OngoingCast)` for cast abilities
-- **Manual**: `interrupt_cast_on_slot(slot_e)` for special cases
+- **Validation**: `is_valid_cast()` - checks cooldowns and slot requirements using components
+- **Client-Side Prediction**: UI uses `is_valid_cast()` to predict validity before user input
+- **AI Integration**: AI queries ability components and uses `is_valid_cast()` for decision-making
 
 ### Development Notes
 

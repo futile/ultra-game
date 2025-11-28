@@ -1,4 +1,5 @@
 #![feature(duration_constructors)]
+#![feature(assert_matches)]
 
 use abilities::AbilitiesPlugin;
 use bevy::prelude::*;
@@ -17,10 +18,14 @@ pub mod fight_ui;
 pub mod game_logic;
 pub mod utils;
 
-fn setup(mut commands: Commands) {
+#[cfg(test)]
+mod ability_fixes_test;
+
+fn setup(mut commands: Commands, ability_catalog: Res<abilities::AbilityCatalog>) {
+    // this is required for egui/egui inspector to work (I think).
     commands.spawn(Camera2d);
 
-    fight_selection_ui::spawn_basic_fight(commands);
+    fight_selection_ui::spawn_basic_fight(commands, ability_catalog);
 }
 
 // from https://github.com/bevyengine/bevy/pull/12859
