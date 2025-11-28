@@ -54,6 +54,8 @@ impl<'w, 's> AbilityCastingInterface<'w, 's> {
         ability.id == *id
     }
 
+    // TODO: Need to get this logic unified/de-duplicated, also for AI (and UI maybe?). Probs after
+    // ability refactoring.
     /// Validates if the cast request is valid (fight ongoing, slot compatibility)
     pub fn is_valid_cast(&self, cast: &UseAbility) -> Result<(), InvalidCastReason> {
         match self.fight_interface.get_fight_status(cast.fight_e) {
