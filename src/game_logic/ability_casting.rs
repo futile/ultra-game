@@ -91,7 +91,6 @@ impl<'w, 's> AbilityCastingInterface<'w, 's> {
     // want to loop.
 
     /// Uses a slot for an instant ability, interrupting any ongoing cast on it
-    /// Uses a slot for an instant ability, interrupting any ongoing cast on it
     pub fn use_slot(&mut self, slot_e: Entity) {
         self.interrupt_cast_on_slot(slot_e);
     }
