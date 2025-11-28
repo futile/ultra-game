@@ -187,6 +187,10 @@ pub fn attack_player_action_system(
                 );
 
                 game_commands.write(game_command);
+
+                // TODO: execution is only done once the command we wrote was processed, which
+                // requires (at least?) FixedUpdate to run. Track this somehow, maybe using `Tick`,
+                // maybe through something else.
                 *action_state = ActionState::Success;
             }
             ActionState::Executing => {
