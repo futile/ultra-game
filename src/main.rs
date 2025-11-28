@@ -22,6 +22,7 @@ pub mod utils;
 mod ability_fixes_test;
 
 fn setup(mut commands: Commands, ability_catalog: Res<abilities::AbilityCatalog>) {
+    // this is required for egui/egui inspector to work (I think).
     commands.spawn(Camera2d);
 
     fight_selection_ui::spawn_basic_fight(commands, ability_catalog);
