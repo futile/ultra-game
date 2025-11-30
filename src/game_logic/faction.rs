@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use itertools::Itertools;
 
 #[derive(Debug, Clone, Component, Reflect, PartialEq, Eq, Hash, derive_more::Display)]
 pub enum Faction {
@@ -17,17 +16,14 @@ impl Faction {
     }
 
     pub fn find_single_enemy(&self, factions: &Query<(Entity, &Faction)>) -> (Entity, Faction) {
-        match factions
-            .iter()
-            .filter(|(_, other_faction)| self.is_enemy(other_faction))
-            .exactly_one()
-        {
-            Ok((e, f)) => (e, f.clone()),
-            Err(multiple) => {
-                panic!(
-                    "expected exactly one enemy, but found multiple: {:?}",
-                    multiple.try_len()
-                );
+        match Iterator::exactly_one(
+            factions
+                .iter()
+                .filter(|(_, other_faction)| self.is_enemy(other_faction)),
+        ) {
+            Some((e, f)) => (e, f.clone()),
+            None => {
+                panic!("expected exactly one enemy, but failed.",);
             }
         }
     }
