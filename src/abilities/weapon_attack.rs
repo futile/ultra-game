@@ -23,7 +23,7 @@ const THIS_ABILITY_ID: AbilityId = AbilityId::WeaponAttack;
 const THIS_ABILITY_DAMAGE: f64 = 10.0;
 const THIS_ABILITY_ABILITY_COOLDOWN: Duration = Duration::from_secs(5);
 
-fn spawn_weapon_attack(commands: &mut Commands) -> Entity {
+pub fn spawn_weapon_attack(commands: &mut Commands) -> Entity {
     commands
         .spawn((
             Ability {

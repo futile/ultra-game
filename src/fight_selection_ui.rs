@@ -5,6 +5,7 @@ use bevy_inspector_egui::bevy_egui::{
     EguiContext, EguiPrimaryContextPass, PrimaryEguiContext, egui,
 };
 use big_brain::prelude::*;
+use itertools::Itertools;
 
 use crate::{
     abilities::AbilityCatalog,
@@ -44,6 +45,15 @@ pub fn despawn_current_fight(mut commands: Commands, fights: Query<Entity, With<
 
 /// Spawns a basic fight
 pub fn spawn_basic_fight(mut commands: Commands, ability_catalog: Res<AbilityCatalog>) {
+    let player_abilities = [
+        AbilityId::WeaponAttack,
+        AbilityId::NeedlingHex,
+        AbilityId::ChargedStrike,
+    ]
+    .into_iter()
+    .map(|ability_id| ability_catalog.spawn(ability_id, &mut commands))
+    .collect_vec();
+
     let player_character = commands
         .spawn((
             Health::new(100.0),
@@ -64,20 +74,10 @@ pub fn spawn_basic_fight(mut commands: Commands, ability_catalog: Res<AbilityCat
                 on_use_cooldown: Some(Duration::from_secs(2)),
             });
         })
+        .add_related::<Held<Ability>>(&player_abilities)
         .id();
 
-    // Spawn abilities for player
-    for ability_id in [
-        AbilityId::WeaponAttack,
-        AbilityId::NeedlingHex,
-        AbilityId::ChargedStrike,
-    ] {
-        let ability_e = ability_catalog.spawn(ability_id, &mut commands);
-        commands.entity(ability_e).insert(Held::<Ability> {
-            held_by: player_character,
-            _phantom_t: std::marker::PhantomData,
-        });
-    }
+    let enemy_ability = ability_catalog.spawn(AbilityId::WeaponAttack, &mut commands);
 
     let enemy = commands
         .spawn((
@@ -94,16 +94,8 @@ pub fn spawn_basic_fight(mut commands: Commands, ability_catalog: Res<AbilityCat
                 on_use_cooldown: Some(Duration::from_secs(1)),
             });
         })
+        .add_one_related::<Held<Ability>>(enemy_ability)
         .id();
-
-    // Spawn abilities for enemy
-    for ability_id in [AbilityId::WeaponAttack] {
-        let ability_e = ability_catalog.spawn(ability_id, &mut commands);
-        commands.entity(ability_e).insert(Held::<Ability> {
-            held_by: enemy,
-            _phantom_t: std::marker::PhantomData,
-        });
-    }
 
     commands
         .spawn((FightBundle::new(), Name::new("The Fight")))

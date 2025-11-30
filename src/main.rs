@@ -1,5 +1,6 @@
 #![feature(duration_constructors)]
 #![feature(assert_matches)]
+#![feature(exact_length_collection)]
 
 use abilities::AbilitiesPlugin;
 use bevy::prelude::*;
@@ -20,6 +21,8 @@ pub mod utils;
 
 #[cfg(test)]
 mod ability_fixes_test;
+#[cfg(test)]
+pub mod test_utils;
 
 fn setup(mut commands: Commands, ability_catalog: Res<abilities::AbilityCatalog>) {
     // this is required for egui/egui inspector to work (I think).

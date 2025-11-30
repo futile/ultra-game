@@ -14,6 +14,10 @@ use crate::utils::holds_held::Holds;
 #[derive(Component, Debug, Clone, ScorerBuilder)]
 pub struct CanAttackPlayerScorer;
 
+#[allow(
+    clippy::too_many_arguments,
+    reason = "it's a system, many arguments is ok"
+)]
 pub fn can_attack_player_scorer_system(
     mut scorers: Query<(&Actor, &mut Score), With<CanAttackPlayerScorer>>,
     ability_casting_interface: AbilityCastingInterface,
@@ -101,6 +105,10 @@ pub fn can_attack_player_scorer_system(
 #[derive(Component, Debug, Clone, ActionBuilder)]
 pub struct AttackPlayerAction;
 
+#[allow(
+    clippy::too_many_arguments,
+    reason = "it's a system, many arguments is ok"
+)]
 pub fn attack_player_action_system(
     mut actions: Query<(&Actor, &mut ActionState), With<AttackPlayerAction>>,
     mut game_commands: MessageWriter<GameCommand>,
@@ -216,5 +224,73 @@ impl Plugin for AiBehaviorPlugin {
             PreUpdate,
             attack_player_action_system.in_set(BigBrainSet::Actions),
         );
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use bevy::{log::LogPlugin, prelude::*};
+    use big_brain::{BigBrainPlugin, prelude::*};
+
+    use super::*;
+    use crate::{
+        game_logic::{
+            ability_casting::AbilityCastingPlugin,
+            commands::{CommandsPlugin, GameCommand, GameCommandKind},
+            fight::{FightPlugin, FightTime},
+        },
+        test_utils::{TestFightEntities, spawn_test_fight},
+    };
+
+    #[test]
+    fn test_ai_attacks_immediately() {
+        let mut app = App::new();
+
+        app.add_plugins(MinimalPlugins)
+            .add_plugins(LogPlugin::default())
+            .add_plugins(BigBrainPlugin::new(PreUpdate))
+            .add_plugins(AiBehaviorPlugin)
+            .add_plugins(FightPlugin)
+            .add_plugins(AbilityCastingPlugin)
+            .add_plugins(CommandsPlugin);
+
+        let TestFightEntities {
+            fight_e,
+            caster_e, // This will be target
+            slot_e: _,
+            ability_e: _,
+            enemy_e, // This will be our AI (Player)
+        } = spawn_test_fight(&mut app);
+
+        // Configure AI (enemy_e)
+        app.world_mut().entity_mut(enemy_e).insert((Thinker::build()
+            .picker(FirstToScore { threshold: 0.5 })
+            .when(CanAttackPlayerScorer, AttackPlayerAction),));
+
+        // Unpause fight
+        app.world_mut()
+            .get_mut::<FightTime>(fight_e)
+            .unwrap()
+            .set_paused(false);
+
+        // currently takes this many updates until the action is executed. adjust as necessary
+        // after updates etc.
+        for _ in 0..4 {
+            app.update();
+        }
+
+        // Check for GameCommand
+        let mut events = app.world_mut().resource_mut::<Messages<GameCommand>>();
+        let commands: Vec<GameCommand> = events.drain().collect();
+
+        assert!(!commands.is_empty(), "AI should have submitted a command");
+
+        let command = &commands[0];
+        match &command.kind {
+            GameCommandKind::UseAbility(use_ability) => {
+                assert_eq!(use_ability.caster_e, enemy_e);
+                assert_eq!(use_ability.target, Some(caster_e));
+            }
+        }
     }
 }

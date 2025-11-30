@@ -2,94 +2,27 @@
 mod tests {
     use std::{assert_matches::assert_matches, time::Duration};
 
-    use bevy::{prelude::*, time::TimeUpdateStrategy};
+    use bevy::{log::LogPlugin, prelude::*, time::TimeUpdateStrategy};
 
     use crate::{
         abilities::{
             AbilityCatalog,
             needling_hex::{NeedlingHexAbility, NeedlingHexEffect, NeedlingHexPlugin},
-            weapon_attack::{WeaponAttackAbility, WeaponAttackPlugin},
+            weapon_attack::WeaponAttackPlugin,
         },
         game_logic::{
-            ability::{Ability, AbilityCastTime, AbilityCooldown, AbilityId},
+            ability::{Ability, AbilityCooldown, AbilityId},
             ability_casting::{AbilityCastingPlugin, UseAbility},
             ability_slots::{AbilitySlot, AbilitySlotType},
             commands::{CommandsPlugin, GameCommand, GameCommandKind},
             cooldown::Cooldown,
             damage_resolution::{DamageResolutionPlugin, DealDamage},
             effects::HasEffects,
-            faction::Faction,
-            fight::{FightBundle, FightPlugin, FightTime},
-            health::Health,
+            fight::{FightPlugin, FightTime},
             ongoing_cast::{OngoingCast, OngoingCastFinishedSuccessfully, OngoingCastPlugin},
         },
-        utils::holds_held::Held,
+        test_utils::{TestFightEntities, spawn_test_fight},
     };
-
-    pub struct TestFightEntities {
-        pub fight_e: Entity,
-        pub caster_e: Entity,
-        pub slot_e: Entity,
-        pub ability_e: Entity,
-        pub enemy_e: Entity,
-    }
-
-    fn spawn_test_fight(app: &mut App) -> TestFightEntities {
-        let mut commands = app.world_mut().commands();
-        let fight_e = commands.spawn(FightBundle::new()).id();
-
-        // Spawn caster
-        let caster_e = commands.spawn_empty().id();
-        commands.entity(fight_e).add_child(caster_e);
-
-        // Spawn slot
-        let slot_e = commands
-            .spawn(AbilitySlot {
-                tpe: AbilitySlotType::WeaponAttack,
-                on_use_cooldown: None,
-            })
-            .id();
-
-        // Attach slot to caster (Held<AbilitySlot>)
-        commands.entity(slot_e).insert(Held::<AbilitySlot> {
-            held_by: caster_e,
-            _phantom_t: std::marker::PhantomData,
-        });
-
-        // Spawn ability
-        let ability_e = commands
-            .spawn((
-                Ability {
-                    id: AbilityId::WeaponAttack,
-                    name: "Attack".into(),
-                    description: "Attack".into(),
-                },
-                AbilityCastTime(Duration::from_secs(0)),
-                Held::<Ability> {
-                    held_by: caster_e,
-                    _phantom_t: std::marker::PhantomData,
-                },
-                WeaponAttackAbility,
-            ))
-            .id();
-
-        // Spawn enemy
-        let enemy_e = commands
-            .spawn((Name::new("Test Enemy"), Health::new(100.0), Faction::Enemy))
-            .id();
-        commands.entity(fight_e).add_child(enemy_e);
-
-        // Flush commands
-        app.update();
-
-        TestFightEntities {
-            fight_e,
-            caster_e,
-            slot_e,
-            ability_e,
-            enemy_e,
-        }
-    }
 
     #[test]
     fn test_fight_timer_starts_on_ability_use() {
@@ -235,6 +168,7 @@ mod tests {
 
         let mut app = App::new();
         app.add_plugins(MinimalPlugins)
+            .add_plugins(LogPlugin::default())
             .add_plugins(CommandsPlugin)
             .add_plugins(FightPlugin)
             .add_plugins(CooldownPlugin);
@@ -264,16 +198,23 @@ mod tests {
             "Ability should have Cooldown component"
         );
 
-        // Automatically advance time by 55ms (little bit more than half the cooldown) on each
+        // update once to initialize all systems etc., seems to be required, when testing with
+        // manual time.
+        app.update();
+
+        // Automatically advance time by 65ms (little bit more than half the cooldown) on each
         // update
         // See: https://docs.rs/bevy/latest/bevy/time/enum.TimeUpdateStrategy.html
         // See: https://taintedcoders.com/bevy/apps#schedules
         // See: https://taintedcoders.com/bevy/how-to/fixed-timestep
+        //
+        // NOTE: Will round down to multiples of `Time<Fixed>`, see
+        // https://docs.rs/bevy/latest/bevy/app/struct.FixedMain.html
         app.insert_resource(TimeUpdateStrategy::ManualDuration(Duration::from_millis(
-            55,
+            65,
         )));
 
-        // Advance time by 55ms (little bit more than half the cooldown)
+        // Advance time by ~65ms (little bit more than half the cooldown)
         app.update();
 
         // Cooldown should still exist
@@ -284,7 +225,7 @@ mod tests {
             "Cooldown should have time remaining"
         );
 
-        // Advance time by another 55ms (total 110ms, past the 100ms cooldown)
+        // Advance time by another 65ms (total 130ms, past the 100ms cooldown)
         app.update();
 
         // Cooldown should be removed
