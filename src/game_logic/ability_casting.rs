@@ -274,7 +274,7 @@ impl Plugin for AbilityCastingPlugin {
             .add_observer(trigger_perform_ability)
             .register_type::<UseAbility>()
             .add_systems(
-                Update,
+                FixedUpdate,
                 (
                     request_ability_cast,
                     (
