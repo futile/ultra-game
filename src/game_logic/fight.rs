@@ -241,3 +241,60 @@ impl Plugin for FightPlugin {
             );
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use bevy::prelude::*;
+
+    use super::{FightPlugin, FightTime};
+    use crate::{
+        abilities::{AbilityCatalog, weapon_attack::WeaponAttackPlugin},
+        game_logic::{
+            ability_casting::{AbilityCastingPlugin, UseAbility},
+            commands::{CommandsPlugin, GameCommand, GameCommandKind},
+            ongoing_cast::OngoingCastPlugin,
+        },
+        test_utils::{TestFightEntities, spawn_test_fight},
+    };
+
+    #[test]
+    fn test_fight_timer_unpauses_on_user_command() {
+        let mut app = App::new();
+        app.init_resource::<AbilityCatalog>()
+            .add_plugins(MinimalPlugins)
+            .add_plugins(FightPlugin)
+            .add_plugins(CommandsPlugin)
+            .add_plugins(AbilityCastingPlugin)
+            .add_plugins(OngoingCastPlugin)
+            .add_plugins(WeaponAttackPlugin);
+
+        let TestFightEntities {
+            fight_e,
+            caster_e,
+            slot_e,
+            ability_e,
+            enemy_e: _,
+        } = spawn_test_fight(&mut app);
+
+        // Verify timer paused
+        let fight_time = app.world().get::<FightTime>(fight_e).unwrap();
+        assert!(fight_time.is_paused());
+
+        app.world_mut()
+            .write_message(GameCommand::new_from_user(GameCommandKind::UseAbility(
+                UseAbility {
+                    caster_e,
+                    slot_e,
+                    ability_e,
+                    target: None,
+                    fight_e,
+                },
+            )));
+
+        app.update();
+
+        // Verify timer unpaused
+        let fight_time = app.world().get::<FightTime>(fight_e).unwrap();
+        assert!(!fight_time.is_paused(), "Fight timer should be unpaused");
+    }
+}

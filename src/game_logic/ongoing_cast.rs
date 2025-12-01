@@ -118,3 +118,71 @@ impl Plugin for OngoingCastPlugin {
             .on_replace(on_replace_ongoing_cast);
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::time::Duration;
+
+    use bevy::prelude::*;
+
+    use super::{OngoingCast, OngoingCastPlugin};
+    use crate::game_logic::{
+        ability::{Ability, AbilityCooldown, AbilityId},
+        ability_casting::AbilityCastingPlugin,
+        ability_slots::{AbilitySlot, AbilitySlotType},
+        commands::CommandsPlugin,
+        cooldown::Cooldown,
+    };
+
+    #[test]
+    fn test_cast_interruption_skips_cooldown() {
+        let mut app = App::new();
+        app.add_plugins(MinimalPlugins)
+            .add_plugins(CommandsPlugin)
+            .add_plugins(AbilityCastingPlugin)
+            .add_plugins(OngoingCastPlugin);
+
+        let ability_e = app
+            .world_mut()
+            .spawn((
+                Ability {
+                    id: AbilityId::WeaponAttack,
+                    name: "Attack".into(),
+                    description: "Attack".into(),
+                },
+                AbilityCooldown {
+                    duration: Duration::from_secs(5),
+                },
+            ))
+            .id();
+        let slot_e = app
+            .world_mut()
+            .spawn(AbilitySlot {
+                tpe: AbilitySlotType::WeaponAttack,
+                on_use_cooldown: Some(Duration::from_secs(1)),
+            })
+            .id();
+
+        // Manually start a cast (as if by system)
+        app.world_mut().entity_mut(slot_e).insert(OngoingCast {
+            ability_e,
+            target: None,
+            cast_timer: Timer::from_seconds(1.0, TimerMode::Once),
+        });
+
+        // Interrupt it (by starting another cast or calling cancel)
+        app.world_mut().entity_mut(slot_e).remove::<OngoingCast>();
+
+        app.update();
+
+        // Verify NO cooldown applied
+        assert!(
+            app.world().get::<Cooldown>(ability_e).is_none(),
+            "Ability should NOT have Cooldown component"
+        );
+        assert!(
+            app.world().get::<Cooldown>(slot_e).is_none(),
+            "Slot should NOT have Cooldown component"
+        );
+    }
+}

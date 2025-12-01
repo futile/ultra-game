@@ -20,8 +20,6 @@ pub mod game_logic;
 pub mod utils;
 
 #[cfg(test)]
-mod ability_fixes_test;
-#[cfg(test)]
 pub mod test_utils;
 
 fn setup(mut commands: Commands, ability_catalog: Res<abilities::AbilityCatalog>) {
