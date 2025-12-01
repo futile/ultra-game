@@ -149,10 +149,62 @@ mod tests {
 
         app.update();
 
-        // Verify cooldown applied
+        // Verify cooldown applied to ability
         assert!(
             app.world().get::<Cooldown>(ability_e).is_some(),
             "Ability should have Cooldown component"
+        );
+
+        // Verify no cooldown applied to slot
+        assert!(
+            app.world().get::<Cooldown>(slot_e).is_none(),
+            "Slot should not have Cooldown component"
+        );
+    }
+
+    #[test]
+    fn test_slot_cooldown_applied_after_cast_completion() {
+        let mut app = App::new();
+        app.add_plugins(MinimalPlugins)
+            .add_plugins(CommandsPlugin)
+            .add_plugins(AbilityCastingPlugin)
+            .add_plugins(OngoingCastPlugin);
+
+        let ability_e = app
+            .world_mut()
+            .spawn(Ability {
+                id: AbilityId::WeaponAttack,
+                name: "Attack".into(),
+                description: "Attack".into(),
+            })
+            .id();
+        let slot_e = app
+            .world_mut()
+            .spawn(AbilitySlot {
+                tpe: AbilitySlotType::WeaponAttack,
+                on_use_cooldown: Some(Duration::from_secs(3)),
+            })
+            .id();
+
+        // Trigger cast finish
+        app.world_mut().trigger(OngoingCastFinishedSuccessfully {
+            slot_entity: slot_e,
+            ability_entity: ability_e,
+            cast_target: None,
+        });
+
+        app.update();
+
+        // Verify cooldown applied to slot
+        assert!(
+            app.world().get::<Cooldown>(slot_e).is_some(),
+            "Slot should have Cooldown component"
+        );
+
+        // Verify no cooldown applied to ability (since AbilityCooldown wasn't set)
+        assert!(
+            app.world().get::<Cooldown>(ability_e).is_none(),
+            "Ability should not have Cooldown component"
         );
     }
 
