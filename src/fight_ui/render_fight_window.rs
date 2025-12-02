@@ -17,7 +17,7 @@ use super::{
 use crate::{
     abilities::AbilityInterface,
     game_logic::{
-        ability::{Ability, AbilityId},
+        ability::{Ability, AbilitySlotRequirement},
         ability_casting::{AbilityCastingInterface, UseAbility},
         ability_slots::{AbilitySlot, AbilitySlotType},
         commands::GameCommand,
@@ -118,21 +118,21 @@ pub fn render_fight_window(
     let fight_children = children
         .get(world, fight_e)
         .expect("Fight without Children");
-    let player_entity = factions
-        .iter_many(world, fight_children)
-        .filter(|(_e, faction)| **faction == Faction::Player)
-        .exactly_one()
-        .ok() // the error doesn't impl `Debug`, so can't unwrap it
-        .unwrap()
-        .0;
+    let player_entity = Iterator::exactly_one(
+        factions
+            .iter_many(world, fight_children)
+            .filter(|(_e, faction)| **faction == Faction::Player),
+    )
+    .unwrap()
+    .0;
 
-    let enemy_entity = factions
-        .iter_many(world, fight_children)
-        .filter(|(_e, faction)| **faction == Faction::Enemy)
-        .exactly_one()
-        .ok() // the error doesn't impl `Debug`, so can't unwrap it
-        .unwrap()
-        .0;
+    let enemy_entity = Iterator::exactly_one(
+        factions
+            .iter_many(world, fight_children)
+            .filter(|(_e, faction)| **faction == Faction::Enemy),
+    )
+    .unwrap()
+    .0;
 
     if let Some(fight_result) = fight_result {
         match fight_result {
@@ -209,7 +209,12 @@ pub fn render_fight_window(
             Id::new("fight_column")
                 .with(fight_window_e)
                 .with(player_entity),
-            (ui_state.player_column_state.clone(), player_entity, fight_e),
+            (
+                ui_state.player_column_state.clone(),
+                player_entity,
+                enemy_entity,
+                fight_e,
+            ),
             ui_fight_column,
         );
 
@@ -221,7 +226,12 @@ pub fn render_fight_window(
             Id::new("fight_column")
                 .with(fight_window_e)
                 .with(enemy_entity),
-            (ui_state.enemy_column_state.clone(), enemy_entity, fight_e),
+            (
+                ui_state.enemy_column_state.clone(),
+                enemy_entity,
+                player_entity,
+                fight_e,
+            ),
             ui_fight_column,
         );
     });
@@ -272,15 +282,15 @@ impl AbilitySlotsSectionUiState {
 }
 
 fn ui_fight_column(
-    In((mut ui, (mut ui_column_state, model_e, fight_e))): In<(
+    In((mut ui, (mut ui_column_state, model_e, target_e, fight_e))): In<(
         Ui,
-        (FightColumnUiState, Entity, Entity),
+        (FightColumnUiState, Entity, Entity, Entity),
     )>,
     world: &mut World,
     names: &mut QueryState<&Name>,
     healths: &mut QueryState<&Health>,
     holds_ability_slots: &mut QueryState<&Holds<AbilitySlot>>,
-    holds_ability_ids: &mut QueryState<&Holds<AbilityId>>,
+    holds_abilities: &mut QueryState<&Holds<Ability>>,
     has_effects: &mut QueryState<&HasEffects>,
 ) -> (Ui, FightColumnUiState) {
     ui.indent(ui.id().with("entity_overview_section"), |ui: &mut Ui| {
@@ -317,14 +327,14 @@ fn ui_fight_column(
         );
     }
 
-    if holds_ability_ids.get(world, model_e).is_ok() {
+    if holds_abilities.get(world, model_e).is_ok() {
         ui.add_space(10.);
 
         ui_column_state = run_ui_system(
             &mut ui,
             world,
             Id::new("abilities_section").with(model_e),
-            (model_e, fight_e, ui_column_state.clone()),
+            (model_e, target_e, fight_e, ui_column_state.clone()),
             ui_abilities,
         );
     }
@@ -472,14 +482,15 @@ fn ui_ability_slots(
     reason = "SystemState<..> big but ok, part of the ui-pattern (for now)"
 )]
 fn ui_abilities(
-    In((mut ui, (model_e, fight_e, mut ui_column_state))): In<(
+    In((mut ui, (model_e, target_e, fight_e, mut ui_column_state))): In<(
         Ui,
-        (Entity, Entity, FightColumnUiState),
+        (Entity, Entity, Entity, FightColumnUiState),
     )>,
     world: &mut World,
     params: &mut SystemState<(
-        Query<&Holds<AbilityId>>,
+        Query<&Holds<Ability>>,
         Query<&Cooldown>,
+        Query<&AbilitySlotRequirement>,
         AbilityInterface,
         AbilityCastingInterface,
         MessageWriter<GameCommand>,
@@ -488,8 +499,9 @@ fn ui_abilities(
     {
         #[rustfmt::skip]
         let (
-            holds_ability_ids,
+            holds_abilities,
             cooldowns,
+            ability_slot_requirements,
             ability_interface,
             ability_casting_interface,
             mut game_commands,
@@ -501,14 +513,15 @@ fn ui_abilities(
         ui.heading("Abilities");
 
         ui.indent(ui.id().with("abilities"), |ui: &mut Ui| {
-            for (idx, ability_id_e) in holds_ability_ids.relationship_sources(model_e).enumerate() {
-                let ability = ability_interface.get_ability_from_entity(ability_id_e);
+            for (idx, ability_e) in holds_abilities.relationship_sources(model_e).enumerate() {
+                let ability = ability_interface.get_ability_from_entity(ability_e);
 
                 let valid_cast = selected_slot_e
                     .map(|selected_slot_e| UseAbility {
                         caster_e: model_e,
                         slot_e: selected_slot_e,
-                        ability_e: ability_id_e,
+                        ability_e,
+                        target: Some(target_e),
                         fight_e,
                     })
                     .filter(|possible_cast| {
@@ -535,7 +548,7 @@ fn ui_abilities(
                         let shortcut_pressed =
                             monospace_checked_shortcut(ui, keyboard_shortcut.as_ref());
 
-                        if let Ok(active_cooldown) = cooldowns.get(ability_id_e)
+                        if let Ok(active_cooldown) = cooldowns.get(ability_e)
                             && !active_cooldown.remaining_cooldown().is_zero()
                         {
                             let cooldown_str =
@@ -571,7 +584,10 @@ fn ui_abilities(
                                 Id::new("AbilityTooltip").with(idx),
                                 ability_button.rect.right_top(),
                             )
-                            .show(tooltip_for_ability(ability.clone()));
+                            .show(tooltip_for_ability(
+                                ability.clone(),
+                                ability_slot_requirements.get(ability_e).ok(),
+                            ));
                         }
 
                         if let Some(valid_cast) = valid_cast
@@ -710,12 +726,15 @@ fn monospace_checked_shortcut(ui: &mut Ui, shortcut: Option<&KeyboardShortcut>) 
     shortcut_pressed
 }
 
-fn tooltip_for_ability(ability: Ability) -> impl FnOnce(&mut Ui) {
+fn tooltip_for_ability(
+    ability: Ability,
+    slot_requirement: Option<&AbilitySlotRequirement>,
+) -> impl FnOnce(&mut Ui) {
     move |ui| {
-        if let Some(required_slot_type) = ability.slot_type {
+        if let Some(req) = slot_requirement {
             ui.label(format!(
                 "Required Slot: {}\n", // newline for spacing
-                text_for_slot_type(&required_slot_type)
+                text_for_slot_type(&req.0)
             ));
         }
 

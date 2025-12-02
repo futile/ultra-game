@@ -2,8 +2,6 @@
 
 ## Next:
 
-- [ ] Refactor ability usage system. maybe use generic system + system chaining?
-
 - [ ] Auto-slot choice when only 1 slot fits (for now, maybe later also if other fitting slots on cd, etc.)
 
 - [ ] More documentation? For everything? Maybe possible/easy enough with Claude?
@@ -12,8 +10,6 @@
   - [ ] Then also update tooltips to show those values.
 
 ## Possible Next
-
-- [ ] 1 or 2 basic tests, also just to try out how well it works/how easy it is
 
 - [ ] More (complicated) abilities
 
@@ -39,11 +35,21 @@
   - Targetable enemies/entities/units have to be tracked through castability-system (see below).
   - Add `target` entity/unit to `commands::CastAbility`, maybe add optional targeting or new command type.
 
+- [ ] Tests: Maybe `bon` for fight creation, and always loading the ability catalog, maybe even all "normal" plugins? maybe gather everything that's added in `main`, that's not UI, into a dedicated plugin, and include that in all tests?
+
+- [ ] Make it possible to determine ability castability "on-demand"
+  - [ ] Maybe using two-phase CastRequest -> decision architecture for AI & UI, or "calling systems from systems"?
+
+- [ ] Ability 'prototype'-entities that are cloned to, e.g., the player & enemy entities, and maybe also linked somehow (i.e., to optionally track "this ability is based on this prototype")?
 ---
 
 # Done
 
 ---
+
+- [x] 1 or 2 basic tests, also just to try out how well it works/how easy it is
+
+- [x] Refactor ability usage system. maybe use generic system + system chaining?
 
 - [x] Resetting fights/fight selection menu
   - [x] Should be implemented in src/ui_fight_selection.rs

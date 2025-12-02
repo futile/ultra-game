@@ -2,23 +2,31 @@ use bevy::prelude::*;
 use big_brain::prelude::*;
 
 use super::{
-    ability::AbilityId,
+    ability::{Ability, AbilityId},
     ability_casting::{AbilityCastingInterface, UseAbility},
-    ability_slots::AbilitySlot,
+    ability_slots::{AbilitySlot, AbilitySlotType},
     commands::{GameCommand, GameCommandKind, GameCommandSource},
+    faction::Faction,
+    fight::Fight,
 };
 use crate::utils::holds_held::Holds;
 
 #[derive(Component, Debug, Clone, ScorerBuilder)]
 pub struct CanAttackPlayerScorer;
 
+#[allow(
+    clippy::too_many_arguments,
+    reason = "it's a system, many arguments is ok"
+)]
 pub fn can_attack_player_scorer_system(
     mut scorers: Query<(&Actor, &mut Score), With<CanAttackPlayerScorer>>,
     ability_casting_interface: AbilityCastingInterface,
-    ability_holders: Query<&Holds<AbilityId>>,
+    ability_holders: Query<&Holds<Ability>>,
     slot_holders: Query<&Holds<AbilitySlot>>,
-    ability_ids: Query<&AbilityId>,
+    abilities: Query<&Ability>,
     ability_slots: Query<&AbilitySlot>,
+    fights: Query<&Children, With<Fight>>,
+    factions: Query<&Faction>,
 ) {
     let fight_interface = &ability_casting_interface.fight_interface;
 
@@ -34,9 +42,9 @@ pub fn can_attack_player_scorer_system(
 
         // Find Attack ability entity using iter_descendants
         let attack_ability_entity = ability_holders.iter_descendants(*actor).find(|&ability_e| {
-            ability_ids
+            abilities
                 .get(ability_e)
-                .is_ok_and(|id| *id == AbilityId::Attack)
+                .is_ok_and(|ability| ability.id == AbilityId::WeaponAttack)
         });
 
         let Some(ability_e) = attack_ability_entity else {
@@ -48,7 +56,7 @@ pub fn can_attack_player_scorer_system(
         let weapon_slot_entity = slot_holders.iter_descendants(*actor).find(|&slot_e| {
             ability_slots
                 .get(slot_e)
-                .is_ok_and(|slot| slot.tpe == super::ability_slots::AbilitySlotType::WeaponAttack)
+                .is_ok_and(|slot| slot.tpe == AbilitySlotType::WeaponAttack)
         });
 
         let Some(slot_e) = weapon_slot_entity else {
@@ -56,11 +64,29 @@ pub fn can_attack_player_scorer_system(
             continue;
         };
 
+        let Ok(fight_children) = fights.get(fight_e) else {
+            score.set(0.0);
+            continue;
+        };
+
+        let own_faction = factions.get(*actor).ok();
+        let target_e = fight_children.iter().find(|child| {
+            factions
+                .get(*child)
+                .ok()
+                .is_some_and(|f| own_faction.is_some_and(|own| f != own))
+        });
+
+        let Some(target_e) = target_e else {
+            score.set(0.0);
+            continue;
+        };
         // Create UseAbility request to validate
         let use_ability = UseAbility {
             caster_e: *actor,
             slot_e,
             ability_e,
+            target: Some(target_e),
             fight_e,
         };
 
@@ -79,14 +105,20 @@ pub fn can_attack_player_scorer_system(
 #[derive(Component, Debug, Clone, ActionBuilder)]
 pub struct AttackPlayerAction;
 
+#[allow(
+    clippy::too_many_arguments,
+    reason = "it's a system, many arguments is ok"
+)]
 pub fn attack_player_action_system(
     mut actions: Query<(&Actor, &mut ActionState), With<AttackPlayerAction>>,
     mut game_commands: MessageWriter<GameCommand>,
     ability_casting_interface: AbilityCastingInterface,
-    ability_holders: Query<&Holds<AbilityId>>,
+    ability_holders: Query<&Holds<Ability>>,
     slot_holders: Query<&Holds<AbilitySlot>>,
-    ability_ids: Query<&AbilityId>,
+    abilities: Query<&Ability>,
     ability_slots: Query<&AbilitySlot>,
+    fights: Query<&Children, With<Fight>>,
+    factions: Query<&Faction>,
 ) {
     let fight_interface = &ability_casting_interface.fight_interface;
 
@@ -104,9 +136,9 @@ pub fn attack_player_action_system(
                 // Find the enemy's Attack ability and WeaponAttack slot
                 let attack_ability_entity =
                     ability_holders.iter_descendants(*actor).find(|&ability_e| {
-                        ability_ids
+                        abilities
                             .get(ability_e)
-                            .is_ok_and(|id| *id == AbilityId::Attack)
+                            .is_ok_and(|ability| ability.id == AbilityId::WeaponAttack)
                     });
 
                 let Some(ability_e) = attack_ability_entity else {
@@ -115,9 +147,9 @@ pub fn attack_player_action_system(
                 };
 
                 let weapon_slot_entity = slot_holders.iter_descendants(*actor).find(|&slot_e| {
-                    ability_slots.get(slot_e).is_ok_and(|slot| {
-                        slot.tpe == super::ability_slots::AbilitySlotType::WeaponAttack
-                    })
+                    ability_slots
+                        .get(slot_e)
+                        .is_ok_and(|slot| slot.tpe == AbilitySlotType::WeaponAttack)
                 });
 
                 let Some(slot_e) = weapon_slot_entity else {
@@ -125,11 +157,29 @@ pub fn attack_player_action_system(
                     continue;
                 };
 
+                let Ok(fight_children) = fights.get(fight_e) else {
+                    *action_state = ActionState::Failure;
+                    continue;
+                };
+
+                let own_faction = factions.get(*actor).ok();
+                let target_e = fight_children.iter().find(|child| {
+                    factions
+                        .get(*child)
+                        .ok()
+                        .is_some_and(|f| own_faction.is_some_and(|own| f != own))
+                });
+
+                let Some(target_e) = target_e else {
+                    *action_state = ActionState::Failure;
+                    continue;
+                };
                 // Create and send the game command
                 let use_ability = UseAbility {
                     caster_e: *actor,
                     slot_e,
                     ability_e,
+                    target: Some(target_e),
                     fight_e,
                 };
 
@@ -145,6 +195,8 @@ pub fn attack_player_action_system(
                 );
 
                 game_commands.write(game_command);
+
+                // Execution finishes immediately
                 *action_state = ActionState::Success;
             }
             ActionState::Executing => {
@@ -172,5 +224,73 @@ impl Plugin for AiBehaviorPlugin {
             PreUpdate,
             attack_player_action_system.in_set(BigBrainSet::Actions),
         );
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use bevy::{log::LogPlugin, prelude::*};
+    use big_brain::{BigBrainPlugin, prelude::*};
+
+    use super::*;
+    use crate::{
+        game_logic::{
+            ability_casting::AbilityCastingPlugin,
+            commands::{CommandsPlugin, GameCommand, GameCommandKind},
+            fight::{FightPlugin, FightTime},
+        },
+        test_utils::{TestFightEntities, spawn_test_fight},
+    };
+
+    #[test]
+    fn test_ai_attacks_immediately() {
+        let mut app = App::new();
+
+        app.add_plugins(MinimalPlugins)
+            .add_plugins(LogPlugin::default())
+            .add_plugins(BigBrainPlugin::new(PreUpdate))
+            .add_plugins(AiBehaviorPlugin)
+            .add_plugins(FightPlugin)
+            .add_plugins(AbilityCastingPlugin)
+            .add_plugins(CommandsPlugin);
+
+        let TestFightEntities {
+            fight_e,
+            caster_e, // This will be target
+            slot_e: _,
+            ability_e: _,
+            enemy_e, // This will be our AI (Player)
+        } = spawn_test_fight(&mut app);
+
+        // Configure AI (enemy_e)
+        app.world_mut().entity_mut(enemy_e).insert((Thinker::build()
+            .picker(FirstToScore { threshold: 0.5 })
+            .when(CanAttackPlayerScorer, AttackPlayerAction),));
+
+        // Unpause fight
+        app.world_mut()
+            .get_mut::<FightTime>(fight_e)
+            .unwrap()
+            .set_paused(false);
+
+        // currently takes this many updates until the action is executed. adjust as necessary
+        // after updates etc.
+        for _ in 0..4 {
+            app.update();
+        }
+
+        // Check for GameCommand
+        let mut events = app.world_mut().resource_mut::<Messages<GameCommand>>();
+        let commands: Vec<GameCommand> = events.drain().collect();
+
+        assert!(!commands.is_empty(), "AI should have submitted a command");
+
+        let command = &commands[0];
+        match &command.kind {
+            GameCommandKind::UseAbility(use_ability) => {
+                assert_eq!(use_ability.caster_e, enemy_e);
+                assert_eq!(use_ability.target, Some(caster_e));
+            }
+        }
     }
 }

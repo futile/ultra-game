@@ -3,31 +3,49 @@ use std::borrow::Cow;
 use bevy::prelude::*;
 
 use crate::{
-    game_logic::ability_slots::{AbilitySlot, AbilitySlotType},
+    game_logic::ability_slots::AbilitySlotType,
     utils::holds_held::{Held, Holds},
 };
 
-#[derive(Component, Clone, Copy, Debug, PartialEq, Eq, Hash, Reflect)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Reflect)]
 pub enum AbilityId {
-    Attack,
+    WeaponAttack,
     NeedlingHex,
     ChargedStrike,
 }
 
-#[derive(Debug, Clone, Reflect)]
+#[derive(Debug, Clone, Component, Reflect)]
 pub struct Ability {
-    pub name: Cow<'static, str>,
     pub id: AbilityId,
-    pub slot_type: Option<AbilitySlotType>,
+    pub name: Cow<'static, str>,
     pub description: Cow<'static, str>,
 }
 
-impl Ability {
-    pub fn can_use_slot(&self, selected_ability_slot: &AbilitySlot) -> bool {
-        let selected_slot_type = Some(selected_ability_slot.tpe);
+#[derive(Debug, Clone, Component, Reflect)]
+pub struct AbilitySlotRequirement(pub AbilitySlotType);
 
-        self.slot_type == selected_slot_type
-    }
+#[derive(Debug, Clone, Component, Reflect, Default)]
+pub struct AbilityCooldown {
+    pub duration: std::time::Duration,
+}
+
+#[derive(Debug, Clone, Component, Reflect)]
+pub struct AbilityCastTime(pub std::time::Duration);
+
+#[derive(EntityEvent, Debug, Reflect)]
+pub struct PerformAbility {
+    #[event_target]
+    pub ability_entity: Entity,
+    pub target: Option<Entity>,
+    pub slot: Entity,
+}
+
+#[derive(Component, Debug, Clone, Copy, PartialEq, Eq, Reflect)]
+pub enum CastFailureReason {
+    AbilityCooldown,
+    SlotCooldown,
+    SlotRequirement,
+    FightEnded,
 }
 
 pub struct AbilityPlugin;
@@ -36,6 +54,11 @@ impl Plugin for AbilityPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<Holds<Ability>>()
             .register_type::<Held<Ability>>()
-            .register_type::<AbilityId>();
+            .register_type::<Ability>()
+            .register_type::<AbilitySlotRequirement>()
+            .register_type::<AbilityCooldown>()
+            .register_type::<AbilityCastTime>()
+            .register_type::<PerformAbility>()
+            .register_type::<CastFailureReason>();
     }
 }

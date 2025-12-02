@@ -5,10 +5,12 @@ use bevy_inspector_egui::bevy_egui::{
     EguiContext, EguiPrimaryContextPass, PrimaryEguiContext, egui,
 };
 use big_brain::prelude::*;
+use itertools::Itertools;
 
 use crate::{
+    abilities::AbilityCatalog,
     game_logic::{
-        ability::AbilityId,
+        ability::{Ability, AbilityId},
         ability_slots::{AbilitySlot, AbilitySlotType},
         ai_behavior::{AttackPlayerAction, CanAttackPlayerScorer},
         faction::Faction,
@@ -42,7 +44,16 @@ pub fn despawn_current_fight(mut commands: Commands, fights: Query<Entity, With<
 }
 
 /// Spawns a basic fight
-pub fn spawn_basic_fight(mut commands: Commands) {
+pub fn spawn_basic_fight(mut commands: Commands, ability_catalog: Res<AbilityCatalog>) {
+    let player_abilities = [
+        AbilityId::WeaponAttack,
+        AbilityId::NeedlingHex,
+        AbilityId::ChargedStrike,
+    ]
+    .into_iter()
+    .map(|ability_id| ability_catalog.spawn(ability_id, &mut commands))
+    .collect_vec();
+
     let player_character = commands
         .spawn((
             Health::new(100.0),
@@ -63,12 +74,10 @@ pub fn spawn_basic_fight(mut commands: Commands) {
                 on_use_cooldown: Some(Duration::from_secs(2)),
             });
         })
-        .with_related_entities::<Held<AbilityId>>(|commands| {
-            commands.spawn(AbilityId::Attack);
-            commands.spawn(AbilityId::NeedlingHex);
-            commands.spawn(AbilityId::ChargedStrike);
-        })
+        .add_related::<Held<Ability>>(&player_abilities)
         .id();
+
+    let enemy_ability = ability_catalog.spawn(AbilityId::WeaponAttack, &mut commands);
 
     let enemy = commands
         .spawn((
@@ -85,9 +94,7 @@ pub fn spawn_basic_fight(mut commands: Commands) {
                 on_use_cooldown: Some(Duration::from_secs(1)),
             });
         })
-        .with_related_entities::<Held<AbilityId>>(|commands| {
-            commands.spawn(AbilityId::Attack);
-        })
+        .add_one_related::<Held<Ability>>(enemy_ability)
         .id();
 
     commands

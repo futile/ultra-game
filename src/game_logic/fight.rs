@@ -2,12 +2,14 @@ use std::time::Duration;
 
 use bevy::{ecs::system::SystemParam, platform::collections::HashSet, prelude::*, time::Stopwatch};
 
-use super::{
-    commands::{GameCommandFightScoped, GameCommandSource},
-    faction::Faction,
-    health::{Health, LivenessChangeEvent},
+use crate::{
+    PerUpdateSet,
+    game_logic::{
+        commands::{GameCommand, GameCommandSource},
+        faction::Faction,
+        health::{Health, LivenessChangeEvent},
+    },
 };
-use crate::PerUpdateSet;
 
 #[derive(Debug, Default, Clone, Component, Reflect)]
 pub struct Fight;
@@ -33,6 +35,14 @@ impl FightTime {
 
     pub fn is_paused(&self) -> bool {
         self.stop_watch.is_paused()
+    }
+
+    pub fn set_paused(&mut self, should_pause: bool) {
+        if should_pause {
+            self.stop_watch.pause();
+        } else {
+            self.stop_watch.unpause();
+        }
     }
 
     pub fn stop_watch(&self) -> &Stopwatch {
@@ -195,22 +205,16 @@ fn pause_just_ended_fights(
 }
 
 fn unpause_fight_on_user_command(
-    trigger: On<GameCommandFightScoped>,
+    mut game_commands: MessageReader<GameCommand>,
     mut fight_times: Query<&mut FightTime>,
 ) {
-    if trigger.event().command.source == GameCommandSource::UserInteraction {
-        fight_times
-            .get_mut(trigger.event().fight_e)
-            .unwrap()
-            .stop_watch
-            .unpause();
+    for game_command in game_commands.read() {
+        if game_command.source == GameCommandSource::UserInteraction {
+            if let Some(fight_e) = game_command.kind.get_fight_e() {
+                fight_times.get_mut(fight_e).unwrap().stop_watch.unpause();
+            }
+        }
     }
-}
-
-fn on_add_fight(trigger: On<Add, Fight>, mut commands: Commands) {
-    commands
-        .entity(trigger.entity)
-        .observe(unpause_fight_on_user_command);
 }
 
 pub struct FightPlugin;
@@ -221,6 +225,7 @@ impl Plugin for FightPlugin {
             .register_type::<FightEndCondition>()
             .register_type::<FightResult>()
             .register_type::<FightTime>()
+            .add_message::<LivenessChangeEvent>()
             .add_systems(
                 FixedUpdate,
                 (
@@ -230,6 +235,66 @@ impl Plugin for FightPlugin {
                         .in_set(PerUpdateSet::FightEndChecking),
                 ),
             )
-            .add_observer(on_add_fight);
+            .add_systems(
+                Update,
+                unpause_fight_on_user_command.after(PerUpdateSet::CommandSubmission),
+            );
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use bevy::prelude::*;
+
+    use super::{FightPlugin, FightTime};
+    use crate::{
+        abilities::{AbilityCatalog, weapon_attack::WeaponAttackPlugin},
+        game_logic::{
+            ability_casting::{AbilityCastingPlugin, UseAbility},
+            commands::{CommandsPlugin, GameCommand, GameCommandKind},
+            ongoing_cast::OngoingCastPlugin,
+        },
+        test_utils::{TestFightEntities, spawn_test_fight},
+    };
+
+    #[test]
+    fn test_fight_timer_unpauses_on_user_command() {
+        let mut app = App::new();
+        app.init_resource::<AbilityCatalog>()
+            .add_plugins(MinimalPlugins)
+            .add_plugins(FightPlugin)
+            .add_plugins(CommandsPlugin)
+            .add_plugins(AbilityCastingPlugin)
+            .add_plugins(OngoingCastPlugin)
+            .add_plugins(WeaponAttackPlugin);
+
+        let TestFightEntities {
+            fight_e,
+            caster_e,
+            slot_e,
+            ability_e,
+            enemy_e: _,
+        } = spawn_test_fight(&mut app);
+
+        // Verify timer paused
+        let fight_time = app.world().get::<FightTime>(fight_e).unwrap();
+        assert!(fight_time.is_paused());
+
+        app.world_mut()
+            .write_message(GameCommand::new_from_user(GameCommandKind::UseAbility(
+                UseAbility {
+                    caster_e,
+                    slot_e,
+                    ability_e,
+                    target: None,
+                    fight_e,
+                },
+            )));
+
+        app.update();
+
+        // Verify timer unpaused
+        let fight_time = app.world().get::<FightTime>(fight_e).unwrap();
+        assert!(!fight_time.is_paused(), "Fight timer should be unpaused");
     }
 }

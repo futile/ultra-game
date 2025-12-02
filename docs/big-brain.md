@@ -133,29 +133,38 @@ This integrates with your existing ability system:
 ```rust
 #[derive(Component, Debug, ActionBuilder)]
 pub struct UseAbilityAction {
-    pub ability_id: AbilityId,
+    pub ability_entity: Entity,
+    pub slot_entity: Entity,
     pub target: Option<Entity>,
 }
 
 pub fn use_ability_action_system(
     mut actions: Query<(&Actor, &mut ActionState, &UseAbilityAction)>,
     mut ability_interface: AbilityCastingInterface,
-    // Add your ability-related queries here
+    mut commands: MessageWriter<GameCommand>,
 ) {
     for (Actor(actor), mut action_state, ability_action) in &mut actions {
         match *action_state {
             ActionState::Requested => {
+                // Create UseAbility command
+                let use_ability = UseAbility {
+                    caster_e: *actor,
+                    slot_e: ability_action.slot_entity,
+                    ability_e: ability_action.ability_entity,
+                    target: ability_action.target,
+                    fight_e: /* get fight entity */,
+                };
+                
                 // Check if we can cast the ability
-                if ability_interface.is_valid_cast(*actor, ability_action.ability_id, ability_action.target) {
-                    // Start casting - this integrates with your existing casting system
-                    *action_state = ActionState::Executing;
+                if ability_interface.is_valid_cast(&use_ability).is_ok() {
+                    // Send command - validation and execution handled automatically
+                    commands.write(GameCommand {
+                        kind: GameCommandKind::UseAbility(use_ability),
+                    });
+                    *action_state = ActionState::Success;
                 } else {
                     *action_state = ActionState::Failure;
                 }
-            }
-            ActionState::Executing => {
-                // Your existing ability casting handles the rest
-                *action_state = ActionState::Success;
             }
             _ => {}
         }
@@ -193,24 +202,19 @@ Integrate with your cooldown system:
 ```rust
 #[derive(Component, Debug, ScorerBuilder)]
 pub struct AbilityCooldownScorer {
-    pub ability_id: AbilityId,
+    pub ability_entity: Entity,
 }
 
 pub fn ability_cooldown_scorer_system(
     mut scorers: Query<(&Actor, &mut Score, &AbilityCooldownScorer)>,
-    cooldowns: Query<&Cooldown>,
+    cooldowns: Query<Has<Cooldown>>,
 ) {
     for (Actor(actor), mut score, cooldown_scorer) in &mut scorers {
-        if let Ok(cooldown) = cooldowns.get(*actor) {
-            if cooldown.is_ready() {
-                score.set(1.0);
-            } else {
-                // Score based on how much time is left
-                let remaining_ratio = cooldown.remaining_time() / cooldown.duration();
-                score.set(1.0 - remaining_ratio);
-            }
+        // Check if ability has cooldown component
+        if cooldowns.get(cooldown_scorer.ability_entity).unwrap_or(false) {
+            score.set(0.0); // Ability is on cooldown
         } else {
-            score.set(1.0); // No cooldown component means ability is ready
+            score.set(1.0); // Ability is ready
         }
     }
 }
@@ -221,7 +225,12 @@ pub fn ability_cooldown_scorer_system(
 ### Basic Enemy AI Template
 
 ```rust
-pub fn spawn_basic_enemy(commands: &mut Commands, position: Transform) -> Entity {
+pub fn spawn_basic_enemy(
+    commands: &mut Commands,
+    position: Transform,
+    weapon_attack_ability: Entity,
+    weapon_attack_slot: Entity,
+) -> Entity {
     let enemy = commands.spawn((
         // Your existing enemy components
         Health::new(100.0),
@@ -230,12 +239,12 @@ pub fn spawn_basic_enemy(commands: &mut Commands, position: Transform) -> Entity
         Thinker::build()
             .picker(Highest)
             .when(
-                (LowHealthScorer { threshold: 0.3 }, HasHealingPotionScorer),
-                UseItemAction { item_type: ItemType::HealthPotion }
-            )
-            .when(
                 EnemyInRangeScorer { range: 2.0 },
-                UseAbilityAction { ability_id: AbilityId::WeaponAttack, target: None }
+                UseAbilityAction {
+                    ability_entity: weapon_attack_ability,
+                    slot_entity: weapon_attack_slot,
+                    target: None, // Target will be determined in action system
+                }
             )
             .when(
                 EnemyNearbyScorer { range: 10.0 },
