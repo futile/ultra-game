@@ -2,8 +2,6 @@
 
 ## Next:
 
-- [ ] Auto-slot choice when only 1 slot fits (for now, maybe later also if other fitting slots on cd, etc.)
-
 - [ ] More documentation? For everything? Maybe possible/easy enough with Claude?
 
 - [ ] Value-/Property-system for abilities, so it doesn't use hardcoded constants anymore.
@@ -46,6 +44,8 @@
 # Done
 
 ---
+
+- [x] Auto-slot choice when only 1 slot fits (for now, maybe later also if other fitting slots on cd, etc.)
 
 - [x] 1 or 2 basic tests, also just to try out how well it works/how easy it is
 
