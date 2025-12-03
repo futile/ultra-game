@@ -489,6 +489,7 @@ fn ui_abilities(
     world: &mut World,
     params: &mut SystemState<(
         Query<&Holds<Ability>>,
+        Query<&Holds<AbilitySlot>>,
         Query<&Cooldown>,
         Query<&AbilitySlotRequirement>,
         AbilityInterface,
@@ -500,6 +501,7 @@ fn ui_abilities(
         #[rustfmt::skip]
         let (
             holds_abilities,
+            holds_ability_slots,
             cooldowns,
             ability_slot_requirements,
             ability_interface,
@@ -516,19 +518,33 @@ fn ui_abilities(
             for (idx, ability_e) in holds_abilities.relationship_sources(model_e).enumerate() {
                 let ability = ability_interface.get_ability_from_entity(ability_e);
 
-                let valid_cast = selected_slot_e
-                    .map(|selected_slot_e| UseAbility {
+                // If a slot is selected, use it. Otherwise, iterate through all slots
+                // and find the first one that yields a valid cast.
+                let mut potential_slots: Box<dyn Iterator<Item = Entity>> =
+                    if let Some(selected_slot_e) = selected_slot_e {
+                        Box::new(std::iter::once(selected_slot_e))
+                    } else {
+                        Box::new(holds_ability_slots.relationship_sources(model_e))
+                    };
+
+                let valid_cast = potential_slots.find_map(|slot_e| {
+                    let possible_cast = UseAbility {
                         caster_e: model_e,
-                        slot_e: selected_slot_e,
+                        slot_e,
                         ability_e,
                         target: Some(target_e),
                         fight_e,
-                    })
-                    .filter(|possible_cast| {
-                        ability_casting_interface
-                            .is_valid_cast(possible_cast)
-                            .is_ok()
-                    });
+                    };
+
+                    if ability_casting_interface
+                        .is_valid_cast(&possible_cast)
+                        .is_ok()
+                    {
+                        Some(possible_cast)
+                    } else {
+                        None
+                    }
+                });
 
                 let keyboard_shortcut: Option<KeyboardShortcut> = if user_interactable {
                     let key: Option<Key> = match idx {
