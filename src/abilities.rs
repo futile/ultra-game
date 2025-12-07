@@ -4,6 +4,7 @@ use crate::game_logic::ability::{Ability, AbilityId};
 
 pub mod charged_strike;
 pub mod needling_hex;
+pub mod prepared_block;
 pub mod weapon_attack;
 
 pub type AbilitySpawner = fn(&mut Commands) -> Entity;
