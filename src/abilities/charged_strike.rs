@@ -27,7 +27,7 @@ fn spawn_charged_strike(commands: &mut Commands) -> Entity {
             Ability {
                 id: THIS_ABILITY_ID,
                 name: "Charged Strike".into(),
-                description: format!("Charge an extra strong strike, dealing 25 damage!").into(),
+                description: "Charge an extra strong strike, dealing 25 damage!".into(),
             },
             ChargedStrikeAbility,
             AbilitySlotRequirement(AbilitySlotType::WeaponAttack),

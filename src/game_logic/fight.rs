@@ -209,11 +209,10 @@ fn unpause_fight_on_user_command(
     mut fight_times: Query<&mut FightTime>,
 ) {
     for game_command in game_commands.read() {
-        if game_command.source == GameCommandSource::UserInteraction {
-            if let Some(fight_e) = game_command.kind.get_fight_e() {
+        if game_command.source == GameCommandSource::UserInteraction
+            && let Some(fight_e) = game_command.kind.get_fight_e() {
                 fight_times.get_mut(fight_e).unwrap().stop_watch.unpause();
             }
-        }
     }
 }
 

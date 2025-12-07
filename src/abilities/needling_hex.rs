@@ -31,7 +31,7 @@ fn spawn_needling_hex(commands: &mut Commands) -> Entity {
             Ability {
                 id: THIS_ABILITY_ID,
                 name: "Needling Hex".into(),
-                description: format!("Hex your enemy with repeated damage over time.").into(),
+                description: "Hex your enemy with repeated damage over time.".into(),
             },
             NeedlingHexAbility,
             AbilitySlotRequirement(AbilitySlotType::Magic),
