@@ -551,6 +551,7 @@ fn ui_abilities(
                         0 => Some(Key::X),
                         1 => Some(Key::V),
                         2 => Some(Key::L),
+                        3 => Some(Key::C),
                         _ => None,
                     };
 
