@@ -49,6 +49,7 @@ pub fn spawn_basic_fight(mut commands: Commands, ability_catalog: Res<AbilityCat
         AbilityId::WeaponAttack,
         AbilityId::NeedlingHex,
         AbilityId::ChargedStrike,
+        AbilityId::PreparedBlock,
     ]
     .into_iter()
     .map(|ability_id| ability_catalog.spawn(ability_id, &mut commands))

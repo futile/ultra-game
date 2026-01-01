@@ -126,7 +126,7 @@ impl Plugin for NeedlingHexPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<NeedlingHexEffect>()
             .register_type::<NeedlingHexAbility>()
-            .add_systems(Startup, register_ability)
+            .add_systems(PreStartup, register_ability)
             .add_systems(
                 FixedUpdate,
                 tick_needling_hex_effects.in_set(PerUpdateSet::LogicUpdate),

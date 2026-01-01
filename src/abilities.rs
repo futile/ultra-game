@@ -26,7 +26,7 @@ impl AbilityCatalog {
             .read()
             .unwrap()
             .get(&id)
-            .expect("Ability not registered");
+            .unwrap_or_else(|| panic!("Ability not registered: {id:?}"));
         spawner(commands)
     }
 }
@@ -53,6 +53,7 @@ impl Plugin for AbilitiesPlugin {
             weapon_attack::WeaponAttackPlugin,
             needling_hex::NeedlingHexPlugin,
             charged_strike::ChargedStrikePlugin,
+            prepared_block::PreparedBlockPlugin,
         ));
     }
 }

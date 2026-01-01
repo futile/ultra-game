@@ -77,7 +77,7 @@ pub struct ChargedStrikePlugin;
 impl Plugin for ChargedStrikePlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<ChargedStrikeAbility>()
-            .add_systems(Startup, register_ability)
+            .add_systems(PreStartup, register_ability)
             .add_observer(on_charged_strike);
     }
 }

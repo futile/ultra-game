@@ -83,7 +83,7 @@ pub struct WeaponAttackPlugin;
 impl Plugin for WeaponAttackPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<WeaponAttackAbility>()
-            .add_systems(Startup, register_ability)
+            .add_systems(PreStartup, register_ability)
             .add_observer(on_weapon_attack);
     }
 }

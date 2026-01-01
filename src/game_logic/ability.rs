@@ -12,6 +12,7 @@ pub enum AbilityId {
     WeaponAttack,
     NeedlingHex,
     ChargedStrike,
+    PreparedBlock,
 }
 
 #[derive(Debug, Clone, Component, Reflect)]
