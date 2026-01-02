@@ -118,21 +118,19 @@ pub fn render_fight_window(
     let fight_children = children
         .get(world, fight_e)
         .expect("Fight without Children");
-    let player_entity = Iterator::exactly_one(
-        factions
-            .iter_many(world, fight_children)
-            .filter(|(_e, faction)| **faction == Faction::Player),
-    )
-    .unwrap()
-    .0;
+    let player_entity = factions
+        .iter_many(world, fight_children)
+        .filter(|(_e, faction)| **faction == Faction::Player)
+        .exactly_one()
+        .unwrap()
+        .0;
 
-    let enemy_entity = Iterator::exactly_one(
-        factions
-            .iter_many(world, fight_children)
-            .filter(|(_e, faction)| **faction == Faction::Enemy),
-    )
-    .unwrap()
-    .0;
+    let enemy_entity = factions
+        .iter_many(world, fight_children)
+        .filter(|(_e, faction)| **faction == Faction::Enemy)
+        .exactly_one()
+        .unwrap()
+        .0;
 
     if let Some(fight_result) = fight_result {
         match fight_result {

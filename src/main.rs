@@ -1,6 +1,5 @@
 #![feature(duration_constructors)]
 #![feature(assert_matches)]
-#![feature(exact_length_collection)]
 
 use abilities::AbilitiesPlugin;
 use bevy::prelude::*;
