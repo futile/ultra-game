@@ -144,6 +144,7 @@ mod tests {
         app.world_mut().trigger(OngoingCastFinishedSuccessfully {
             slot_entity: slot_e,
             ability_entity: ability_e,
+            caster_entity: None,
             cast_target: None,
         });
 
@@ -190,6 +191,7 @@ mod tests {
         app.world_mut().trigger(OngoingCastFinishedSuccessfully {
             slot_entity: slot_e,
             ability_entity: ability_e,
+            caster_entity: None,
             cast_target: None,
         });
 

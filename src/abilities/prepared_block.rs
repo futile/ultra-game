@@ -82,16 +82,14 @@ fn on_prepared_block(
         return;
     };
 
-    // TODO: get `caster` somehow
-
-    // Prepared Block requires no target.
-    let Some(target_e) = event.target else {
-        error!("PreparedBlock with target - ignoring. Event: {event:?}");
+    // Prepared Block requires a caster.
+    let Some(caster_e) = event.caster else {
+        error!("PreparedBlock without caster - ignoring. Event: {event:?}");
         return;
     };
 
     // Apply effect
-    effects_interface.spawn_or_replace_unique_effect(target_e, PreparedBlockEffect::new());
+    effects_interface.spawn_or_replace_unique_effect(caster_e, PreparedBlockEffect::new());
 }
 
 fn tick_prepared_block_effects(

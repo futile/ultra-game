@@ -201,6 +201,7 @@ fn process_valid_casts(
             ability_e: use_ability.ability_e,
             target: use_ability.target,
             cast_timer: Timer::new(cast_duration, TimerMode::Once),
+            caster_e: Some(use_ability.caster_e),
         };
 
         // Start the cast (spawns OngoingCast entity attached to slot)
@@ -259,6 +260,7 @@ fn trigger_perform_ability(trigger: On<OngoingCastFinishedSuccessfully>, mut com
     let event = trigger.event();
     commands.trigger(PerformAbility {
         ability_entity: event.ability_entity,
+        caster: event.caster_entity,
         target: event.cast_target,
         slot: event.slot_entity,
     });

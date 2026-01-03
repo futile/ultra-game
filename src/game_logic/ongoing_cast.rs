@@ -13,6 +13,7 @@ use crate::{PerUpdateSet, game_logic::ability_slots::AbilitySlot, utils::holds_h
 #[derive(Debug, Component, Reflect)]
 pub struct OngoingCast {
     pub ability_e: Entity,
+    pub caster_e: Option<Entity>,
     pub target: Option<Entity>,
     pub cast_timer: Timer,
 }
@@ -24,6 +25,7 @@ pub struct OngoingCastFinishedSuccessfully {
     #[event_target]
     pub slot_entity: Entity,
     pub ability_entity: Entity,
+    pub caster_entity: Option<Entity>,
     pub cast_target: Option<Entity>,
 }
 
@@ -79,6 +81,7 @@ fn tick_ongoing_casts(
             commands.trigger(OngoingCastFinishedSuccessfully {
                 slot_entity: slot_e,
                 ability_entity: ongoing_cast.ability_e,
+                caster_entity: ongoing_cast.caster_e,
                 cast_target: ongoing_cast.target,
             });
             commands.entity(slot_e).remove::<OngoingCast>();
@@ -166,6 +169,7 @@ mod tests {
         // Manually start a cast (as if by system)
         app.world_mut().entity_mut(slot_e).insert(OngoingCast {
             ability_e,
+            caster_e: None,
             target: None,
             cast_timer: Timer::from_seconds(1.0, TimerMode::Once),
         });

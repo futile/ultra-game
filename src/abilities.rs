@@ -95,7 +95,7 @@ mod tests {
 
         let TestFightEntities {
             fight_e: _,
-            caster_e: _,
+            caster_e,
             slot_e,
             ability_e: attack_ability_e,
             enemy_e,
@@ -105,6 +105,7 @@ mod tests {
         app.world_mut().trigger(OngoingCastFinishedSuccessfully {
             slot_entity: slot_e,
             ability_entity: attack_ability_e,
+            caster_entity: Some(caster_e),
             cast_target: Some(enemy_e),
         });
 
@@ -139,6 +140,7 @@ mod tests {
         app.world_mut().trigger(OngoingCastFinishedSuccessfully {
             slot_entity: slot_e,
             ability_entity: hex_ability_e,
+            caster_entity: Some(caster_e),
             cast_target: Some(enemy_e),
         });
 

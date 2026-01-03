@@ -37,6 +37,7 @@ pub struct AbilityCastTime(pub std::time::Duration);
 pub struct PerformAbility {
     #[event_target]
     pub ability_entity: Entity,
+    pub caster: Option<Entity>,
     pub target: Option<Entity>,
     pub slot: Entity,
 }
